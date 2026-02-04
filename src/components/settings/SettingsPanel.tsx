@@ -47,6 +47,22 @@ const CHANGELOG: Record<string, { he: string; en: string }[]> = {
       he: "תרגום מלא לאנגלית ועברית",
       en: "Full Hebrew and English translations",
     },
+    {
+      he: "לוח שנה עם חיווי התקדמות - וי ירוק להושלם, אחוז לחלקי",
+      en: "Calendar with progress indicators - checkmark for complete, percentage for partial",
+    },
+    {
+      he: "סינון לפי תאריך - לחיצה על תאריך בלוח מציגה רק אותו",
+      en: "Date filtering - clicking a calendar date shows only that day",
+    },
+    {
+      he: "חיווי ויזואלי בהחלקה - משוב מיידי לפעולות סימון",
+      en: "Swipe visual feedback - immediate response to marking actions",
+    },
+    {
+      he: "שאלת סימון אוטומטי - האם לסמן גם הלכות קודמות",
+      en: "Auto-mark prompt - option to mark previous halakhot too",
+    },
   ],
   "3": [
     {
@@ -184,9 +200,8 @@ const CONTRIBUTORS: Record<
     avatar: "https://github.com/meirpro.png",
   },
   "4": {
-    name: { he: "הרב שוקי", en: "Rabbi Shuki" },
-    avatar: "/rabbi.jpeg",
-    link: "https://wa.me/972586030770?text=אהבתי%20את%20האפליקציה%20של%20הרמבם",
+    name: { he: "מאיר", en: "Meir" },
+    avatar: "https://github.com/meirpro.png",
   },
 };
 
