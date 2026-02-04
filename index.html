@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="changelog.js"></script>
   <style>
     * {
       margin: 0;
@@ -404,6 +405,12 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
+    }
+
+    .settings-scrollable {
+      flex: 1;
+      overflow-y: auto;
     }
 
     .settings-section {
@@ -680,7 +687,70 @@
       font-size: 0.875rem;
       color: #92400e;
       font-weight: 500;
-      margin-top: auto;
+    }
+
+    .changelog-version {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .changelog-version:last-child {
+      margin-bottom: 0;
+    }
+
+    .changelog-version summary {
+      padding: 0.75rem;
+      cursor: pointer;
+      background: #f9fafb;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #374151;
+      user-select: none;
+      list-style: none;
+    }
+
+    .changelog-version summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .changelog-version summary:hover {
+      background: #f3f4f6;
+    }
+
+    .changelog-arrow {
+      color: #6b7280;
+      transition: transform 0.2s;
+      display: inline-block;
+      margin-left: 0.5rem;
+    }
+
+    .changelog-version[open] .changelog-arrow {
+      transform: rotate(-90deg);
+    }
+
+    .changelog-items {
+      padding: 0.75rem;
+      background: white;
+    }
+
+    .changelog-item {
+      padding: 0.5rem 0;
+      font-size: 0.875rem;
+      color: #6b7280;
+      line-height: 1.5;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .changelog-item:last-child {
+      border-bottom: none;
+    }
+
+    .changelog-item::before {
+      content: '• ';
+      color: #2563eb;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -731,34 +801,41 @@
       <button class="close-btn" id="closeBtn" aria-label="סגור">×</button>
     </div>
     <div class="settings-content">
-      <div class="settings-section">
-        <label class="settings-label">תאריך התחלת לימוד</label>
-        <div class="date-row">
-          <button class="btn btn-primary btn-compact" id="setCycleBtn">מחזור 46</button>
-          <input type="date" class="date-input" id="startDateInput">
+      <div class="settings-scrollable">
+        <div class="settings-section">
+          <label class="settings-label">תאריך התחלת לימוד</label>
+          <div class="date-row">
+            <button class="btn btn-primary btn-compact" id="setCycleBtn">מחזור 46</button>
+            <input type="date" class="date-input" id="startDateInput">
+          </div>
         </div>
-      </div>
 
-      <div class="settings-section">
-        <label class="settings-label">מספר פרקים ליום</label>
-        <div class="toggle-container">
-          <button class="toggle-btn active" data-value="3">3 פרקים</button>
-          <button class="toggle-btn" data-value="1">פרק אחד</button>
+        <div class="settings-section">
+          <label class="settings-label">מספר פרקים ליום</label>
+          <div class="toggle-container">
+            <button class="toggle-btn active" data-value="3">3 פרקים</button>
+            <button class="toggle-btn" data-value="1">פרק אחד</button>
+          </div>
         </div>
-      </div>
 
-      <div class="settings-section">
-        <label class="settings-label">מיקום ושקיעה</label>
-        <div style="display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 8px; font-size: 0.875rem; color: #374151;">
-          <div id="locationText">מיקום: תל אביב (ברירת מחדל)</div>
-          <div id="sunsetText">שקיעה: 18:00</div>
+        <div class="settings-section">
+          <label class="settings-label">מיקום ושקיעה</label>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 8px; font-size: 0.875rem; color: #374151;">
+            <div id="locationText">מיקום: תל אביב (ברירת מחדל)</div>
+            <div id="sunsetText">שקיעה: 18:00</div>
+          </div>
+          <button class="btn btn-primary" id="updateLocationBtn">עדכן מיקום ושקיעה</button>
         </div>
-        <button class="btn btn-primary" id="updateLocationBtn">עדכן מיקום ושקיעה</button>
-      </div>
 
-      <div class="settings-section">
-        <p class="settings-warning">⚠️ פעולה זו תמחק את כל ההתקדמות שלך</p>
-        <button class="btn btn-danger" id="resetBtn">איפוס מלא</button>
+        <div class="settings-section">
+          <p class="settings-warning">⚠️ פעולה זו תמחק את כל ההתקדמות שלך</p>
+          <button class="btn btn-danger" id="resetBtn">איפוס מלא</button>
+        </div>
+
+        <div class="settings-section">
+          <label class="settings-label">רשימת שינויים</label>
+          <div id="changelogContainer"></div>
+        </div>
       </div>
 
       <div class="settings-dedication">
@@ -1937,6 +2014,51 @@
     }
 
     // ============================================================================
+    // Changelog
+    // ============================================================================
+    function loadChangelog() {
+      try {
+        const container = document.getElementById('changelogContainer');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        // Get version numbers and sort in descending order
+        const versions = Object.keys(CHANGELOG).sort((a, b) => parseInt(b) - parseInt(a));
+
+        versions.forEach(version => {
+          const changes = CHANGELOG[version];
+          if (!changes || changes.length === 0) return;
+
+          const details = document.createElement('details');
+          details.className = 'changelog-version';
+          if (version === versions[0]) {
+            details.open = true; // Auto-open latest version
+          }
+
+          const summary = document.createElement('summary');
+          summary.innerHTML = `<span class="changelog-arrow">◀</span> גרסה ${version}`;
+
+          const itemsDiv = document.createElement('div');
+          itemsDiv.className = 'changelog-items';
+
+          changes.forEach(change => {
+            const item = document.createElement('div');
+            item.className = 'changelog-item';
+            item.textContent = change;
+            itemsDiv.appendChild(item);
+          });
+
+          details.appendChild(summary);
+          details.appendChild(itemsDiv);
+          container.appendChild(details);
+        });
+      } catch (error) {
+        console.error('Failed to load changelog:', error);
+      }
+    }
+
+    // ============================================================================
     // App Initialization
     // ============================================================================
     async function init() {
@@ -1966,6 +2088,9 @@
 
         // Update location display after everything is loaded
         updateLocationDisplay();
+
+        // Load changelog
+        loadChangelog();
 
         // Open settings on first visit
         if (firstVisit) {
