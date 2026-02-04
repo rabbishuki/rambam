@@ -265,9 +265,15 @@
       transition: none;
     }
 
-    .halakha-card.removing {
-      opacity: 0;
-      transform: translateX(120%);
+    .halakha-card.completed {
+      opacity: 0.4;
+      background: #f3f4f6;
+      border-color: #d1d5db;
+    }
+
+    .halakha-card.completed .halakha-text {
+      text-decoration: line-through;
+      color: #6b7280;
     }
 
     .halakha-text {
@@ -1031,10 +1037,12 @@
 
         halakhot.forEach((text, index) => {
           const isDone = done[`${date}:${index}`];
-          if (isDone) return; // Skip completed halakhot
 
           const card = document.createElement('div');
           card.className = 'halakha-card';
+          if (isDone) {
+            card.classList.add('completed');
+          }
           card.dataset.date = date;
           card.dataset.index = index;
 
@@ -1046,10 +1054,6 @@
           attachSwipeHandler(card);
           container.appendChild(card);
         });
-
-        if (container.children.length === 0) {
-          container.innerHTML = '<div class="loading">✅ הושלם!</div>';
-        }
       } catch (error) {
         console.error('Failed to load halakhot:', error);
         container.innerHTML = '<div class="loading">❌ שגיאה בטעינה</div>';
@@ -1089,10 +1093,9 @@
 
         if (isSwiping) {
           e.preventDefault();
-          if (deltaX > 0) {
-            card.style.transform = `translateX(${deltaX}px)`;
-            card.style.opacity = 1 - (deltaX / 300);
-          }
+          // Allow swiping in both directions
+          card.style.transform = `translateX(${deltaX}px)`;
+          card.style.opacity = 1 - (Math.abs(deltaX) / 300);
         }
       }, { passive: false });
 
@@ -1122,9 +1125,10 @@
           isSwiping = true;
         }
 
-        if (isSwiping && deltaX > 0) {
+        if (isSwiping) {
+          // Allow swiping in both directions
           card.style.transform = `translateX(${deltaX}px)`;
-          card.style.opacity = 1 - (deltaX / 300);
+          card.style.opacity = 1 - (Math.abs(deltaX) / 300);
         }
       });
 
@@ -1143,26 +1147,49 @@
         isMouseDown = false;
 
         const deltaX = currentX - startX;
+        const date = card.dataset.date;
+        const index = parseInt(card.dataset.index);
+        const done = getDone();
+        const isCompleted = done[`${date}:${index}`];
 
-        if (isSwiping && deltaX > 100) {
-          card.classList.add('removing');
+        // Swipe right: mark as done
+        if (isSwiping && deltaX > 100 && !isCompleted) {
+          card.classList.add('completed');
+          markDone(date, index);
+          renderStats();
 
-          setTimeout(() => {
-            const date = card.dataset.date;
-            const index = parseInt(card.dataset.index);
-            markDone(date, index);
-            card.remove();
-            renderStats();
-
-            const container = card.parentElement;
-            if (container && container.children.length === 0) {
-              container.innerHTML = '<div class="loading">✅ הושלם!</div>';
-            }
-          }, 300);
-        } else {
-          card.style.transform = '';
-          card.style.opacity = '';
+          // Scroll to next card
+          const nextCard = card.nextElementSibling;
+          if (nextCard && nextCard.classList.contains('halakha-card')) {
+            const nextCardTop = nextCard.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({
+              top: nextCardTop - 300,
+              behavior: 'smooth'
+            });
+          }
         }
+        // Swipe left: unmark as done
+        else if (isSwiping && deltaX < -100 && isCompleted) {
+          card.classList.remove('completed');
+          const done = getDone();
+          delete done[`${date}:${index}`];
+          saveDone(done);
+          renderStats();
+
+          // Scroll to previous card
+          const prevCard = card.previousElementSibling;
+          if (prevCard && prevCard.classList.contains('halakha-card')) {
+            const prevCardTop = prevCard.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({
+              top: prevCardTop - 300,
+              behavior: 'smooth'
+            });
+          }
+        }
+
+        // Reset position
+        card.style.transform = '';
+        card.style.opacity = '';
 
         isSwiping = false;
         currentX = 0;
