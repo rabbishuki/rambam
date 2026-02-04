@@ -44,3 +44,6 @@ next-env.d.ts
 *.mhtml
 .playwright-mcp/
 .claude/settings.local.json
+
+# Cloudflare build output
+.open-next/
