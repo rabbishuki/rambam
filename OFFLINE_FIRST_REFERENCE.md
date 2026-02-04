@@ -285,6 +285,300 @@ runtimeCaching: [
 
 ---
 
+---
+
+## Source 3: Bangle.io
+
+**URL:** https://bangle.io
+**Privacy:** https://bangle.io/privacy
+
+A local-first markdown note-taking app that offers two storage backends:
+1. Browser storage (IndexedDB)
+2. Local file system (File System Access API)
+
+### Their Approach
+
+```
+User opens Bangle.io
+    ↓
+Choose workspace location:
+    ├── "Browser Storage" → IndexedDB (works everywhere)
+    └── "Local Folder" → File System Access API (limited support)
+```
+
+**Key insight:** They give users the choice, rather than forcing one approach.
+
+---
+
+## File System Access API: Should You Use It?
+
+### Browser Support (as of 2025)
+
+| Browser | Support | Notes |
+|---------|---------|-------|
+| **Chrome/Edge** | ✅ Full | Chromium-based, full support |
+| **Safari** | ⚠️ Partial | Desktop Safari 15.2+, iOS Safari limited |
+| **Firefox** | ❌ None | Explicitly declined to implement |
+| **Mobile Chrome** | ❌ None | Not supported on Android |
+| **PWA (iOS)** | ❌ None | Not available in home screen PWAs |
+
+**Overall compatibility score: ~30%** of global users
+
+### What It Enables
+
+```javascript
+// Open a file picker and get persistent access
+const fileHandle = await window.showOpenFilePicker()
+const file = await fileHandle.getFile()
+const contents = await file.text()
+
+// Write back to the same file (no "Save As" dialog)
+const writable = await fileHandle.createWritable()
+await writable.write(newContents)
+await writable.close()
+
+// Open a directory and access all files
+const dirHandle = await window.showDirectoryPicker()
+for await (const entry of dirHandle.values()) {
+  console.log(entry.name)
+}
+```
+
+### Fallback Library: browser-fs-access
+
+[GoogleChromeLabs/browser-fs-access](https://github.com/GoogleChromeLabs/browser-fs-access) provides graceful fallbacks:
+
+```javascript
+import { fileOpen, fileSave, supported } from 'browser-fs-access'
+
+// Feature detection
+if (supported) {
+  console.log('Native File System Access API available')
+} else {
+  console.log('Using fallback (<input type="file">)')
+}
+
+// Works everywhere, native where possible
+const file = await fileOpen({
+  mimeTypes: ['application/json'],
+  extensions: ['.json'],
+})
+
+// Save (native = overwrites, fallback = downloads)
+await fileSave(blob, {
+  fileName: 'backup.json',
+  extensions: ['.json'],
+})
+```
+
+**Limitations of fallback:**
+- Can't overwrite files (always "Save As" / download)
+- Can't access directories
+- No persistent file handles
+- Different UX between browsers
+
+---
+
+## Better Alternative: Origin Private File System (OPFS)
+
+OPFS is a **sandboxed file system** that works in ALL modern browsers, including Firefox and mobile.
+
+### Browser Support
+
+| Browser | Support |
+|---------|---------|
+| Chrome 86+ | ✅ |
+| Edge 86+ | ✅ |
+| Firefox 111+ | ✅ |
+| Safari 15.2+ | ✅ |
+| iOS Safari 15.2+ | ✅ |
+| Android Chrome | ✅ |
+
+**Overall compatibility: ~95%** of modern browsers
+
+### What It Is
+
+```
+Regular File System          OPFS
+─────────────────────────    ─────────────────────────
+User's Documents/            Browser's private storage/
+├── myfile.txt               ├── {origin}/
+├── photos/                  │   ├── file1
+└── ...                      │   ├── file2
+                             │   └── ...
+User can see/access          Invisible to user
+                             Only your app can access
+```
+
+### OPFS vs Other Storage
+
+| Feature | localStorage | IndexedDB | OPFS |
+|---------|-------------|-----------|------|
+| **Capacity** | 5-10 MB | 50-500 MB | GB+ |
+| **Speed** | Slow | Medium | Fast (2-10x) |
+| **Async** | ❌ Sync only | ✅ | ✅ |
+| **Binary data** | ❌ | ✅ | ✅ |
+| **File-like API** | ❌ | ❌ | ✅ |
+| **Web Worker** | ❌ | ✅ | ✅ (sync access!) |
+
+### Basic OPFS Usage
+
+```javascript
+// Get the root directory
+const root = await navigator.storage.getDirectory()
+
+// Create/open a file
+const fileHandle = await root.getFileHandle('halakhot.json', { create: true })
+
+// Read
+const file = await fileHandle.getFile()
+const contents = await file.text()
+
+// Write
+const writable = await fileHandle.createWritable()
+await writable.write(JSON.stringify(data))
+await writable.close()
+
+// Create directories
+const dataDir = await root.getDirectoryHandle('prefetched', { create: true })
+```
+
+### High-Performance Sync Access (Web Worker)
+
+```javascript
+// In a Web Worker - synchronous file access!
+const root = await navigator.storage.getDirectory()
+const fileHandle = await root.getFileHandle('data.bin', { create: true })
+const accessHandle = await fileHandle.createSyncAccessHandle()
+
+// Synchronous read/write (very fast)
+const buffer = new ArrayBuffer(1024)
+accessHandle.read(buffer, { at: 0 })
+accessHandle.write(buffer, { at: 0 })
+accessHandle.flush()
+accessHandle.close()
+```
+
+### Safari/iOS Considerations
+
+**Important for PWAs:**
+- Safari has a **7-day eviction policy** for script-writable storage
+- BUT this **does not apply to installed PWAs** (added to home screen)
+- PWAs have separate storage containers from Safari
+- Storage quota varies (300MB - several GB depending on device)
+
+```javascript
+// Check available storage
+const estimate = await navigator.storage.estimate()
+console.log(`Used: ${estimate.usage} / ${estimate.quota} bytes`)
+
+// Request persistent storage (prevents eviction)
+const persistent = await navigator.storage.persist()
+if (persistent) {
+  console.log('Storage will not be evicted')
+}
+```
+
+---
+
+## Recommendation for Rambam
+
+### Don't Use File System Access API
+
+- Firefox users (10%+ of traffic) would be broken
+- Mobile users would be broken
+- Complex fallback handling
+- Not worth the complexity for this use case
+
+### Do Use OPFS + IndexedDB
+
+```
+Storage Strategy:
+├── Settings, completion status → Zustand + localStorage (small, fast)
+├── Day metadata, Hebrew dates → IndexedDB (structured queries)
+└── Prefetched halakha texts → OPFS (large, fast binary access)
+```
+
+### Implementation Sketch
+
+**src/lib/storage/opfs.ts:**
+```typescript
+const STORAGE_DIR = 'halakhot'
+
+export async function saveHalakhot(date: string, data: DayData): Promise<void> {
+  const root = await navigator.storage.getDirectory()
+  const dir = await root.getDirectoryHandle(STORAGE_DIR, { create: true })
+  const file = await dir.getFileHandle(`${date}.json`, { create: true })
+
+  const writable = await file.createWritable()
+  await writable.write(JSON.stringify(data))
+  await writable.close()
+}
+
+export async function loadHalakhot(date: string): Promise<DayData | null> {
+  try {
+    const root = await navigator.storage.getDirectory()
+    const dir = await root.getDirectoryHandle(STORAGE_DIR)
+    const file = await dir.getFileHandle(`${date}.json`)
+    const blob = await file.getFile()
+    return JSON.parse(await blob.text())
+  } catch {
+    return null // File doesn't exist
+  }
+}
+
+export async function listPrefetchedDates(): Promise<string[]> {
+  const root = await navigator.storage.getDirectory()
+  try {
+    const dir = await root.getDirectoryHandle(STORAGE_DIR)
+    const dates: string[] = []
+    for await (const entry of dir.values()) {
+      if (entry.kind === 'file' && entry.name.endsWith('.json')) {
+        dates.push(entry.name.replace('.json', ''))
+      }
+    }
+    return dates
+  } catch {
+    return []
+  }
+}
+```
+
+---
+
+## Updated Storage Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Rambam PWA                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│   Zustand Store (in-memory)                                 │
+│   └── Hydrates from localStorage on load                    │
+│                                                              │
+│   localStorage (~5MB)                                        │
+│   ├── rambam-storage (Zustand persist)                      │
+│   │   ├── startDate, chaptersPerDay, autoMarkPrevious       │
+│   │   └── completion map                                    │
+│   └── rambam-location                                       │
+│       └── coords, cityName, sunset                          │
+│                                                              │
+│   OPFS (GB+, fast)                                          │
+│   └── halakhot/                                             │
+│       ├── 2026-02-04.json  (prefetched day data + texts)    │
+│       ├── 2026-02-05.json                                   │
+│       └── ...                                               │
+│                                                              │
+│   Service Worker Cache                                       │
+│   ├── static-assets (app shell)                             │
+│   ├── sefaria-texts (API responses)                         │
+│   └── hebcal (zmanim responses)                             │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Additional Resources
 
 - [Awesome PWA List](https://github.com/nicholasadamou/awesome-pwa) - Curated PWA examples
@@ -292,6 +586,10 @@ runtimeCaching: [
 - [Automerge](https://automerge.org/) - CRDT library for JS
 - [PowerSync](https://www.powersync.com/) - Local-first sync service
 - [Martin Kleppmann's talk](https://martin.kleppmann.com/2019/10/23/local-first-at-onward.html) - Video presentation
+- [MDN: Origin Private File System](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system) - OPFS documentation
+- [web.dev: OPFS](https://web.dev/articles/origin-private-file-system) - OPFS guide
+- [browser-fs-access](https://github.com/GoogleChromeLabs/browser-fs-access) - File System Access polyfill
+- [Kiwix PWA Case Study](https://web.dev/case-studies/kiwix) - Storing GBs offline
 
 ---
 
