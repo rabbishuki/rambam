@@ -26,14 +26,12 @@ interface SwipeHandlers {
 interface UseSwipeGestureOptions {
   /** Minimum distance in pixels to trigger swipe (default: 100) */
   threshold?: number;
-  /** Called when swiped right (mark complete) */
+  /** Called when swiped right */
   onSwipeRight?: () => void;
-  /** Called when swiped left (mark incomplete) */
+  /** Called when swiped left */
   onSwipeLeft?: () => void;
   /** Called on double tap/click (toggle) */
   onDoubleTap?: () => void;
-  /** Whether the item is already completed */
-  isCompleted?: boolean;
 }
 
 interface UseSwipeGestureReturn {
@@ -47,13 +45,7 @@ const DOUBLE_TAP_DELAY = 300;
 export function useSwipeGesture(
   options: UseSwipeGestureOptions = {},
 ): UseSwipeGestureReturn {
-  const {
-    threshold = 100,
-    onSwipeRight,
-    onSwipeLeft,
-    onDoubleTap,
-    isCompleted = false,
-  } = options;
+  const { threshold = 100, onSwipeRight, onSwipeLeft, onDoubleTap } = options;
 
   const [state, setState] = useState<SwipeState>({
     deltaX: 0,
@@ -95,12 +87,12 @@ export function useSwipeGesture(
     const { deltaX, isSwiping } = state;
 
     if (isSwiping) {
-      // Swipe right: mark as complete (only if not already completed)
-      if (deltaX > threshold && !isCompleted) {
+      // Swipe right - handler decides what to do based on state
+      if (deltaX > threshold) {
         onSwipeRight?.();
       }
-      // Swipe left: mark as incomplete (only if already completed)
-      else if (deltaX < -threshold && isCompleted) {
+      // Swipe left - handler decides what to do based on state
+      else if (deltaX < -threshold) {
         onSwipeLeft?.();
       }
     }
@@ -113,7 +105,7 @@ export function useSwipeGesture(
       direction: null,
     });
     isMouseDown.current = false;
-  }, [state, threshold, isCompleted, onSwipeRight, onSwipeLeft]);
+  }, [state, threshold, onSwipeRight, onSwipeLeft]);
 
   const handleDoubleTap = useCallback(() => {
     const now = Date.now();

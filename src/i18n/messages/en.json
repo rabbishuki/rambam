@@ -99,6 +99,19 @@
     "later": "Maybe later",
     "refresh": "Refresh"
   },
+  "swipe": {
+    "markRead": "Mark read",
+    "markAllPrevious": "Mark all ({count})",
+    "markUnread": "Mark unread"
+  },
+  "autoMarkPrompt": {
+    "title": "Mark previous halakhot",
+    "message": "There are {count} unread halakhot before this one. Mark them too?",
+    "always": "Always",
+    "justOnce": "Just this time",
+    "onlyThis": "Only this one",
+    "cancel": "Cancel"
+  },
   "messages": {
     "loading": "Loading...",
     "error": "Error loading",
@@ -113,5 +126,27 @@
   "dates": {
     "today": "Today",
     "default": "default"
+  },
+  "offline": {
+    "indicator": "Offline mode - data saved locally",
+    "noConnection": "No internet connection",
+    "noData": "No cached data. Connect to the internet to load content.",
+    "tryAgain": "Try again",
+    "downloadSection": "Download for Offline",
+    "downloadDescription": "Download next week's content for offline use",
+    "downloadWeek": "Download week ahead",
+    "downloading": "Downloading... {percent}%",
+    "downloadComplete": "Download complete!",
+    "downloadRetry": "Try again",
+    "downloadSuccess": "7 days downloaded for offline use",
+    "downloadFailed": "Failed {failed} of {total} days",
+    "downloadingDate": "Downloading data for {date}"
+  },
+  "update": {
+    "appAvailable": "Update available!",
+    "contentAvailable": "New content available",
+    "refresh": "Refresh",
+    "refreshContent": "Refresh content",
+    "later": "Later"
   }
 }

@@ -99,6 +99,19 @@
     "later": "אולי מאוחר יותר",
     "refresh": "רענן"
   },
+  "swipe": {
+    "markRead": "נקרא",
+    "markAllPrevious": "סמן עד כאן ({count})",
+    "markUnread": "לא נקרא"
+  },
+  "autoMarkPrompt": {
+    "title": "סימון הלכות קודמות",
+    "message": "יש {count} הלכות קודמות שעוד לא נקראו. האם לסמן גם אותן?",
+    "always": "תמיד",
+    "justOnce": "רק הפעם",
+    "onlyThis": "רק את זו",
+    "cancel": "ביטול"
+  },
   "messages": {
     "loading": "טוען הלכות...",
     "error": "שגיאה בטעינה",
@@ -113,5 +126,27 @@
   "dates": {
     "today": "היום",
     "default": "ברירת מחדל"
+  },
+  "offline": {
+    "indicator": "מצב לא מקוון - הנתונים נשמרים מקומית",
+    "noConnection": "אין חיבור לאינטרנט",
+    "noData": "אין נתונים שמורים. התחבר לאינטרנט כדי לטעון את הלימוד.",
+    "tryAgain": "נסה שוב",
+    "downloadSection": "הורדה לשימוש אופליין",
+    "downloadDescription": "הורד את התוכן של השבוע הקרוב לשימוש ללא אינטרנט",
+    "downloadWeek": "הורד שבוע קדימה",
+    "downloading": "מוריד... {percent}%",
+    "downloadComplete": "ההורדה הושלמה!",
+    "downloadRetry": "נסה שוב",
+    "downloadSuccess": "7 ימים הורדו בהצלחה לשימוש אופליין",
+    "downloadFailed": "נכשלו {failed} ימים מתוך {total}",
+    "downloadingDate": "מוריד נתונים עבור {date}"
+  },
+  "update": {
+    "appAvailable": "גרסה חדשה זמינה!",
+    "contentAvailable": "תוכן חדש זמין",
+    "refresh": "רענן",
+    "refreshContent": "רענן תוכן",
+    "later": "מאוחר יותר"
   }
 }

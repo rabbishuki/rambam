@@ -21,11 +21,14 @@ interface AppStore extends AppSettings {
   done: CompletionMap;
   // Migration flag
   hasMigratedLegacy: boolean;
+  // Has user seen the auto-mark prompt (first time marking multiple)
+  hasSeenAutoMarkPrompt: boolean;
 
   // Settings actions
   setStudyPath: (path: StudyPath) => void;
   setTextLanguage: (lang: TextLanguage) => void;
   setAutoMarkPrevious: (enabled: boolean) => void;
+  setHasSeenAutoMarkPrompt: (seen: boolean) => void;
   setStartDate: (path: StudyPath, date: string) => void;
 
   // Day data actions
@@ -70,6 +73,7 @@ export const useAppStore = create<AppStore>()(
       },
       done: {},
       hasMigratedLegacy: false,
+      hasSeenAutoMarkPrompt: false,
 
       // Settings actions
       setStudyPath: (path) => set({ studyPath: path }),
@@ -77,6 +81,8 @@ export const useAppStore = create<AppStore>()(
       setTextLanguage: (lang) => set({ textLanguage: lang }),
 
       setAutoMarkPrevious: (enabled) => set({ autoMarkPrevious: enabled }),
+
+      setHasSeenAutoMarkPrompt: (seen) => set({ hasSeenAutoMarkPrompt: seen }),
 
       setStartDate: (path, date) =>
         set((state) => ({
@@ -200,16 +206,44 @@ export const useAppStore = create<AppStore>()(
     {
       name: "rambam-app-storage",
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        // Only persist these fields
-        studyPath: state.studyPath,
-        textLanguage: state.textLanguage,
-        autoMarkPrevious: state.autoMarkPrevious,
-        startDates: state.startDates,
-        days: state.days,
-        done: state.done,
-        hasMigratedLegacy: state.hasMigratedLegacy,
-      }),
+      partialize: (state) => {
+        // Strip texts and chapterBreaks from days (they're now in IndexedDB)
+        const cleanedDays: typeof state.days = {
+          rambam3: {},
+          rambam1: {},
+          mitzvot: {},
+        };
+
+        for (const path of Object.keys(state.days) as Array<
+          keyof typeof state.days
+        >) {
+          const pathDays = state.days[path] || {};
+          for (const [date, dayData] of Object.entries(pathDays)) {
+            if (dayData) {
+              cleanedDays[path][date] = {
+                he: dayData.he || "",
+                en: dayData.en,
+                ref: dayData.ref || "",
+                count: dayData.count || 0,
+                heDate: dayData.heDate,
+                // texts and chapterBreaks are intentionally excluded
+              };
+            }
+          }
+        }
+
+        return {
+          // Only persist these fields
+          studyPath: state.studyPath,
+          textLanguage: state.textLanguage,
+          autoMarkPrevious: state.autoMarkPrevious,
+          hasSeenAutoMarkPrompt: state.hasSeenAutoMarkPrompt,
+          startDates: state.startDates,
+          days: cleanedDays,
+          done: state.done,
+          hasMigratedLegacy: state.hasMigratedLegacy,
+        };
+      },
     },
   ),
 );

@@ -17,14 +17,7 @@ interface LocationSetupDialogProps {
   onComplete: () => void;
 }
 
-type Step =
-  | "language"
-  | "path"
-  | "textLang"
-  | "autoMark"
-  | "choice"
-  | "manual"
-  | "loading";
+type Step = "language" | "path" | "textLang" | "choice" | "manual" | "loading";
 
 /**
  * Dialog for initial app setup:
@@ -50,7 +43,6 @@ export function LocationSetupDialog({
   const [selectedPath, setSelectedPath] = useState<StudyPath>("rambam3");
   const [selectedTextLang, setSelectedTextLang] =
     useState<TextLanguage>("hebrew");
-  const [selectedAutoMark, setSelectedAutoMark] = useState(false);
 
   const setLocation = useLocationStore((state) => state.setLocation);
   const setSunset = useLocationStore((state) => state.setSunset);
@@ -59,7 +51,6 @@ export function LocationSetupDialog({
   );
   const setStudyPath = useAppStore((state) => state.setStudyPath);
   const setTextLanguage = useAppStore((state) => state.setTextLanguage);
-  const setAutoMarkPrevious = useAppStore((state) => state.setAutoMarkPrevious);
 
   // Handle language selection
   const handleSelectLanguage = useCallback(
@@ -81,17 +72,11 @@ export function LocationSetupDialog({
     setStep("textLang");
   }, [selectedPath, setStudyPath]);
 
-  // Handle text language selection and continue to auto-mark
+  // Handle text language selection and continue to location
   const handleTextLangContinue = useCallback(() => {
     setTextLanguage(selectedTextLang);
-    setStep("autoMark");
-  }, [selectedTextLang, setTextLanguage]);
-
-  // Handle auto-mark selection and continue to location
-  const handleAutoMarkContinue = useCallback(() => {
-    setAutoMarkPrevious(selectedAutoMark);
     setStep("choice");
-  }, [selectedAutoMark, setAutoMarkPrevious]);
+  }, [selectedTextLang, setTextLanguage]);
 
   // Handle "Use My Location" - will trigger browser permission
   const handleUseMyLocation = useCallback(async () => {
@@ -232,9 +217,7 @@ export function LocationSetupDialog({
             ? t("pathTitle")
             : step === "textLang"
               ? t("textLangTitle")
-              : step === "autoMark"
-                ? t("autoMarkTitle")
-                : t("title")
+              : t("title")
       }
       onClose={() => {}}
     >
@@ -528,102 +511,6 @@ export function LocationSetupDialog({
           </>
         )}
 
-        {/* Step 4: Auto-Mark Previous */}
-        {step === "autoMark" && (
-          <>
-            <div className="text-5xl mb-4">✓</div>
-            <p className="text-gray-600 mb-6">{t("autoMarkDescription")}</p>
-
-            <div className="space-y-3 mb-6">
-              {/* Off (default) */}
-              <button
-                type="button"
-                onClick={() => setSelectedAutoMark(false)}
-                className={`
-                  w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-start
-                  ${
-                    !selectedAutoMark
-                      ? "border-blue-600 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                  }
-                `}
-              >
-                <div
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    !selectedAutoMark ? "border-blue-600" : "border-gray-300"
-                  }`}
-                >
-                  {!selectedAutoMark && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-                  )}
-                </div>
-                <div>
-                  <div
-                    className={`font-medium ${!selectedAutoMark ? "text-blue-600" : ""}`}
-                  >
-                    {t("autoMarkOff")}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {t("autoMarkOffDescription")}
-                  </div>
-                </div>
-              </button>
-
-              {/* On */}
-              <button
-                type="button"
-                onClick={() => setSelectedAutoMark(true)}
-                className={`
-                  w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-start
-                  ${
-                    selectedAutoMark
-                      ? "border-blue-600 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                  }
-                `}
-              >
-                <div
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    selectedAutoMark ? "border-blue-600" : "border-gray-300"
-                  }`}
-                >
-                  {selectedAutoMark && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-                  )}
-                </div>
-                <div>
-                  <div
-                    className={`font-medium ${selectedAutoMark ? "text-blue-600" : ""}`}
-                  >
-                    {t("autoMarkOn")}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {t("autoMarkOnDescription")}
-                  </div>
-                </div>
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <Button
-                variant="primary"
-                fullWidth
-                onClick={handleAutoMarkContinue}
-              >
-                {t("continue")}
-              </Button>
-
-              <Button
-                variant="secondary"
-                fullWidth
-                onClick={() => setStep("textLang")}
-              >
-                ← {t("back")}
-              </Button>
-            </div>
-          </>
-        )}
-
         {/* Loading state */}
         {step === "loading" && (
           <div className="py-8">
@@ -663,7 +550,7 @@ export function LocationSetupDialog({
               <Button
                 variant="secondary"
                 fullWidth
-                onClick={() => setStep("autoMark")}
+                onClick={() => setStep("textLang")}
               >
                 ← {t("back")}
               </Button>
