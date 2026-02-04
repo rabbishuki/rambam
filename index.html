@@ -48,6 +48,11 @@
       position: sticky;
       top: 0;
       z-index: 101;
+      transition: background 0.3s;
+    }
+
+    header.viewing-other-date {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
     }
 
     .header-content {
@@ -67,7 +72,20 @@
       font-weight: 700;
     }
 
-    .settings-btn {
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .header-date-picker {
+      display: none;
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .header-btn {
       background: rgba(255, 255, 255, 0.2);
       border: none;
       color: white;
@@ -82,7 +100,7 @@
       transition: background 0.2s;
     }
 
-    .settings-btn:active {
+    .header-btn:active {
       background: rgba(255, 255, 255, 0.3);
     }
 
@@ -668,12 +686,23 @@
 </head>
 <body>
   <div class="container">
-    <header>
+    <header id="mainHeader">
       <div class="header-content">
         <img src="logo.png" alt="Logo" class="logo">
         <h1>רמב"ם יומי</h1>
       </div>
-      <button class="settings-btn" id="settingsBtn" aria-label="הגדרות">⚙</button>
+      <div class="header-actions">
+        <input type="date" class="header-date-picker" id="headerDatePicker" aria-label="בחר תאריך">
+        <button class="header-btn" id="calendarBtn" aria-label="בחר תאריך">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </button>
+        <button class="header-btn" id="settingsBtn" aria-label="הגדרות">⚙</button>
+      </div>
     </header>
 
     <div class="stats">
@@ -1581,6 +1610,120 @@
         location.reload();
       }
     });
+
+    // ============================================================================
+    // Calendar Date Picker
+    // ============================================================================
+    let viewingDate = null; // null means viewing normal mode (all days)
+
+    const calendarBtn = document.getElementById('calendarBtn');
+    const headerDatePicker = document.getElementById('headerDatePicker');
+    const mainHeader = document.getElementById('mainHeader');
+
+    calendarBtn.addEventListener('click', () => {
+      if (viewingDate) {
+        // Already viewing a specific date, return to normal mode
+        viewingDate = null;
+        renderDays();
+        mainHeader.classList.remove('viewing-other-date');
+      } else {
+        // Open date picker
+        headerDatePicker.showPicker();
+      }
+    });
+
+    headerDatePicker.addEventListener('change', async (e) => {
+      const selectedDate = e.target.value;
+      viewingDate = selectedDate;
+
+      const today = getTodayInIsrael();
+      if (selectedDate !== today) {
+        mainHeader.classList.add('viewing-other-date');
+      } else {
+        mainHeader.classList.remove('viewing-other-date');
+      }
+
+      await renderSingleDay(selectedDate);
+    });
+
+    async function renderSingleDay(date) {
+      const days = getDays();
+      const done = getDone();
+      const today = getTodayInIsrael();
+      const mainContent = document.getElementById('mainContent');
+
+      // Check if we have this date cached
+      let dayData = days[date];
+
+      // If not cached, fetch it from Sefaria
+      if (!dayData) {
+        mainContent.innerHTML = '<div class="loading">טוען...</div>';
+
+        try {
+          const { he, ref } = await fetchCalendar(date);
+          const { halakhot } = await fetchText(ref);
+          dayData = { he, ref, count: halakhot.length };
+
+          // Cache it
+          days[date] = dayData;
+          saveDays(days);
+        } catch (error) {
+          console.error('Failed to fetch date:', error);
+          mainContent.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">❌</div>
+              <div class="empty-state-title">שגיאה</div>
+              <div class="empty-state-text">לא ניתן לטעון את הנתונים לתאריך זה</div>
+            </div>
+          `;
+          return;
+        }
+      }
+
+      const doneCount = Object.keys(done).filter(key =>
+        key.startsWith(`${date}:`)
+      ).length;
+      const isComplete = doneCount >= dayData.count;
+
+      mainContent.innerHTML = '';
+
+      const details = document.createElement('details');
+      details.className = `day-group ${isComplete ? 'completed' : ''}`;
+      details.dataset.date = date;
+      details.dataset.ref = dayData.ref;
+      details.open = true; // Auto-open when viewing single day
+
+      const isToday = date === today;
+      const dateLabel = isToday ? 'היום' : formatHebrewDate(date);
+
+      const showCheckBtn = !isComplete;
+      const showResetBtn = doneCount > 0;
+
+      details.innerHTML = `
+        <summary>
+          <div class="day-header">
+            <span class="day-arrow">◀</span>
+            <div class="day-info">
+              <div>${dayData.he}</div>
+              <div class="day-meta">${dateLabel} • ${doneCount}/${dayData.count}</div>
+            </div>
+          </div>
+          <div class="day-actions">
+            <button class="day-action-btn check" data-action="complete" data-date="${date}" title="סמן הכל כהושלם" aria-label="סמן הכל כהושלם" style="display: ${showCheckBtn ? '' : 'none'}">✓</button>
+            <button class="day-action-btn reset" data-action="reset" data-date="${date}" title="אפס יום" aria-label="אפס יום" style="display: ${showResetBtn ? '' : 'none'}">↺</button>
+          </div>
+        </summary>
+        <div class="cards-container" data-date="${date}"></div>
+      `;
+
+      mainContent.appendChild(details);
+
+      // Attach listeners
+      details.addEventListener('toggle', handleDetailsToggle);
+      details.querySelectorAll('.day-action-btn').forEach(btn => {
+        btn.addEventListener('click', handleDayAction);
+      });
+    }
 
     // ============================================================================
     // Service Worker Registration
