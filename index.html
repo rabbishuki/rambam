@@ -948,6 +948,54 @@
       document.getElementById('backlogValue').textContent = backlog;
     }
 
+    function updateDayHeader(date) {
+      const days = getDays();
+      const done = getDone();
+      const dayData = days[date];
+      if (!dayData) return;
+
+      const doneCount = Object.keys(done).filter(key =>
+        key.startsWith(`${date}:`)
+      ).length;
+      const isComplete = doneCount >= dayData.count;
+
+      // Find the details element for this date
+      const details = document.querySelector(`details[data-date="${date}"]`);
+      if (!details) return;
+
+      // Update the completed class
+      if (isComplete) {
+        details.classList.add('completed');
+      } else {
+        details.classList.remove('completed');
+      }
+
+      // Update the progress text
+      const dayMeta = details.querySelector('.day-meta');
+      const today = getTodayInIsrael();
+      const isToday = date === today;
+      const dateLabel = isToday ? 'היום' : formatHebrewDate(date);
+      dayMeta.textContent = `${dateLabel} • ${doneCount}/${dayData.count}`;
+
+      // Update button visibility
+      const checkBtn = details.querySelector('.day-action-btn.check');
+      const resetBtn = details.querySelector('.day-action-btn.reset');
+
+      // Hide check button if all done
+      if (isComplete) {
+        checkBtn.style.display = 'none';
+      } else {
+        checkBtn.style.display = '';
+      }
+
+      // Hide reset button if nothing done
+      if (doneCount === 0) {
+        resetBtn.style.display = 'none';
+      } else {
+        resetBtn.style.display = '';
+      }
+    }
+
     // ============================================================================
     // Rendering
     // ============================================================================
@@ -992,6 +1040,10 @@
         const isToday = date === today;
         const dateLabel = isToday ? 'היום' : formatHebrewDate(date);
 
+        // Determine button visibility
+        const showCheckBtn = !isComplete;
+        const showResetBtn = doneCount > 0;
+
         details.innerHTML = `
           <summary>
             <div class="day-header">
@@ -1002,8 +1054,8 @@
               </div>
             </div>
             <div class="day-actions">
-              <button class="day-action-btn check" data-action="complete" data-date="${date}" title="סמן הכל כהושלם" aria-label="סמן הכל כהושלם">✓</button>
-              <button class="day-action-btn reset" data-action="reset" data-date="${date}" title="אפס יום" aria-label="אפס יום">↺</button>
+              <button class="day-action-btn check" data-action="complete" data-date="${date}" title="סמן הכל כהושלם" aria-label="סמן הכל כהושלם" style="display: ${showCheckBtn ? '' : 'none'}">✓</button>
+              <button class="day-action-btn reset" data-action="reset" data-date="${date}" title="אפס יום" aria-label="אפס יום" style="display: ${showResetBtn ? '' : 'none'}">↺</button>
             </div>
           </summary>
           <div class="cards-container" data-date="${date}"></div>
@@ -1250,6 +1302,7 @@
           card.classList.add('completed');
           markDone(date, index);
           renderStats();
+          updateDayHeader(date);
 
           // Scroll to next card
           const nextCard = card.nextElementSibling;
@@ -1268,6 +1321,7 @@
           delete done[`${date}:${index}`];
           saveDone(done);
           renderStats();
+          updateDayHeader(date);
 
           // Scroll to previous card
           const prevCard = card.previousElementSibling;
