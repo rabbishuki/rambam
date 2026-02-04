@@ -393,6 +393,11 @@
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .settings-section:last-of-type {
+      border-bottom: none;
     }
 
     .settings-label {
@@ -401,13 +406,83 @@
       color: #374151;
     }
 
+    .toggle-container {
+      display: flex;
+      gap: 0.5rem;
+      background: #f3f4f6;
+      padding: 0.25rem;
+      border-radius: 8px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 0.625rem 1rem;
+      border: none;
+      background: transparent;
+      color: #6b7280;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn:hover {
+      color: #374151;
+    }
+
+    .toggle-btn.active {
+      background: white;
+      color: #2563eb;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .date-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: stretch;
+    }
+
+    .date-row > * {
+      flex: 1;
+      min-width: 0;
+    }
+
     .date-input {
       padding: 0.75rem;
-      border: 1px solid #d1d5db;
+      border: 2px solid #2563eb;
       border-radius: 8px;
       font-size: 1rem;
       font-family: inherit;
-      width: 100%;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .date-input-inactive {
+      background: #f3f4f6;
+      color: #9ca3af;
+      border-color: #d1d5db;
+    }
+
+    .btn-compact {
+      white-space: nowrap;
+      padding: 0.6rem 1rem;
+    }
+
+    .btn-secondary {
+      background: #f9fafb;
+      border-color: #e5e7eb;
+      color: #9ca3af;
+    }
+
+    .btn-secondary:hover {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+      color: #6b7280;
+    }
+
+    .btn-secondary:active {
+      background: #e5e7eb;
     }
 
     .btn {
@@ -628,9 +703,19 @@
     </div>
     <div class="settings-content">
       <div class="settings-section">
-        <label class="settings-label">תאריך התחלה</label>
-        <input type="date" class="date-input" id="startDateInput">
-        <button class="btn btn-primary" id="setCycleBtn">קבע לט״ו שבט ה׳תשפ״ו (תחילת המחזור ה-46)</button>
+        <label class="settings-label">תאריך התחלת לימוד</label>
+        <div class="date-row">
+          <button class="btn btn-primary btn-compact" id="setCycleBtn">מחזור 46</button>
+          <input type="date" class="date-input" id="startDateInput">
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <label class="settings-label">מספר פרקים ליום</label>
+        <div class="toggle-container">
+          <button class="toggle-btn active" data-value="3">3 פרקים</button>
+          <button class="toggle-btn" data-value="1">פרק אחד</button>
+        </div>
       </div>
 
       <div class="settings-section">
@@ -647,7 +732,7 @@
           <span>נבנה באמצעות</span>
           <div class="footer-badge">
             <img src="claude.jpeg" alt="Claude" class="claude-icon">
-            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Claude</span>
+            <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Claude Code</span>
           </div>
         </div>
         <div class="footer-content" style="margin-top: 0.5rem;">
@@ -676,16 +761,29 @@
     // ============================================================================
     // LocalStorage Utilities
     // ============================================================================
+    const CYCLE_START = '2026-02-03';
+
     function getStart() {
       const stored = localStorage.getItem('rambam_start');
-      if (stored) return stored;
-      const today = getTodayInIsrael();
-      localStorage.setItem('rambam_start', today);
-      return today;
+      // If not set, return the default but don't save it yet
+      return stored || CYCLE_START;
     }
 
     function setStart(dateStr) {
       localStorage.setItem('rambam_start', dateStr);
+    }
+
+    function getChapterCount() {
+      const stored = localStorage.getItem('rambam_chapters');
+      return stored ? parseInt(stored) : 3;
+    }
+
+    function setChapterCount(count) {
+      localStorage.setItem('rambam_chapters', count.toString());
+    }
+
+    function isFirstVisit() {
+      return !localStorage.getItem('rambam_start');
     }
 
     function getTodayInIsrael() {
@@ -807,8 +905,11 @@
       if (!res.ok) throw new Error(`Calendar API failed: ${res.status}`);
       const data = await res.json();
 
+      const chapterCount = getChapterCount();
+      const searchTitle = chapterCount === 3 ? 'Daily Rambam (3 Chapters)' : 'Daily Rambam';
+
       const rambam = data.calendar_items.find(item =>
-        item.title.en === 'Daily Rambam (3 Chapters)'
+        item.title.en === searchTitle
       );
 
       if (!rambam) throw new Error('No Rambam entry found');
@@ -1178,7 +1279,7 @@
     }
 
     // ============================================================================
-    // Swipe Gesture
+    // Swipe Gesture & Double Click/Tap
     // ============================================================================
     function attachSwipeHandler(card) {
       let startX = 0;
@@ -1187,16 +1288,121 @@
       let currentY = 0;
       let isSwiping = false;
       let isMouseDown = false;
+      let lastTapTime = 0;
+
+      // Mark card as done with all the checks and scrolling
+      function markCardDone() {
+        const date = card.dataset.date;
+        const index = parseInt(card.dataset.index);
+        const done = getDone();
+
+        // Check if there are incomplete cards above this one
+        const container = card.parentElement;
+        const cards = Array.from(container.querySelectorAll('.halakha-card'));
+        const currentIndex = cards.indexOf(card);
+
+        const incompleteAbove = [];
+        for (let i = 0; i < currentIndex; i++) {
+          const aboveCard = cards[i];
+          const aboveIndex = parseInt(aboveCard.dataset.index);
+          if (!done[`${date}:${aboveIndex}`]) {
+            incompleteAbove.push(aboveIndex);
+          }
+        }
+
+        if (incompleteAbove.length > 0) {
+          if (confirm(`יש ${incompleteAbove.length} הלכות לא מושלמות למעלה. האם לסמן גם אותן כהושלם?`)) {
+            // Mark all incomplete cards above as done
+            incompleteAbove.forEach(idx => {
+              markDone(date, idx);
+              const cardToMark = cards.find(c => parseInt(c.dataset.index) === idx);
+              if (cardToMark) {
+                cardToMark.classList.add('completed');
+              }
+            });
+          }
+        }
+
+        card.classList.add('completed');
+        markDone(date, index);
+        renderStats();
+        updateDayHeader(date);
+
+        // Scroll to next card
+        const nextCard = card.nextElementSibling;
+        if (nextCard && nextCard.classList.contains('halakha-card')) {
+          const nextCardTop = nextCard.getBoundingClientRect().top + window.scrollY;
+          window.scrollTo({
+            top: nextCardTop - 300,
+            behavior: 'smooth'
+          });
+        }
+      }
+
+      // Unmark card as done
+      function unmarkCardDone() {
+        const date = card.dataset.date;
+        const index = parseInt(card.dataset.index);
+
+        card.classList.remove('completed');
+        const done = getDone();
+        delete done[`${date}:${index}`];
+        saveDone(done);
+        renderStats();
+        updateDayHeader(date);
+
+        // Scroll to previous card
+        const prevCard = card.previousElementSibling;
+        if (prevCard && prevCard.classList.contains('halakha-card')) {
+          const prevCardTop = prevCard.getBoundingClientRect().top + window.scrollY;
+          window.scrollTo({
+            top: prevCardTop - 300,
+            behavior: 'smooth'
+          });
+        }
+      }
+
+      // Double-click/tap handler
+      function handleToggle() {
+        const date = card.dataset.date;
+        const index = parseInt(card.dataset.index);
+        const done = getDone();
+        const isCompleted = done[`${date}:${index}`];
+
+        if (isCompleted) {
+          unmarkCardDone();
+        } else {
+          markCardDone();
+        }
+      }
+
+      // Double-click for desktop
+      card.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        handleToggle();
+      });
 
       // Touch events (mobile)
       card.addEventListener('touchstart', (e) => {
+        // Double-tap detection
+        const now = Date.now();
+        const timeSinceLastTap = now - lastTapTime;
+        if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
+          // Double tap detected
+          e.preventDefault();
+          handleToggle();
+          lastTapTime = 0;
+          return;
+        }
+        lastTapTime = now;
+
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
         currentX = startX;
         currentY = startY;
         isSwiping = false;
         card.classList.add('swiping');
-      }, { passive: true });
+      }, { passive: false });
 
       card.addEventListener('touchmove', (e) => {
         currentX = e.touches[0].clientX;
@@ -1271,67 +1477,11 @@
 
         // Swipe right: mark as done
         if (isSwiping && deltaX > 100 && !isCompleted) {
-          // Check if there are incomplete cards above this one
-          const done = getDone();
-          const container = card.parentElement;
-          const cards = Array.from(container.querySelectorAll('.halakha-card'));
-          const currentIndex = cards.indexOf(card);
-
-          const incompleteAbove = [];
-          for (let i = 0; i < currentIndex; i++) {
-            const aboveCard = cards[i];
-            const aboveIndex = parseInt(aboveCard.dataset.index);
-            if (!done[`${date}:${aboveIndex}`]) {
-              incompleteAbove.push(aboveIndex);
-            }
-          }
-
-          if (incompleteAbove.length > 0) {
-            if (confirm(`יש ${incompleteAbove.length} הלכות לא מושלמות למעלה. האם לסמן גם אותן כהושלם?`)) {
-              // Mark all incomplete cards above as done
-              incompleteAbove.forEach(idx => {
-                markDone(date, idx);
-                const cardToMark = cards.find(c => parseInt(c.dataset.index) === idx);
-                if (cardToMark) {
-                  cardToMark.classList.add('completed');
-                }
-              });
-            }
-          }
-
-          card.classList.add('completed');
-          markDone(date, index);
-          renderStats();
-          updateDayHeader(date);
-
-          // Scroll to next card
-          const nextCard = card.nextElementSibling;
-          if (nextCard && nextCard.classList.contains('halakha-card')) {
-            const nextCardTop = nextCard.getBoundingClientRect().top + window.scrollY;
-            window.scrollTo({
-              top: nextCardTop - 300,
-              behavior: 'smooth'
-            });
-          }
+          markCardDone();
         }
         // Swipe left: unmark as done
         else if (isSwiping && deltaX < -100 && isCompleted) {
-          card.classList.remove('completed');
-          const done = getDone();
-          delete done[`${date}:${index}`];
-          saveDone(done);
-          renderStats();
-          updateDayHeader(date);
-
-          // Scroll to previous card
-          const prevCard = card.previousElementSibling;
-          if (prevCard && prevCard.classList.contains('halakha-card')) {
-            const prevCardTop = prevCard.getBoundingClientRect().top + window.scrollY;
-            window.scrollTo({
-              top: prevCardTop - 300,
-              behavior: 'smooth'
-            });
-          }
+          unmarkCardDone();
         }
 
         // Reset position
@@ -1347,18 +1497,44 @@
     // ============================================================================
     // Settings
     // ============================================================================
-    document.getElementById('settingsBtn').addEventListener('click', () => {
+    function openSettings() {
       document.getElementById('settingsPanel').classList.add('open');
       document.getElementById('overlay').classList.add('visible');
-    });
+    }
 
     function closeSettings() {
       document.getElementById('settingsPanel').classList.remove('open');
       document.getElementById('overlay').classList.remove('visible');
     }
 
+    document.getElementById('settingsBtn').addEventListener('click', openSettings);
     document.getElementById('closeBtn').addEventListener('click', closeSettings);
     document.getElementById('overlay').addEventListener('click', closeSettings);
+
+    // Chapter count toggle
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const value = parseInt(btn.dataset.value);
+        if (value !== getChapterCount()) {
+          if (confirm(`האם לשנות ל-${value === 1 ? 'פרק אחד' : '3 פרקים'} ליום? זה יאפס את ההתקדמות שלך.`)) {
+            setChapterCount(value);
+            localStorage.removeItem('rambam_days'); // Clear cached days
+            location.reload();
+          }
+        }
+      });
+    });
+
+    // Set initial active toggle button
+    const currentChapterCount = getChapterCount();
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+      const value = parseInt(btn.dataset.value);
+      if (value === currentChapterCount) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
       if (confirm('האם אתה בטוח? כל ההתקדמות תימחק.')) {
@@ -1369,7 +1545,25 @@
 
     // Set start date input value
     const startDateInput = document.getElementById('startDateInput');
+    const setCycleBtn = document.getElementById('setCycleBtn');
+
+    function updateDateButtons() {
+      const currentStart = getStart();
+      const isCycleDate = currentStart === CYCLE_START;
+
+      if (isCycleDate) {
+        setCycleBtn.classList.remove('btn-secondary');
+        setCycleBtn.classList.add('btn-primary');
+        startDateInput.classList.add('date-input-inactive');
+      } else {
+        setCycleBtn.classList.remove('btn-primary');
+        setCycleBtn.classList.add('btn-secondary');
+        startDateInput.classList.remove('date-input-inactive');
+      }
+    }
+
     startDateInput.value = getStart();
+    updateDateButtons();
 
     startDateInput.addEventListener('change', (e) => {
       const newStart = e.target.value;
@@ -1381,9 +1575,9 @@
       }
     });
 
-    document.getElementById('setCycleBtn').addEventListener('click', () => {
+    setCycleBtn.addEventListener('click', () => {
       if (confirm('האם לקבוע את תאריך ההתחלה לט״ו שבט ה׳תשפ״ו (3 בפברואר 2026)?')) {
-        setStart('2026-02-03');
+        setStart(CYCLE_START);
         location.reload();
       }
     });
@@ -1404,26 +1598,39 @@
     // ============================================================================
     async function init() {
       try {
+        // Check if this is the first visit BEFORE any other operations
+        const firstVisit = isFirstVisit();
+
+        // If first visit, set the default start date
+        if (firstVisit) {
+          localStorage.setItem('rambam_start', CYCLE_START);
+        }
+
         await loadMissingDays();
         renderDays();
         renderStats();
 
-        // Auto-open today's section if not completed
-        const today = getTodayInIsrael();
-        const days = getDays();
-        const done = getDone();
-        const todayData = days[today];
+        // Open settings on first visit
+        if (firstVisit) {
+          openSettings();
+        } else {
+          // Auto-open today's section if not completed (only if not first visit)
+          const today = getTodayInIsrael();
+          const days = getDays();
+          const done = getDone();
+          const todayData = days[today];
 
-        if (todayData) {
-          const todayDone = Object.keys(done).filter(key =>
-            key.startsWith(`${today}:`)
-          ).length;
+          if (todayData) {
+            const todayDone = Object.keys(done).filter(key =>
+              key.startsWith(`${today}:`)
+            ).length;
 
-          if (todayDone < todayData.count) {
-            // Find and open today's details element
-            const todayDetails = document.querySelector(`details[data-date="${today}"]`);
-            if (todayDetails) {
-              todayDetails.open = true;
+            if (todayDone < todayData.count) {
+              // Find and open today's details element
+              const todayDetails = document.querySelector(`details[data-date="${today}"]`);
+              if (todayDetails) {
+                todayDetails.open = true;
+              }
             }
           }
         }
