@@ -1,0 +1,33 @@
+{
+  "name": "רמב\"ם יומי - Daily Rambam",
+  "short_name": "רמב\"ם יומי",
+  "description": "עקוב אחר לימוד הרמב\"ם היומי שלך (1 או 3 פרקים) עם כרטיסיות להחלקה",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "he",
+  "categories": ["education", "lifestyle"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

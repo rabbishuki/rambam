@@ -1,0 +1,102 @@
+{
+  "app": {
+    "title": "Daily Rambam",
+    "description": "Track your daily Rambam study"
+  },
+  "stats": {
+    "completedDays": "Days studied",
+    "today": "Today",
+    "backlog": "To complete"
+  },
+  "settings": {
+    "title": "Settings",
+    "interfaceLanguage": "Interface Language",
+    "switchToHebrew": "עבור לעברית",
+    "studyPath": "Study path",
+    "textLanguage": "Text language",
+    "startDate": "Start date",
+    "autoMark": "Auto-mark previous as read",
+    "location": "Location & sunset",
+    "locationLabel": "Location",
+    "sunsetLabel": "Sunset",
+    "updateLocation": "Update location",
+    "updating": "Updating...",
+    "reset": "Reset",
+    "resetPath": "Reset current path",
+    "resetAll": "Reset all",
+    "resetWarning": "This will delete your progress",
+    "changelog": "Changelog",
+    "version": "Version",
+    "cycle46": "Cycle 46",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close",
+    "progress": "Progress"
+  },
+  "welcome": {
+    "title": "Welcome!",
+    "loading": "Loading your daily study...",
+    "setupLocation": "Set up your location to begin"
+  },
+  "locationDialog": {
+    "title": "Location Setup",
+    "description": "To calculate the accurate sunset time for your area, we need to know your location.",
+    "useMyLocation": "Use my location",
+    "enterManually": "Enter city manually",
+    "privacyNote": "Location is only used to calculate sunset and is not stored on any server",
+    "enterCity": "Enter your city name:",
+    "cityPlaceholder": "e.g., Jerusalem, New York",
+    "confirm": "Confirm",
+    "back": "Back",
+    "detecting": "Detecting location...",
+    "errorDetecting": "Could not detect your location. Please enter a city manually.",
+    "errorGeneral": "Error detecting location. Please enter a city manually.",
+    "errorCityNotFound": "City not found. Try a different name or choose a nearby major city.",
+    "errorEmptyCity": "Please enter a city name"
+  },
+  "paths": {
+    "rambam3": {
+      "label": "3 chapters/day",
+      "short": "3 chapters",
+      "description": "Complete Mishneh Torah in ~1 year"
+    },
+    "rambam1": {
+      "label": "1 chapter/day",
+      "short": "1 chapter",
+      "description": "Complete Mishneh Torah in ~3 years"
+    },
+    "mitzvot": {
+      "label": "Sefer HaMitzvot",
+      "description": "613 commandments yearly cycle",
+      "comingSoon": "Coming soon"
+    },
+    "chaptersPerDay": "Chapters per day"
+  },
+  "language": {
+    "hebrew": "עברית",
+    "english": "English",
+    "both": "Both"
+  },
+  "actions": {
+    "markComplete": "Mark all complete",
+    "reset": "Reset day",
+    "install": "Install",
+    "later": "Maybe later",
+    "refresh": "Refresh"
+  },
+  "messages": {
+    "loading": "Loading...",
+    "error": "Error loading",
+    "installPrompt": "Install the app to your home screen for quick access and offline use!",
+    "updateAvailable": "Update available!",
+    "confirmMarkAll": "Mark all of {title} as complete?",
+    "confirmReset": "Reset all progress for {title}?",
+    "confirmResetPath": "Are you sure? All progress in current path will be deleted.",
+    "confirmResetAll": "Are you sure? All progress in all paths will be deleted.",
+    "confirmChangeDate": "Change start date to {date}?"
+  },
+  "dates": {
+    "today": "Today",
+    "default": "default"
+  }
+}

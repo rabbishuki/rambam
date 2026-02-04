@@ -1,0 +1,102 @@
+{
+  "app": {
+    "title": "רמב\"ם יומי",
+    "description": "עקוב אחר לימוד הרמב\"ם היומי שלך"
+  },
+  "stats": {
+    "completedDays": "ימים שלמדתי",
+    "today": "היום",
+    "backlog": "הלכות להשלים"
+  },
+  "settings": {
+    "title": "הגדרות",
+    "interfaceLanguage": "שפת הממשק",
+    "switchToEnglish": "Switch to English",
+    "studyPath": "מסלול לימוד",
+    "textLanguage": "שפת הטקסט",
+    "startDate": "תאריך התחלת לימוד",
+    "autoMark": "סימון הלכות קודמות כנקראו",
+    "location": "מיקום ושקיעה",
+    "locationLabel": "מיקום",
+    "sunsetLabel": "שקיעה",
+    "updateLocation": "עדכן מיקום ושקיעה",
+    "updating": "מעדכן...",
+    "reset": "איפוס",
+    "resetPath": "אפס מסלול נוכחי",
+    "resetAll": "איפוס מלא",
+    "resetWarning": "פעולה זו תמחק את ההתקדמות שלך",
+    "changelog": "רשימת שינויים",
+    "version": "גרסה",
+    "cycle46": "מחזור 46",
+    "yes": "כן",
+    "no": "לא",
+    "close": "סגור",
+    "progress": "התקדמות"
+  },
+  "welcome": {
+    "title": "ברוכים הבאים!",
+    "loading": "טוען את הלימוד היומי שלך...",
+    "setupLocation": "הגדר את מיקומך כדי להתחיל"
+  },
+  "locationDialog": {
+    "title": "הגדרת מיקום",
+    "description": "כדי לחשב את זמן השקיעה המדויק לאזורך, אנחנו צריכים לדעת את מיקומך.",
+    "useMyLocation": "השתמש במיקום שלי",
+    "enterManually": "אזין עיר ידנית",
+    "privacyNote": "המיקום משמש רק לחישוב שקיעה ואינו נשמר בשרת",
+    "enterCity": "הזן את שם העיר שלך:",
+    "cityPlaceholder": "לדוגמה: ירושלים, ניו יורק",
+    "confirm": "אישור",
+    "back": "חזרה",
+    "detecting": "מזהה מיקום...",
+    "errorDetecting": "לא הצלחנו לזהות את מיקומך. אנא הזן עיר ידנית.",
+    "errorGeneral": "שגיאה בזיהוי מיקום. אנא הזן עיר ידנית.",
+    "errorCityNotFound": "לא מצאנו את העיר. נסה שם אחר או בחר עיר גדולה קרובה.",
+    "errorEmptyCity": "אנא הזן שם עיר"
+  },
+  "paths": {
+    "rambam3": {
+      "label": "3 פרקים",
+      "short": "3 פרקים",
+      "description": "משנה תורה שלם בכשנה אחת"
+    },
+    "rambam1": {
+      "label": "פרק אחד",
+      "short": "פרק אחד",
+      "description": "משנה תורה שלם בכ-3 שנים"
+    },
+    "mitzvot": {
+      "label": "ספר המצוות",
+      "description": "תרי״ג מצוות במחזור שנתי",
+      "comingSoon": "בקרוב"
+    },
+    "chaptersPerDay": "פרקים ליום"
+  },
+  "language": {
+    "hebrew": "עברית",
+    "english": "English",
+    "both": "שניהם"
+  },
+  "actions": {
+    "markComplete": "סמן הכל כהושלם",
+    "reset": "אפס יום",
+    "install": "התקן",
+    "later": "אולי מאוחר יותר",
+    "refresh": "רענן"
+  },
+  "messages": {
+    "loading": "טוען הלכות...",
+    "error": "שגיאה בטעינה",
+    "installPrompt": "התקן את האפליקציה למסך הבית לגישה מהירה ושימוש ללא אינטרנט!",
+    "updateAvailable": "גרסה חדשה זמינה!",
+    "confirmMarkAll": "האם לסמן את כל {title} כהושלם?",
+    "confirmReset": "האם לאפס את כל ההתקדמות של {title}?",
+    "confirmResetPath": "האם אתה בטוח? כל ההתקדמות במסלול הנוכחי תימחק.",
+    "confirmResetAll": "האם אתה בטוח? כל ההתקדמות בכל המסלולים תימחק.",
+    "confirmChangeDate": "האם לשנות את תאריך ההתחלה ל-{date}?"
+  },
+  "dates": {
+    "today": "היום",
+    "default": "ברירת מחדל"
+  }
+}

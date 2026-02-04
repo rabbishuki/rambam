@@ -16,27 +16,19 @@ A Progressive Web App (PWA) for tracking your daily Rambam (3 chapters) study wi
 
 ### Prerequisites
 
-- A web browser (Chrome, Safari, Firefox, Edge)
-- For local development with PWA features: a local web server
+- Node.js 18+
+- npm or pnpm
 
 ### Running Locally
 
-#### Option 1: Simple File Open
 ```bash
-open index.html
+npm install
+npm run dev
 ```
-Note: Limited PWA features (no service worker in `file://` protocol)
 
-#### Option 2: Local Server (Recommended)
-```bash
-# Python 3
-python3 -m http.server 8000
+Open http://localhost:3613
 
-# Node.js
-npx serve .
-
-# Then open: http://localhost:8000
-```
+> **Port 3613**: תרי״ג - The number of mitzvot in the Torah, as catalogued by the Rambam in Sefer HaMitzvot.
 
 ### Installing as PWA
 
@@ -83,11 +75,15 @@ Days change at sunset (~6 PM Israel time):
 
 ### Tech Stack
 
-- **Pure Vanilla JavaScript** - No frameworks, no dependencies
+- **Next.js 16** - React framework with App Router
+- **React 19** - UI library
+- **TypeScript** - Type-safe JavaScript
+- **Tailwind CSS 4** - Utility-first CSS framework
 - **Service Worker** - Offline-first PWA with caching
 - **LocalStorage** - Client-side data persistence
 - **Sefaria API** - Jewish text database
-- **Noto Sans Hebrew** - Google Fonts for beautiful Hebrew typography
+
+> Legacy vanilla JS version available in `legacy/` folder for reference.
 
 ### Data Storage
 
@@ -117,18 +113,23 @@ rambam_done: {
 
 ```
 rambam/
-├── index.html           # Main app (HTML + CSS + JS)
-├── manifest.json        # PWA manifest
-├── service-worker.js    # Offline caching
-├── logo.png            # App logo (scroll icon)
-├── icon-192.png        # PWA icon 192×192
-├── icon-512.png        # PWA icon 512×512
-├── favicon.ico         # Browser favicon
-├── claude.jpeg         # Claude AI icon
-├── rabbi.jpeg          # Rabbi Shuki avatar
-├── PLAN.md             # Implementation plan
-├── QUICK_REFERENCE.md  # API reference
-└── README.md           # This file
+├── src/app/             # Next.js App Router
+│   ├── layout.tsx       # Root layout
+│   ├── page.tsx         # Home page
+│   └── globals.css      # Tailwind CSS
+├── public/              # Static assets
+│   ├── icon-192.png     # PWA icon 192×192
+│   ├── icon-512.png     # PWA icon 512×512
+│   └── logo.png         # App logo
+├── legacy/              # Original vanilla JS app
+│   ├── index.html       # Legacy main app
+│   ├── service-worker.js
+│   └── manifest.json
+├── docs/                # Migration documentation
+├── MIGRATION_PLAN.md    # Next.js migration plan
+├── PLAN.md              # Implementation plan
+├── QUICK_REFERENCE.md   # API reference
+└── README.md            # This file
 ```
 
 ## 🎨 Features in Detail
