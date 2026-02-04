@@ -748,6 +748,15 @@
       </div>
 
       <div class="settings-section">
+        <label class="settings-label">מיקום ושקיעה</label>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 8px; font-size: 0.875rem; color: #374151;">
+          <div id="locationText">מיקום: תל אביב (ברירת מחדל)</div>
+          <div id="sunsetText">שקיעה: 18:00</div>
+        </div>
+        <button class="btn btn-primary" id="updateLocationBtn">עדכן מיקום ושקיעה</button>
+      </div>
+
+      <div class="settings-section">
         <p class="settings-warning">⚠️ פעולה זו תמחק את כל ההתקדמות שלך</p>
         <button class="btn btn-danger" id="resetBtn">איפוס מלא</button>
       </div>
@@ -785,7 +794,38 @@
     // Constants & State
     // ============================================================================
     const SEFARIA_API = 'https://www.sefaria.org';
+    const HEBCAL_API = 'https://www.hebcal.com';
+    const DEFAULT_COORDS = { latitude: 32.0853, longitude: 34.7818 }; // Tel Aviv fallback
     const textCache = new Map(); // In-memory cache for halakha texts
+    let cachedSunsetHour = 18;   // fallback
+    let cachedSunsetMinute = 0;
+    let cachedCoords = DEFAULT_COORDS;
+    let isUsingDefaultLocation = true;
+    let cachedLocationName = 'תל אביב';
+
+    function getUserCoords() {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+          console.log('Geolocation not supported, using Tel Aviv');
+          isUsingDefaultLocation = true;
+          resolve(DEFAULT_COORDS);
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            console.log('Got user location:', pos.coords.latitude, pos.coords.longitude);
+            isUsingDefaultLocation = false;
+            resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+          },
+          (error) => {
+            console.log('Geolocation error:', error.message, '- using Tel Aviv');
+            isUsingDefaultLocation = true;
+            resolve(DEFAULT_COORDS);
+          },
+          { timeout: 5000 }
+        );
+      });
+    }
 
     // ============================================================================
     // LocalStorage Utilities
@@ -821,17 +861,19 @@
       const israelTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
       const israelTime = new Date(israelTimeStr);
       const hour = israelTime.getHours();
+      const minute = israelTime.getMinutes();
 
-      // Jewish day starts at sunset (approx 6 PM / 18:00)
-      // Between 6 PM and midnight = next Jewish day
-      // Between midnight and 6 PM = current Jewish day
+      // Jewish day starts at sunset (using cached sunset time)
+      const isPastSunset = (hour > cachedSunsetHour) ||
+                           (hour === cachedSunsetHour && minute >= cachedSunsetMinute);
+
       let jewishDate = new Date(israelTime);
 
-      if (hour < 18) {
-        // Before 6 PM - still in previous Jewish day
+      if (!isPastSunset) {
+        // Before sunset - still in previous Jewish day
         // No adjustment needed, use current calendar date
       } else {
-        // After 6 PM - advance to next Jewish day
+        // After sunset - advance to next Jewish day
         jewishDate.setDate(jewishDate.getDate() + 1);
       }
 
@@ -881,6 +923,15 @@
     }
 
     function formatHebrewDate(dateStr) {
+      const days = getDays();
+      const dayData = days[dateStr];
+
+      // Try to use cached Hebrew date first
+      if (dayData && dayData.heDate) {
+        return dayData.heDate;
+      }
+
+      // Fall back to Gregorian format
       const [y, m, d] = dateStr.split('-').map(Number);
       return `${d}/${m}/${y}`;
     }
@@ -984,6 +1035,96 @@
       return result;
     }
 
+    async function fetchLocationName(coords) {
+      try {
+        // Use BigDataCloud's free reverse geocoding API (no API key, no rate limits)
+        const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${coords.latitude}&longitude=${coords.longitude}&localityLanguage=he`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Geocoding failed: ${res.status}`);
+        const data = await res.json();
+
+        console.log('Geocoding response:', data);
+
+        // Try to get city name in Hebrew - locality is most accurate
+        const cityName = data.locality || data.city || data.principalSubdivision || 'מיקום נוכחי';
+        console.log('Extracted city name:', cityName);
+        return cityName;
+      } catch (error) {
+        console.error('Failed to fetch location name:', error);
+        return 'מיקום נוכחי';
+      }
+    }
+
+    async function fetchSunset(dateStr, coords) {
+      try {
+        cachedCoords = coords;
+
+        // Fetch location name and sunset in parallel
+        const [locationName, sunsetRes] = await Promise.all([
+          isUsingDefaultLocation ? Promise.resolve('תל אביב') : fetchLocationName(coords),
+          fetch(`${HEBCAL_API}/zmanim?cfg=json&latitude=${coords.latitude}&longitude=${coords.longitude}&date=${dateStr}`)
+        ]);
+
+        cachedLocationName = locationName;
+
+        if (!sunsetRes.ok) throw new Error(`Zmanim API failed: ${sunsetRes.status}`);
+        const data = await sunsetRes.json();
+
+        if (data.times && data.times.sunset) {
+          const sunsetTime = new Date(data.times.sunset);
+          cachedSunsetHour = sunsetTime.getHours();
+          cachedSunsetMinute = sunsetTime.getMinutes();
+        }
+        updateLocationDisplay();
+      } catch (error) {
+        console.error('Failed to fetch sunset time:', error);
+        // Keep fallback values (18:00)
+        updateLocationDisplay();
+      }
+    }
+
+    function updateLocationDisplay() {
+      const locationText = document.getElementById('locationText');
+      const sunsetText = document.getElementById('sunsetText');
+
+      console.log('Updating location display:', {
+        cachedLocationName,
+        isUsingDefaultLocation,
+        cachedSunsetHour,
+        cachedSunsetMinute,
+        locationText: !!locationText,
+        sunsetText: !!sunsetText
+      });
+
+      if (locationText) {
+        const suffix = isUsingDefaultLocation ? ' (ברירת מחדל)' : '';
+        locationText.textContent = `מיקום: ${cachedLocationName}${suffix}`;
+      }
+
+      if (sunsetText) {
+        const hourStr = String(cachedSunsetHour).padStart(2, '0');
+        const minStr = String(cachedSunsetMinute).padStart(2, '0');
+        sunsetText.textContent = `שקיעה: ${hourStr}:${minStr}`;
+      }
+    }
+
+    async function fetchHebrewDate(dateStr) {
+      try {
+        const url = `${HEBCAL_API}/converter?cfg=json&date=${dateStr}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Converter API failed: ${res.status}`);
+        const data = await res.json();
+
+        if (data.heDateParts && data.heDateParts.d && data.heDateParts.m) {
+          return `${data.heDateParts.d} ${data.heDateParts.m}`;
+        }
+        return null;
+      } catch (error) {
+        console.error('Failed to fetch Hebrew date:', error);
+        return null;
+      }
+    }
+
     // ============================================================================
     // Data Loading
     // ============================================================================
@@ -994,25 +1135,49 @@
       const days = getDays();
 
       const missing = allDates.filter(date => !days[date]);
-      if (missing.length === 0) return;
+      const needHeDate = allDates.filter(date => days[date] && !days[date].heDate);
 
       // Fetch all missing dates in parallel
-      const results = await Promise.allSettled(
-        missing.map(async (date) => {
-          const { he, ref } = await fetchCalendar(date);
-          const { halakhot } = await fetchText(ref);
-          return { date, he, ref, count: halakhot.length };
-        })
-      );
+      if (missing.length > 0) {
+        const results = await Promise.allSettled(
+          missing.map(async (date) => {
+            const { he, ref } = await fetchCalendar(date);
+            const { halakhot } = await fetchText(ref);
+            const heDate = await fetchHebrewDate(date);
+            return { date, he, ref, count: halakhot.length, heDate };
+          })
+        );
 
-      results.forEach((result, i) => {
-        if (result.status === 'fulfilled') {
-          const { date, he, ref, count } = result.value;
-          days[date] = { he, ref, count };
-        } else {
-          console.error(`Failed to load ${missing[i]}:`, result.reason);
-        }
-      });
+        results.forEach((result, i) => {
+          if (result.status === 'fulfilled') {
+            const { date, he, ref, count, heDate } = result.value;
+            days[date] = { he, ref, count, heDate };
+          } else {
+            console.error(`Failed to load ${missing[i]}:`, result.reason);
+          }
+        });
+      }
+
+      // Backfill Hebrew dates for existing days
+      if (needHeDate.length > 0) {
+        const results = await Promise.allSettled(
+          needHeDate.map(async (date) => {
+            const heDate = await fetchHebrewDate(date);
+            return { date, heDate };
+          })
+        );
+
+        results.forEach((result, i) => {
+          if (result.status === 'fulfilled') {
+            const { date, heDate } = result.value;
+            if (heDate && days[date]) {
+              days[date].heDate = heDate;
+            }
+          } else {
+            console.error(`Failed to fetch Hebrew date for ${needHeDate[i]}:`, result.reason);
+          }
+        });
+      }
 
       saveDays(days);
     }
@@ -1529,6 +1694,7 @@
     function openSettings() {
       document.getElementById('settingsPanel').classList.add('open');
       document.getElementById('overlay').classList.add('visible');
+      updateLocationDisplay();
     }
 
     function closeSettings() {
@@ -1611,6 +1777,39 @@
       }
     });
 
+    // Update location button
+    document.getElementById('updateLocationBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('updateLocationBtn');
+      const originalText = btn.textContent;
+      btn.textContent = 'מעדכן...';
+      btn.disabled = true;
+
+      try {
+        const coords = await getUserCoords();
+        const now = new Date();
+        const israelTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
+        const israelTime = new Date(israelTimeStr);
+        const year = israelTime.getFullYear();
+        const month = String(israelTime.getMonth() + 1).padStart(2, '0');
+        const day = String(israelTime.getDate()).padStart(2, '0');
+        const rawDateStr = `${year}-${month}-${day}`;
+        await fetchSunset(rawDateStr, coords);
+
+        btn.textContent = '✓ עודכן';
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
+      } catch (error) {
+        console.error('Failed to update location:', error);
+        btn.textContent = '❌ שגיאה';
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
     // ============================================================================
     // Calendar Date Picker
     // ============================================================================
@@ -1662,7 +1861,8 @@
         try {
           const { he, ref } = await fetchCalendar(date);
           const { halakhot } = await fetchText(ref);
-          dayData = { he, ref, count: halakhot.length };
+          const heDate = await fetchHebrewDate(date);
+          dayData = { he, ref, count: halakhot.length, heDate };
 
           // Cache it
           days[date] = dayData;
@@ -1749,9 +1949,23 @@
           localStorage.setItem('rambam_start', CYCLE_START);
         }
 
+        // Fetch coords and sunset before loading days
+        const coords = await getUserCoords();
+        const now = new Date();
+        const israelTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
+        const israelTime = new Date(israelTimeStr);
+        const year = israelTime.getFullYear();
+        const month = String(israelTime.getMonth() + 1).padStart(2, '0');
+        const day = String(israelTime.getDate()).padStart(2, '0');
+        const rawDateStr = `${year}-${month}-${day}`;
+        await fetchSunset(rawDateStr, coords);
+
         await loadMissingDays();
         renderDays();
         renderStats();
+
+        // Update location display after everything is loaded
+        updateLocationDisplay();
 
         // Open settings on first visit
         if (firstVisit) {

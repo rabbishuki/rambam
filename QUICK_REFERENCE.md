@@ -31,3 +31,13 @@ GET https://www.sefaria.org/api/v3/texts/{url}
 
 - `versions[0].text` → array of הלכות (Hebrew with nikud)
 - Each array element = one הלכה
+
+## Hebrew Date Converter
+GET https://www.hebcal.com/converter?cfg=json&date=2026-02-03
+
+Response: { heDateParts: { d: "ט״ז", m: "שבט", y: "תשפ״ו" }, hebrew: "ט״ז בִּשְׁבָט תשפ״ו", events: [...] }
+
+## Zmanim (Sunset Time)
+GET https://www.hebcal.com/zmanim?cfg=json&latitude=32.0853&longitude=34.7818&date=2026-02-03
+
+Response: { times: { sunset: "2026-02-03T17:16:00+02:00", ... } }
