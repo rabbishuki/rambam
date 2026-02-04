@@ -11,29 +11,39 @@ const withPWA = withPWAInit({
   workboxOptions: {
     runtimeCaching: [
       {
-        // Cache Sefaria API responses
-        urlPattern: /^https:\/\/www\.sefaria\.org\/api\/.*/i,
-        handler: "NetworkFirst",
+        // Cache Sefaria text content - CacheFirst (texts rarely change)
+        urlPattern: /^https:\/\/www\.sefaria\.org\/api\/v3\/texts\/.*/i,
+        handler: "CacheFirst",
         options: {
-          cacheName: "sefaria-api-cache",
+          cacheName: "sefaria-texts",
+          expiration: {
+            maxEntries: 500,
+            maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+          },
+        },
+      },
+      {
+        // Cache Sefaria calendar - StaleWhileRevalidate (should be fresh but fast)
+        urlPattern: /^https:\/\/www\.sefaria\.org\/api\/calendars.*/i,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "sefaria-calendar",
           expiration: {
             maxEntries: 100,
             maxAgeSeconds: 60 * 60 * 24, // 24 hours
           },
-          networkTimeoutSeconds: 10,
         },
       },
       {
-        // Cache Hebcal API responses
+        // Cache Hebcal API - StaleWhileRevalidate (date info should be fresh but fast)
         urlPattern: /^https:\/\/www\.hebcal\.com\/.*/i,
-        handler: "NetworkFirst",
+        handler: "StaleWhileRevalidate",
         options: {
           cacheName: "hebcal-api-cache",
           expiration: {
-            maxEntries: 50,
+            maxEntries: 100,
             maxAgeSeconds: 60 * 60 * 24, // 24 hours
           },
-          networkTimeoutSeconds: 10,
         },
       },
       {
@@ -58,6 +68,14 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "www.sefaria.org",
+      },
+      {
+        protocol: "https",
+        hostname: "github.com",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
       },
     ],
   },
