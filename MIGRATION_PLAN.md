@@ -1125,6 +1125,148 @@ async function syncHalakhot() {
 }
 ```
 
+### Update Banner (Non-Overlay)
+
+When background updates are available, show a non-intrusive banner at the bottom that doesn't cover other UI.
+
+**src/hooks/useServiceWorkerUpdate.ts:**
+```typescript
+'use client'
+
+import { useState, useEffect } from 'react'
+
+export function useServiceWorkerUpdate() {
+  const [hasUpdate, setHasUpdate] = useState(false)
+  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null)
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+
+    const handleUpdate = (registration: ServiceWorkerRegistration) => {
+      const waiting = registration.waiting
+      if (waiting) {
+        setWaitingWorker(waiting)
+        setHasUpdate(true)
+      }
+    }
+
+    // Check for updates on load
+    navigator.serviceWorker.ready.then(registration => {
+      // Check if already waiting
+      if (registration.waiting) {
+        handleUpdate(registration)
+      }
+
+      // Listen for new updates
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing
+        if (!newWorker) return
+
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            handleUpdate(registration)
+          }
+        })
+      })
+    })
+
+    // Listen for controller change (update applied)
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload()
+    })
+  }, [])
+
+  const applyUpdate = () => {
+    if (!waitingWorker) return
+    waitingWorker.postMessage({ type: 'SKIP_WAITING' })
+  }
+
+  const dismissUpdate = () => {
+    setHasUpdate(false)
+  }
+
+  return { hasUpdate, applyUpdate, dismissUpdate }
+}
+```
+
+**src/components/offline/UpdateBanner.tsx:**
+```tsx
+'use client'
+
+import { useServiceWorkerUpdate } from '@/hooks/useServiceWorkerUpdate'
+import { useTranslations } from 'next-intl'
+
+export function UpdateBanner() {
+  const t = useTranslations('offline')
+  const { hasUpdate, applyUpdate, dismissUpdate } = useServiceWorkerUpdate()
+
+  if (!hasUpdate) return null
+
+  return (
+    <div
+      className="fixed bottom-0 inset-x-0 z-40 safe-area-bottom
+                 bg-blue-600 text-white px-4 py-3
+                 flex items-center justify-between gap-3
+                 shadow-lg"
+      role="alert"
+    >
+      <span className="text-sm flex-1">
+        {t('updateAvailable')}
+      </span>
+      <div className="flex gap-2">
+        <button
+          onClick={dismissUpdate}
+          className="text-blue-100 hover:text-white text-sm"
+        >
+          {t('later')}
+        </button>
+        <button
+          onClick={applyUpdate}
+          className="bg-white text-blue-600 px-3 py-1 rounded-md
+                     text-sm font-medium hover:bg-blue-50"
+        >
+          {t('updateNow')}
+        </button>
+      </div>
+    </div>
+  )
+}
+```
+
+**Add to i18n messages:**
+```json
+{
+  "offline": {
+    "updateAvailable": "עדכון זמין",
+    "updateNow": "עדכן עכשיו",
+    "later": "אחר כך",
+    ...
+  }
+}
+```
+
+**Key design decisions:**
+1. **Fixed to bottom** - doesn't overlay content, user can continue using app
+2. **Dismissible** - user can say "later" and keep working
+3. **Non-blocking** - app continues to function normally
+4. **Safe area aware** - respects notch/home indicator on mobile
+5. **Subtle but visible** - blue background stands out without being intrusive
+
+**Layout consideration:**
+```
+┌──────────────────────────────────┐
+│  [Header]                        │
+├──────────────────────────────────┤
+│                                  │
+│  [Main Content]                  │
+│                                  │
+│  Cards, halakhot, etc.           │
+│                                  │
+├──────────────────────────────────┤
+│  [Update banner - fixed bottom]  │  ← Doesn't overlap content
+└──────────────────────────────────┘
+```
+
 ### UI Component
 
 **src/components/offline/OfflineIndicator.tsx:**
