@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 
 interface ModalProps {
   isOpen: boolean;
@@ -17,14 +18,16 @@ export function Modal({
   title,
   showCloseButton = true,
 }: ModalProps) {
-  // Handle escape key
+  const tAria = useTranslations("aria");
+
+  // Handle escape key (only when close button is shown)
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" && showCloseButton) {
         onClose();
       }
     },
-    [onClose],
+    [onClose, showCloseButton],
   );
 
   useEffect(() => {
@@ -45,7 +48,7 @@ export function Modal({
       {/* Overlay */}
       <div
         className="fixed inset-0 bg-black/50 z-[999] transition-opacity"
-        onClick={onClose}
+        onClick={showCloseButton ? onClose : undefined}
         aria-hidden="true"
       />
 
@@ -68,7 +71,7 @@ export function Modal({
               <button
                 onClick={onClose}
                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 text-xl"
-                aria-label="סגור"
+                aria-label={tAria("close")}
               >
                 ×
               </button>

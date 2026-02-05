@@ -25,6 +25,7 @@ export function Header({
 }: HeaderProps) {
   const t = useTranslations("app");
   const tOffline = useTranslations("offline");
+  const tAria = useTranslations("aria");
   const locale = useLocale();
   const isHebrew = locale === "he";
   const [datePickerValue, setDatePickerValue] = useState("");
@@ -71,7 +72,7 @@ export function Header({
           }}
           className="hidden"
           id="headerDatePicker"
-          aria-label="בחר תאריך"
+          aria-label={tAria("selectDate")}
         />
 
         {/* Offline indicator */}
@@ -80,7 +81,7 @@ export function Header({
             <button
               onClick={() => setShowOfflineTooltip(!showOfflineTooltip)}
               className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 active:bg-white/40 transition-colors"
-              aria-label={isHebrew ? "מצב לא מקוון" : "Offline mode"}
+              aria-label={tAria("offlineMode")}
             >
               <svg
                 width="20"
@@ -123,7 +124,7 @@ export function Header({
           <button
             onClick={onInstallClick}
             className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 active:bg-white/40 transition-colors"
-            aria-label="התקן אפליקציה"
+            aria-label={tAria("installApp")}
           >
             <svg
               width="20"
@@ -147,7 +148,7 @@ export function Header({
           id="calendar-button"
           onClick={onCalendarClick}
           className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 active:bg-white/40 transition-colors"
-          aria-label="בחר תאריך"
+          aria-label={tAria("selectDate")}
         >
           <svg
             width="20"
@@ -171,7 +172,7 @@ export function Header({
           id="settings-button"
           onClick={onSettingsClick}
           className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 active:bg-white/40 transition-colors"
-          aria-label="הגדרות"
+          aria-label={tAria("settings")}
         >
           <svg
             width="22"

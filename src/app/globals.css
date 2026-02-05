@@ -151,3 +151,245 @@ a {
     padding-left: env(safe-area-inset-left);
   }
 }
+
+/* Custom z-index utilities not in standard Tailwind */
+.z-45 {
+  z-index: 45;
+}
+
+/* Tutorial gesture indicator animations */
+@keyframes swipe-hint-right {
+  0%, 100% {
+    transform: translateX(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateX(20px);
+    opacity: 1;
+  }
+}
+
+@keyframes swipe-hint-left {
+  0%, 100% {
+    transform: translateX(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateX(-20px);
+    opacity: 1;
+  }
+}
+
+@keyframes tap-ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+}
+
+@keyframes tap-ripple-delayed {
+  0%, 20% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.4);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+.animate-swipe-right {
+  animation: swipe-hint-right 1.5s ease-in-out infinite;
+}
+
+.animate-swipe-left {
+  animation: swipe-hint-left 1.5s ease-in-out infinite;
+}
+
+.animate-tap-ripple {
+  animation: tap-ripple 1.2s ease-in-out infinite;
+}
+
+.animate-tap-ripple-delayed {
+  animation: tap-ripple-delayed 1.2s ease-in-out infinite;
+}
+
+/* Gesture indicator: grab and drag animations */
+/* Timeline: 0-20% open hand, 20-30% crossfade to grab, 30-70% drag, 70-85% fade out, 85-100% reset */
+
+@keyframes swipe-drag-right {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  /* Stay still while open hand is visible and during grab transition */
+  30% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  /* Drag to the right (only after grab) */
+  70% {
+    transform: translateX(80px);
+    opacity: 1;
+  }
+  /* Fade out at the end */
+  85% {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+  /* Reset while invisible */
+  86% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  /* Fade back in at start position */
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes swipe-drag-left {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  /* Stay still while open hand is visible and during grab transition */
+  30% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  /* Drag to the left (only after grab) */
+  70% {
+    transform: translateX(-80px);
+    opacity: 1;
+  }
+  /* Fade out at the end */
+  85% {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+  /* Reset while invisible */
+  86% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  /* Fade back in at start position */
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Open hand: visible at start, fades out during grab transition */
+@keyframes hand-open {
+  0% {
+    opacity: 1;
+  }
+  /* Visible during initial phase */
+  20% {
+    opacity: 1;
+  }
+  /* Fade out as grab hand takes over */
+  30% {
+    opacity: 0;
+  }
+  /* Stay hidden during drag */
+  85% {
+    opacity: 0;
+  }
+  /* Fade back in for reset */
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Grab hand: hidden at start, fades in during transition, stays for drag */
+@keyframes hand-grab {
+  0% {
+    opacity: 0;
+  }
+  /* Hidden during open hand phase */
+  20% {
+    opacity: 0;
+  }
+  /* Fade in as open hand fades out */
+  30% {
+    opacity: 1;
+  }
+  /* Stay visible during drag */
+  85% {
+    opacity: 1;
+  }
+  /* Fade out during reset */
+  86% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes double-tap {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  /* First tap down */
+  15% {
+    transform: translateY(4px) scale(0.95);
+    opacity: 1;
+  }
+  /* First tap up */
+  30% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  /* Brief pause */
+  40% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  /* Second tap down */
+  55% {
+    transform: translateY(4px) scale(0.95);
+    opacity: 1;
+  }
+  /* Second tap up */
+  70% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-swipe-drag-right {
+  animation: swipe-drag-right 2.5s ease-in-out infinite;
+}
+
+.animate-swipe-drag-left {
+  animation: swipe-drag-left 2.5s ease-in-out infinite;
+}
+
+.animate-hand-open {
+  animation: hand-open 2.5s ease-in-out infinite;
+}
+
+.animate-hand-grab {
+  animation: hand-grab 2.5s ease-in-out infinite;
+}
+
+.animate-double-tap {
+  animation: double-tap 1.5s ease-in-out infinite;
+}

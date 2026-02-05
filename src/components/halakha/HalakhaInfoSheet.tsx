@@ -53,7 +53,7 @@ export function HalakhaInfoSheet({
             {displayTitle}
           </h3>
           <p className="text-sm text-gray-500 mt-1">
-            {isHebrew ? "הלכה" : "Halakha"} {halakhaIndex + 1}
+            {t("halakha")} {halakhaIndex + 1}
           </p>
         </div>
 

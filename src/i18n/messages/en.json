@@ -25,6 +25,13 @@
     "resetPath": "Reset current path",
     "resetAll": "Reset all",
     "resetWarning": "This will delete your progress",
+    "hideCompleted": "Hide completed items",
+    "hideCompletedOptions": {
+      "show": "Show all",
+      "immediate": "Hide immediately",
+      "after1h": "Hide after 1 hour",
+      "after24h": "Hide after 24 hours"
+    },
     "changelog": "Changelog & Credits",
     "version": "Version",
     "cycle46": "Cycle 46",
@@ -76,19 +83,22 @@
   },
   "paths": {
     "rambam3": {
-      "label": "3 chapters/day",
-      "short": "3 chapters",
-      "description": "Complete Mishneh Torah in ~1 year"
+      "label": "Rambam 3 Chapters",
+      "description": "3 chapters per day - annual cycle"
     },
     "rambam1": {
-      "label": "1 chapter/day",
-      "short": "1 chapter",
-      "description": "Complete Mishneh Torah in ~3 years"
+      "label": "Rambam 1 Chapter",
+      "description": "1 chapter per day - 3-year cycle"
     },
     "mitzvot": {
       "label": "Sefer HaMitzvot",
-      "description": "613 commandments yearly cycle",
-      "comingSoon": "Coming soon"
+      "description": "One or more commandments daily"
+    },
+    "selectMultiple": "Select one or more study paths",
+    "badge": {
+      "rambam3": "3 Chapters",
+      "rambam1": "1 Chapter",
+      "mitzvot": "Mitzvot"
     },
     "chaptersPerDay": "Chapters per day"
   },
@@ -126,7 +136,10 @@
     "confirmReset": "Reset all progress for {title}?",
     "confirmResetPath": "Are you sure? All progress in current path will be deleted.",
     "confirmResetAll": "Are you sure? All progress in all paths will be deleted.",
-    "confirmChangeDate": "Change start date to {date}?"
+    "confirmChangeDate": "Change start date to {date}?",
+    "allComplete": "All caught up!",
+    "allCompleteHint": "Completed items are hidden. You can change this in Settings under \"Hide completed\".",
+    "openSettings": "Open Settings"
   },
   "dates": {
     "today": "Today",
@@ -169,10 +182,110 @@
     "dayNamesShort": ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
     "complete": "Complete",
     "partial": "Partial",
-    "today": "Today"
+    "today": "Today",
+    "loadingMore": "Loading more...",
+    "jumpToToday": "Jump to today",
+    "prevIncomplete": "Previous incomplete",
+    "nextIncomplete": "Next incomplete"
   },
   "filter": {
     "viewingDate": "Viewing {date}",
     "showAll": "Show all"
+  },
+  "info": {
+    "moreInfo": "More information",
+    "viewOnSefaria": "View full text with commentaries",
+    "viewOnChabad": "View with translation and commentary",
+    "halakha": "Halakha"
+  },
+  "aria": {
+    "close": "Close",
+    "selectDate": "Select date",
+    "offlineMode": "Offline mode",
+    "installApp": "Install app",
+    "settings": "Settings"
+  },
+  "scroll": {
+    "jumpToNext": "Jump to next unread"
+  },
+  "tutorial": {
+    "skip": "Skip tutorial",
+    "hint": "Hint",
+    "next": "Next",
+    "start": "Start Learning!",
+    "goToStep": "Go back to step {step}",
+    "restartTutorial": "Restart tutorial",
+    "completeTutorial": "Please complete the tutorial to get the full benefit of the app",
+    "progress": "{current}/{total}",
+    "welcome": {
+      "title": "Welcome!",
+      "instruction": "Welcome to Daily Rambam! This short tutorial will show you how to use the app. You'll learn swipe gestures and navigation."
+    },
+    "swipeRight": {
+      "title": "Swipe Right",
+      "instruction": "Swipe right on each card to mark it as complete. Try all 3 cards!",
+      "hint": "Swipe right on the highlighted card"
+    },
+    "swipeLeft": {
+      "title": "Undo - Swipe Left",
+      "instruction": "Swipe left on a completed card to mark it as incomplete. Try it on any green card.",
+      "hint": "Swipe left on a completed card"
+    },
+    "markAll": {
+      "title": "Mark All Previous",
+      "instruction": "Swipe left on an incomplete card to mark it AND all previous cards as complete. Great for catching up!"
+    },
+    "doubleTap": {
+      "title": "Double Tap",
+      "instruction": "You can also double-tap a card to toggle its read status. Quick and easy!",
+      "hint": "Try double-tapping the card",
+      "continue": "Got it!",
+      "success": "Great! You've got it!"
+    },
+    "infoIcon": {
+      "title": "More Information",
+      "instruction": "Each halakha has an info button (ⓘ) that opens external links to Sefaria, Chabad.org, and more. You can also long-press any card to access this.",
+      "hint": "Tap the info icon or long-press"
+    },
+    "dayCheckmark": {
+      "title": "Mark Day Complete",
+      "instruction": "Use the checkmark (✓) on each day's header to mark all halakhot in that day as complete at once. Perfect for catching up!"
+    },
+    "actionComplete": "Action completed!",
+    "jumpButton": {
+      "title": "Jump to Incomplete",
+      "instruction": "Use this blue button to quickly scroll to your next incomplete halakha. It appears when you have unread items."
+    },
+    "calendar": {
+      "title": "Calendar",
+      "instruction": "Use the calendar button in the header to jump to any date. View past or future halakhot by selecting a date."
+    },
+    "settings": {
+      "title": "Settings",
+      "instruction": "Access settings to customize text language, study path, and more. You can also download content for offline use."
+    },
+    "headerColors": {
+      "title": "Header Colors",
+      "instruction": "The header color indicates your status: Blue = normal, Amber = offline mode, Red = viewing a different date.",
+      "hint": "Colors help you know your current state at a glance",
+      "blue": "Blue = Normal",
+      "amber": "Amber = Offline",
+      "red": "Red = Other date"
+    },
+    "demo": {
+      "externalLinks": "External Links",
+      "halakhaExample": "Example halakha - tap info button to see links to Sefaria and Chabad.org",
+      "chapterTitle": "Laws of Dispositions Ch. 1",
+      "todayDate": "Today • 18 Shevat",
+      "halakha": "Example halakha",
+      "card1": "Laws of Character Traits, Chapter 1, Law 1",
+      "card2": "Laws of Character Traits, Chapter 1, Law 2",
+      "card3": "Laws of Character Traits, Chapter 1, Law 3",
+      "doubleTapCard": "This is a demo card. Double-tap to toggle read status."
+    },
+    "complete": {
+      "title": "You're Ready!",
+      "instruction": "You now know all the basics! Start your daily Rambam study. Swipe cards as you read, and track your progress."
+    }
   }
 }
