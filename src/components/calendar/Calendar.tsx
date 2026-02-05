@@ -5,6 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { CalendarHeader } from "./CalendarHeader";
 import { CalendarGrid } from "./CalendarGrid";
 import { useHebrewMonthCompletion } from "@/hooks/useMonthCompletion";
+import { useMultiPathHebrewMonthCompletion } from "@/hooks/useMultiPathCompletion";
+import { useAppStore } from "@/stores/appStore";
 import {
   getHebrewMonthData,
   getNextHebrewMonth,
@@ -56,9 +58,16 @@ export function Calendar({
     setLastTargetDate(targetDate);
   }
 
+  // Get active paths count to determine if we should use multi-path mode
+  const activePaths = useAppStore((state) => state.activePaths) ?? ["rambam3"];
+  const useMultiPathMode = activePaths.length > 1;
+
   // Get completion data for the displayed Hebrew month
   // Uses Gregorian dates from the Hebrew month's days array
   const completionMap = useHebrewMonthCompletion(hebrewMonth.days);
+  const multiPathCompletionMap = useMultiPathHebrewMonthCompletion(
+    hebrewMonth.days,
+  );
 
   // Navigate to previous Hebrew month
   const handlePreviousMonth = useCallback(() => {
@@ -156,6 +165,9 @@ export function Calendar({
             selectedDate={selectedDate}
             startDate={startDate}
             completionMap={completionMap}
+            multiPathCompletionMap={
+              useMultiPathMode ? multiPathCompletionMap : undefined
+            }
             onDateSelect={handleDateSelect}
           />
 

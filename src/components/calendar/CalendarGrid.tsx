@@ -1,8 +1,9 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { CalendarDay, EmptyDay } from "./CalendarDay";
 import type { DayCompletionStatus } from "@/hooks/useMonthCompletion";
+import type { MultiPathDayStatus } from "@/hooks/useMultiPathCompletion";
 import type { HebrewDayData } from "@/lib/hebrewCalendar";
 
 interface CalendarGridProps {
@@ -12,6 +13,8 @@ interface CalendarGridProps {
   selectedDate: string;
   startDate: string;
   completionMap: Record<string, DayCompletionStatus>;
+  /** Multi-path completion map (optional, for multi-path mode) */
+  multiPathCompletionMap?: Record<string, MultiPathDayStatus>;
   onDateSelect: (date: string) => void;
 }
 
@@ -25,14 +28,11 @@ export function CalendarGrid({
   selectedDate,
   startDate,
   completionMap,
+  multiPathCompletionMap,
   onDateSelect,
 }: CalendarGridProps) {
   const locale = useLocale();
-  const t = useTranslations("calendar");
   const isHebrew = locale === "he";
-
-  // Day names - Hebrew weeks start on Sunday
-  const dayNames: string[] = t.raw("dayNamesShort") as string[];
 
   // Build grid with empty cells for alignment
   // First day of Hebrew month tells us where to start
@@ -51,34 +51,16 @@ export function CalendarGrid({
     gridData.push(day);
   }
 
-  // Pad to complete the last row
-  while (gridData.length % 7 !== 0) {
-    gridData.push(null);
-  }
+  // No padding for the last row - saves vertical space
 
   return (
-    <div className="p-4">
-      {/* Day names header */}
-      <div
-        className="grid grid-cols-7 gap-1 mb-2"
-        dir={isHebrew ? "rtl" : "ltr"}
-      >
-        {dayNames.map((name, index) => (
-          <div
-            key={index}
-            className="w-10 h-8 flex items-center justify-center text-xs font-medium text-gray-500"
-          >
-            {name}
-          </div>
-        ))}
-      </div>
-
-      {/* Calendar grid */}
+    <div className="px-4 py-2">
+      {/* Calendar grid - day names are in sticky header */}
       <div
         className="grid grid-cols-7 gap-1"
         dir={isHebrew ? "rtl" : "ltr"}
         role="grid"
-        aria-label={t("title")}
+        aria-label="Calendar"
       >
         {gridData.map((day, index) => {
           if (day === null) {
@@ -104,6 +86,7 @@ export function CalendarGrid({
               isFuture={isFuture}
               isBeforeStart={isBeforeStart}
               completionStatus={completionMap[dateStr] || null}
+              multiPathStatus={multiPathCompletionMap?.[dateStr] || null}
               onClick={() => onDateSelect(dateStr)}
             />
           );
