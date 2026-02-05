@@ -40,6 +40,7 @@ interface AppStore extends AppSettings {
   markIncomplete: (path: StudyPath, date: string, index: number) => void;
   markAllComplete: (path: StudyPath, date: string, count: number) => void;
   resetDay: (path: StudyPath, date: string) => void;
+  importDone: (done: CompletionMap) => void;
 
   // Reset actions
   resetPath: (path: StudyPath) => void;
@@ -152,6 +153,11 @@ export const useAppStore = create<AppStore>()(
           });
           return { done: newDone };
         }),
+
+      importDone: (importedDone) =>
+        set((state) => ({
+          done: { ...state.done, ...importedDone },
+        })),
 
       // Reset actions
       resetPath: (path) =>

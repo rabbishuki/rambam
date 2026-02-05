@@ -1,0 +1,250 @@
+/**
+ * Data export/import service
+ * Allows users to transfer their study progress between devices
+ */
+
+import { useAppStore } from "@/stores/appStore";
+import { useLocationStore } from "@/stores/locationStore";
+import type { StudyPath, TextLanguage, CompletionMap } from "@/types";
+
+/**
+ * Export data format (versioned for future compatibility)
+ */
+export interface ExportData {
+  version: 1;
+  exportedAt: string;
+  app: {
+    studyPath: StudyPath;
+    textLanguage: TextLanguage;
+    autoMarkPrevious: boolean;
+    hasSeenAutoMarkPrompt: boolean;
+    startDates: Record<StudyPath, string>;
+    done: CompletionMap;
+  };
+  location?: {
+    coords: { latitude: number; longitude: number };
+    cityName: { he: string; en: string };
+    isManual: boolean;
+  };
+}
+
+/**
+ * Gather all exportable data from stores
+ */
+export function exportData(): ExportData {
+  const appState = useAppStore.getState();
+  const locationState = useLocationStore.getState();
+
+  const data: ExportData = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    app: {
+      studyPath: appState.studyPath,
+      textLanguage: appState.textLanguage,
+      autoMarkPrevious: appState.autoMarkPrevious,
+      hasSeenAutoMarkPrompt: appState.hasSeenAutoMarkPrompt,
+      startDates: appState.startDates,
+      done: appState.done,
+    },
+  };
+
+  // Only include location if user has set it up
+  if (locationState.hasCompletedSetup && !locationState.isDefault) {
+    data.location = {
+      coords: locationState.coords,
+      cityName: locationState.cityName,
+      isManual: locationState.isManual,
+    };
+  }
+
+  return data;
+}
+
+/**
+ * Create and download a JSON backup file
+ */
+export function downloadExport(): void {
+  const data = exportData();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+
+  // Generate filename with date
+  const date = new Date().toISOString().split("T")[0];
+  const filename = `rambam-backup-${date}.json`;
+
+  // Create download link and trigger it
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Type guard to validate imported data structure
+ */
+export function validateImportData(data: unknown): data is ExportData {
+  if (!data || typeof data !== "object") {
+    return false;
+  }
+
+  const obj = data as Record<string, unknown>;
+
+  // Check version
+  if (obj.version !== 1) {
+    return false;
+  }
+
+  // Check app object exists
+  if (!obj.app || typeof obj.app !== "object") {
+    return false;
+  }
+
+  const app = obj.app as Record<string, unknown>;
+
+  // Check required app fields
+  if (
+    typeof app.studyPath !== "string" ||
+    !["rambam3", "rambam1", "mitzvot"].includes(app.studyPath)
+  ) {
+    return false;
+  }
+
+  if (
+    typeof app.textLanguage !== "string" ||
+    !["hebrew", "english", "both"].includes(app.textLanguage)
+  ) {
+    return false;
+  }
+
+  if (typeof app.autoMarkPrevious !== "boolean") {
+    return false;
+  }
+
+  if (typeof app.hasSeenAutoMarkPrompt !== "boolean") {
+    return false;
+  }
+
+  if (!app.startDates || typeof app.startDates !== "object") {
+    return false;
+  }
+
+  if (!app.done || typeof app.done !== "object") {
+    return false;
+  }
+
+  // Validate done map entries (should be string keys and string timestamps)
+  for (const [key, value] of Object.entries(
+    app.done as Record<string, unknown>,
+  )) {
+    if (typeof key !== "string" || typeof value !== "string") {
+      return false;
+    }
+  }
+
+  // Location is optional, but if present must be valid
+  if (obj.location !== undefined) {
+    if (typeof obj.location !== "object" || obj.location === null) {
+      return false;
+    }
+
+    const loc = obj.location as Record<string, unknown>;
+
+    if (!loc.coords || typeof loc.coords !== "object") {
+      return false;
+    }
+
+    const coords = loc.coords as Record<string, unknown>;
+    if (
+      typeof coords.latitude !== "number" ||
+      typeof coords.longitude !== "number"
+    ) {
+      return false;
+    }
+
+    if (!loc.cityName || typeof loc.cityName !== "object") {
+      return false;
+    }
+
+    const cityName = loc.cityName as Record<string, unknown>;
+    if (typeof cityName.he !== "string" || typeof cityName.en !== "string") {
+      return false;
+    }
+
+    if (typeof loc.isManual !== "boolean") {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Apply imported data to stores
+ * Merges completion data with existing (imported entries take precedence)
+ */
+export function importData(data: ExportData): void {
+  const appStore = useAppStore.getState();
+  const locationStore = useLocationStore.getState();
+
+  // Apply app settings
+  appStore.setStudyPath(data.app.studyPath);
+  appStore.setTextLanguage(data.app.textLanguage);
+  appStore.setAutoMarkPrevious(data.app.autoMarkPrevious);
+  appStore.setHasSeenAutoMarkPrompt(data.app.hasSeenAutoMarkPrompt);
+
+  // Apply start dates for each path
+  for (const path of ["rambam3", "rambam1", "mitzvot"] as StudyPath[]) {
+    if (data.app.startDates[path]) {
+      appStore.setStartDate(path, data.app.startDates[path]);
+    }
+  }
+
+  // Merge completion data (imported takes precedence)
+  appStore.importDone(data.app.done);
+
+  // Apply location if present
+  if (data.location) {
+    locationStore.setLocation(
+      data.location.coords,
+      data.location.cityName,
+      data.location.isManual,
+      false, // Not default since user explicitly set it
+    );
+    locationStore.markLocationSetup();
+  }
+}
+
+/**
+ * Parse and validate a File object as import data
+ */
+export async function parseImportFile(file: File): Promise<ExportData> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const data = JSON.parse(text);
+
+        if (!validateImportData(data)) {
+          reject(new Error("Invalid backup file format"));
+          return;
+        }
+
+        resolve(data);
+      } catch {
+        reject(new Error("Failed to parse backup file"));
+      }
+    };
+
+    reader.onerror = () => {
+      reject(new Error("Failed to read file"));
+    };
+
+    reader.readAsText(file);
+  });
+}
