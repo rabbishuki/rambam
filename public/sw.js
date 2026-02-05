@@ -3,7 +3,7 @@
  * Handles offline caching and background sync
  */
 
-const CACHE_NAME = "rambam-v6";
+const CACHE_NAME = "rambam-v8";
 const OFFLINE_URL = "/offline.html";
 
 // Assets to precache on install
@@ -19,6 +19,10 @@ const PRECACHE_ASSETS = [
   "/contributors/meir.png",
   "/contributors/claude.jpeg",
   "/contributors/rabbi.jpeg",
+  "/contributors/rambam.png",
+  "/contributors/sefaria.png",
+  "/contributors/chabad.png",
+  "/contributors/hebcal.png",
 ];
 
 // Cache strategies for different request types

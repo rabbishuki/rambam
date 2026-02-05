@@ -11,6 +11,8 @@ interface HeaderProps {
   onInstallClick?: () => void;
   showInstallButton?: boolean;
   isViewingOtherDate?: boolean;
+  /** Force blue color during tutorial - colors will be taught separately */
+  forceDefaultColor?: boolean;
 }
 
 export function Header({
@@ -19,6 +21,7 @@ export function Header({
   onInstallClick,
   showInstallButton = false,
   isViewingOtherDate = false,
+  forceDefaultColor = false,
 }: HeaderProps) {
   const t = useTranslations("app");
   const tOffline = useTranslations("offline");
@@ -29,15 +32,17 @@ export function Header({
   const { isOffline } = useOfflineStatus();
 
   // Update body background based on state
-  // Priority: viewing other date (red) > offline (amber) > normal (blue)
+  // Priority: forceDefaultColor (blue) > viewing other date (red) > offline (amber) > normal (blue)
   useEffect(() => {
-    const bgColor = isViewingOtherDate
-      ? "#dc2626" // red-600
-      : isOffline
-        ? "#f59e0b" // amber-500
-        : "#2563eb"; // blue-600
+    const bgColor = forceDefaultColor
+      ? "#2563eb" // blue-600 - forced during tutorial
+      : isViewingOtherDate
+        ? "#dc2626" // red-600
+        : isOffline
+          ? "#f59e0b" // amber-500
+          : "#2563eb"; // blue-600
     document.documentElement.style.setProperty("--app-bg", bgColor);
-  }, [isViewingOtherDate, isOffline]);
+  }, [isViewingOtherDate, isOffline, forceDefaultColor]);
 
   return (
     <header
@@ -139,6 +144,7 @@ export function Header({
 
         {/* Calendar button */}
         <button
+          id="calendar-button"
           onClick={onCalendarClick}
           className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 active:bg-white/40 transition-colors"
           aria-label="בחר תאריך"
@@ -162,6 +168,7 @@ export function Header({
 
         {/* Settings button */}
         <button
+          id="settings-button"
           onClick={onSettingsClick}
           className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 active:bg-white/40 transition-colors"
           aria-label="הגדרות"

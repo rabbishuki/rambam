@@ -17,7 +17,19 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.ico",
-    apple: "/icon-192.png",
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: 'רמב"ם יומי - Daily Rambam',
+    description: 'עקוב אחר לימוד הרמב"ם היומי שלך עם כרטיסיות להחלקה',
+    images: ["/logo.png"],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: 'רמב"ם יומי - Daily Rambam',
+    description: 'עקוב אחר לימוד הרמב"ם היומי שלך עם כרטיסיות להחלקה',
+    images: ["/logo.png"],
   },
 };
 
@@ -59,7 +71,11 @@ export default async function LocaleLayout({
         <meta httpEquiv="Content-Language" content="he, en" />
         {/* Preconnect to external resources for faster loading */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
         <link rel="preconnect" href="https://www.sefaria.org" />
         <link rel="preconnect" href="https://www.hebcal.com" />
       </head>

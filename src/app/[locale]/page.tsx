@@ -15,12 +15,20 @@ import {
   InstallPrompt,
   useInstallPrompt,
 } from "@/components/pwa/InstallPrompt";
-import { UpdateBanner } from "@/components/pwa/UpdateBanner";
-import { initializeOffline } from "@/services/offlineInit";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
+import { ScrollToIncompleteFAB } from "@/components/ui/ScrollToIncompleteFAB";
+import dynamic from "next/dynamic";
 import { fetchCalendar, fetchHalakhot } from "@/services/sefaria";
+import { useTutorial } from "@/hooks/useTutorial";
+
+// Dynamic import to avoid SSR hydration issues
+const Tutorial = dynamic(
+  () => import("@/components/tutorial").then((mod) => mod.Tutorial),
+  { ssr: false },
+);
 import { fetchHebrewDate } from "@/services/hebcal";
 import { dateRange } from "@/lib/dates";
+import { isDayComplete } from "@/stores/appStore";
 import type { DayData, StudyPath } from "@/types";
 
 export default function HomePage() {
@@ -34,10 +42,13 @@ export default function HomePage() {
 
   // App store
   const studyPath = useAppStore((state) => state.studyPath);
+  const activePaths = useAppStore((state) => state.activePaths);
   const textLanguage = useAppStore((state) => state.textLanguage);
   const autoMarkPrevious = useAppStore((state) => state.autoMarkPrevious);
+  const hideCompleted = useAppStore((state) => state.hideCompleted);
   const startDates = useAppStore((state) => state.startDates);
   const days = useAppStore((state) => state.days);
+  const done = useAppStore((state) => state.done);
   const hasMigratedLegacy = useAppStore((state) => state.hasMigratedLegacy);
   const setDaysData = useAppStore((state) => state.setDaysData);
   const setDayData = useAppStore((state) => state.setDayData);
@@ -61,9 +72,50 @@ export default function HomePage() {
   // Jewish date
   const today = useJewishDate();
 
-  // Current path's data
-  const startDate = startDates[studyPath];
+  // Tutorial state - used to hide UI elements during tutorial
+  const { isActive: isTutorialActive, currentStage } = useTutorial();
+  const isJumpButtonStage = currentStage?.id === "jump-button";
+  const isSettingsStage = currentStage?.id === "settings";
+
+  // Get earliest start date across all active paths
+  const startDate = useMemo(() => {
+    // Guard against undefined during hydration
+    if (!activePaths || activePaths.length === 0) {
+      return startDates?.rambam3 ?? "2026-02-03";
+    }
+    return activePaths.reduce((earliest, path) => {
+      const pathStart = startDates[path];
+      return pathStart < earliest ? pathStart : earliest;
+    }, startDates[activePaths[0]]);
+  }, [activePaths, startDates]);
+
+  // Primary path's days (for backward compat with some existing logic)
   const pathDays = days[studyPath];
+
+  // Helper to check if a day should be hidden based on completion
+  const shouldHideDay = useCallback(
+    (date: string, path: StudyPath): boolean => {
+      if (hideCompleted === "show") return false;
+
+      const dayData = days[path][date];
+      if (!dayData) return false;
+      if (!isDayComplete(done, path, date, dayData.count)) return false;
+
+      if (hideCompleted === "immediate") return true;
+
+      // Check completion timestamp for time-based hiding
+      // Find the last completed item's timestamp
+      const lastCompletionKey = `${path}:${date}:${dayData.count - 1}`;
+      const completedAt = done[lastCompletionKey];
+      if (!completedAt) return false;
+
+      const hoursAgo = (Date.now() - new Date(completedAt).getTime()) / 3600000;
+      if (hideCompleted === "after1h") return hoursAgo >= 1;
+      if (hideCompleted === "after24h") return hoursAgo >= 24;
+      return false;
+    },
+    [hideCompleted, days, done],
+  );
 
   // Migrate legacy localStorage data
   useEffect(() => {
@@ -101,7 +153,7 @@ export default function HomePage() {
       if (legacyDone) {
         try {
           const parsedDone = JSON.parse(legacyDone) as Record<string, string>;
-          Object.entries(parsedDone).forEach(([key, _value]) => {
+          Object.keys(parsedDone).forEach((key) => {
             // Old format: "date:index" -> new format: "path:date:index"
             const parts = key.split(":");
             if (parts.length === 2) {
@@ -136,11 +188,6 @@ export default function HomePage() {
     setMigrated();
   }, [hasMigratedLegacy, setMigrated, setStartDate, setDaysData, markComplete]);
 
-  // Initialize offline-first infrastructure (IndexedDB, background sync, cleanup)
-  useEffect(() => {
-    initializeOffline();
-  }, []);
-
   // Wait for Zustand stores to hydrate from localStorage before checking setup state
   useEffect(() => {
     // Check if location store has hydrated
@@ -164,7 +211,7 @@ export default function HomePage() {
     }
   }, [hasHydrated, hasCompletedSetup]);
 
-  // Load missing days data (only after location is set up)
+  // Load missing days data for all active paths (only after location is set up)
   useEffect(() => {
     // Don't load data until location is set up
     if (!hasCompletedSetup) {
@@ -177,61 +224,66 @@ export default function HomePage() {
 
       try {
         const allDates = dateRange(startDate, today);
-        const missingDates = allDates.filter((date) => !pathDays[date]);
 
-        if (missingDates.length === 0) {
-          setIsLoading(false);
-          return;
-        }
+        // Load data for each active path
+        for (const path of activePaths) {
+          const pathData = days[path];
+          const pathStartDate = startDates[path];
+          const missingDates = allDates.filter(
+            (date) => date >= pathStartDate && !pathData[date],
+          );
 
-        // Fetch all missing dates in parallel
-        const results = await Promise.allSettled(
-          missingDates.map(async (date) => {
-            const calData = await fetchCalendar(date, studyPath);
-            const { halakhot, chapterBreaks } = await fetchHalakhot(
-              calData.ref,
-            );
+          if (missingDates.length === 0) continue;
 
-            // Use cached Hebrew dates if available, otherwise fetch
-            let heDate = calData.heDate;
-            let enDate = calData.enDate;
-            if (!heDate || !enDate) {
-              const dateResult = await fetchHebrewDate(date);
-              heDate = dateResult?.he;
-              enDate = dateResult?.en;
+          // Fetch all missing dates in parallel for this path
+          const results = await Promise.allSettled(
+            missingDates.map(async (date) => {
+              const calData = await fetchCalendar(date, path);
+              const { halakhot, chapterBreaks } = await fetchHalakhot(
+                calData.ref,
+              );
+
+              // Use cached Hebrew dates if available, otherwise fetch
+              let heDate = calData.heDate;
+              let enDate = calData.enDate;
+              if (!heDate || !enDate) {
+                const dateResult = await fetchHebrewDate(date);
+                heDate = dateResult?.he;
+                enDate = dateResult?.en;
+              }
+
+              return {
+                date,
+                data: {
+                  he: calData.he,
+                  en: calData.en,
+                  ref: calData.ref,
+                  count: halakhot.length,
+                  heDate,
+                  enDate,
+                  texts: halakhot,
+                  chapterBreaks,
+                } as DayData,
+              };
+            }),
+          );
+
+          // Process results
+          const newDays: Record<string, DayData> = {};
+          results.forEach((result, index) => {
+            if (result.status === "fulfilled") {
+              newDays[result.value.date] = result.value.data;
+            } else {
+              console.error(
+                `Failed to load ${path}/${missingDates[index]}:`,
+                result.reason,
+              );
             }
+          });
 
-            return {
-              date,
-              data: {
-                he: calData.he,
-                en: calData.en,
-                ref: calData.ref,
-                count: halakhot.length,
-                heDate,
-                enDate,
-                texts: halakhot,
-                chapterBreaks,
-              } as DayData,
-            };
-          }),
-        );
-
-        // Process results
-        const newDays: Record<string, DayData> = {};
-        results.forEach((result, index) => {
-          if (result.status === "fulfilled") {
-            newDays[result.value.date] = result.value.data;
-          } else {
-            console.error(
-              `Failed to load ${missingDates[index]}:`,
-              result.reason,
-            );
+          if (Object.keys(newDays).length > 0) {
+            setDaysData(path, newDays);
           }
-        });
-
-        if (Object.keys(newDays).length > 0) {
-          setDaysData(studyPath, newDays);
         }
       } catch (error) {
         console.error("Failed to load days:", error);
@@ -241,15 +293,57 @@ export default function HomePage() {
     }
 
     loadMissingDays();
-  }, [startDate, today, studyPath, pathDays, setDaysData, hasCompletedSetup]);
+  }, [
+    startDate,
+    today,
+    activePaths,
+    days,
+    startDates,
+    setDaysData,
+    hasCompletedSetup,
+  ]);
 
-  // Get sorted dates (newest first)
-  const sortedDates = Object.keys(pathDays)
-    .filter((date) => date <= today && date >= startDate)
-    .sort((a, b) => b.localeCompare(a));
+  // Get all unique dates across all active paths, sorted newest first
+  const sortedDates = useMemo(() => {
+    if (!activePaths || activePaths.length === 0) return [];
+    const allDates = new Set<string>();
+    activePaths.forEach((path) => {
+      const pathStart = startDates[path];
+      Object.keys(days[path] ?? {})
+        .filter((date) => date <= today && date >= pathStart)
+        .forEach((date) => allDates.add(date));
+    });
+    return Array.from(allDates).sort((a, b) => b.localeCompare(a));
+  }, [activePaths, days, startDates, today]);
+
+  // Build display data: for each date, show each active path that has data for that date
+  const displayData = useMemo(() => {
+    if (!activePaths || activePaths.length === 0) return [];
+    const dates = viewingDate ? [viewingDate] : sortedDates;
+    const result: Array<{
+      date: string;
+      path: StudyPath;
+      dayData: DayData;
+    }> = [];
+
+    dates.forEach((date) => {
+      activePaths.forEach((path) => {
+        const dayData = days[path]?.[date];
+        if (dayData && !shouldHideDay(date, path)) {
+          result.push({ date, path, dayData });
+        }
+      });
+    });
+
+    return result;
+  }, [viewingDate, sortedDates, activePaths, days, shouldHideDay]);
 
   // Handle calendar button click
   const handleCalendarClick = useCallback(() => {
+    // Block calendar during entire tutorial (nothing to show - would be empty)
+    if (isTutorialActive && !viewingDate) {
+      return;
+    }
     if (viewingDate) {
       // Return to normal view (today)
       setViewingDate(null);
@@ -257,7 +351,16 @@ export default function HomePage() {
       // Open calendar modal
       setCalendarOpen(true);
     }
-  }, [viewingDate]);
+  }, [viewingDate, isTutorialActive]);
+
+  // Handle settings button click
+  const handleSettingsClick = useCallback(() => {
+    // Block settings during tutorial until the settings stage
+    if (isTutorialActive && !isSettingsStage) {
+      return;
+    }
+    setSettingsOpen(true);
+  }, [isTutorialActive, isSettingsStage]);
 
   // Handle date selection from calendar
   const handleCalendarSelect = useCallback(
@@ -265,37 +368,41 @@ export default function HomePage() {
       setCalendarOpen(false);
       setViewingDate(selectedDate);
 
-      // Load this date if not already loaded
-      if (!pathDays[selectedDate]) {
-        try {
-          const calData = await fetchCalendar(selectedDate, studyPath);
-          const { halakhot, chapterBreaks } = await fetchHalakhot(calData.ref);
+      // Load this date for all active paths if not already loaded
+      for (const path of activePaths) {
+        if (!days[path][selectedDate]) {
+          try {
+            const calData = await fetchCalendar(selectedDate, path);
+            const { halakhot, chapterBreaks } = await fetchHalakhot(
+              calData.ref,
+            );
 
-          // Use cached Hebrew dates if available, otherwise fetch
-          let heDate = calData.heDate;
-          let enDate = calData.enDate;
-          if (!heDate || !enDate) {
-            const dateResult = await fetchHebrewDate(selectedDate);
-            heDate = dateResult?.he;
-            enDate = dateResult?.en;
+            // Use cached Hebrew dates if available, otherwise fetch
+            let heDate = calData.heDate;
+            let enDate = calData.enDate;
+            if (!heDate || !enDate) {
+              const dateResult = await fetchHebrewDate(selectedDate);
+              heDate = dateResult?.he;
+              enDate = dateResult?.en;
+            }
+
+            setDayData(path, selectedDate, {
+              he: calData.he,
+              en: calData.en,
+              ref: calData.ref,
+              count: halakhot.length,
+              heDate,
+              enDate,
+              texts: halakhot,
+              chapterBreaks,
+            });
+          } catch (error) {
+            console.error(`Failed to load ${path}/${selectedDate}:`, error);
           }
-
-          setDayData(studyPath, selectedDate, {
-            he: calData.he,
-            en: calData.en,
-            ref: calData.ref,
-            count: halakhot.length,
-            heDate,
-            enDate,
-            texts: halakhot,
-            chapterBreaks,
-          });
-        } catch (error) {
-          console.error("Failed to load selected date:", error);
         }
       }
     },
-    [pathDays, studyPath, setDayData],
+    [activePaths, days, setDayData],
   );
 
   // Handle location setup complete
@@ -303,8 +410,8 @@ export default function HomePage() {
     setShowLocationDialog(false);
   }, []);
 
-  // Dates to display
-  const displayDates = viewingDate ? [viewingDate] : sortedDates;
+  // Check if we have any data to show
+  const hasAnyData = sortedDates.length > 0;
 
   // Check if we're filtering to a specific date
   const isFiltering = viewingDate !== null;
@@ -329,16 +436,18 @@ export default function HomePage() {
   return (
     <div className="container">
       <Header
-        onSettingsClick={() => setSettingsOpen(true)}
+        onSettingsClick={handleSettingsClick}
         onCalendarClick={handleCalendarClick}
         onInstallClick={install}
-        showInstallButton={canInstall}
+        showInstallButton={canInstall && !isTutorialActive}
         isViewingOtherDate={viewingDate !== null && viewingDate !== today}
+        forceDefaultColor={isTutorialActive}
       />
 
-      <StatsBar />
+      {/* Hide stats bar during tutorial */}
+      {!isTutorialActive && <StatsBar selectedDate={viewingDate} />}
 
-      <main className="p-4 pb-8">
+      <main className="px-0 sm:px-4 pb-8 pt-4">
         {/* Date filter indicator - shown when viewing a specific date */}
         {isFiltering && (
           <div
@@ -396,8 +505,21 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Show loading after location is set up */}
-        {hasCompletedSetup && isLoading && sortedDates.length === 0 && (
+        {/* Welcome message during tutorial */}
+        {hasCompletedSetup && isTutorialActive && (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">📚</div>
+            <div className="text-2xl font-bold text-gray-800 mb-2">
+              {t("welcome.title")}
+            </div>
+            <div className="text-gray-500">
+              {t("tutorial.completeTutorial")}
+            </div>
+          </div>
+        )}
+
+        {/* Show loading after location is set up (only when not in tutorial) */}
+        {hasCompletedSetup && !isTutorialActive && isLoading && !hasAnyData && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📚</div>
             <div className="text-2xl font-bold text-gray-800 mb-2">
@@ -408,41 +530,62 @@ export default function HomePage() {
         )}
 
         {/* Show offline message when no cached data */}
+        {hasCompletedSetup && !isLoading && !hasAnyData && isOffline && (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">📴</div>
+            <div className="text-2xl font-bold text-gray-800 mb-2">
+              {t("offline.noConnection")}
+            </div>
+            <div className="text-gray-500 mb-4">{t("offline.noData")}</div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              {t("offline.tryAgain")}
+            </button>
+          </div>
+        )}
+
+        {/* All complete message - shown when all content is hidden */}
         {hasCompletedSetup &&
           !isLoading &&
-          sortedDates.length === 0 &&
-          isOffline && (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">📴</div>
+          hasAnyData &&
+          displayData.length === 0 &&
+          !viewingDate && (
+            <div
+              className="text-center py-12 px-4"
+              dir={isHebrew ? "rtl" : "ltr"}
+            >
+              <div className="text-6xl mb-4">🎉</div>
               <div className="text-2xl font-bold text-gray-800 mb-2">
-                {t("offline.noConnection")}
+                {t("messages.allComplete")}
               </div>
-              <div className="text-gray-500 mb-4">{t("offline.noData")}</div>
+              <div className="text-gray-500 mb-4">
+                {t("messages.allCompleteHint")}
+              </div>
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => setSettingsOpen(true)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                {t("offline.tryAgain")}
+                {t("messages.openSettings")}
               </button>
             </div>
           )}
 
-        {displayDates.map((date) => {
-          const dayData = pathDays[date];
-          if (!dayData) return null;
-
-          return (
+        {/* Hide real halacha cards during tutorial */}
+        {!isTutorialActive &&
+          displayData.map(({ date, path, dayData }) => (
             <DayGroup
-              key={date}
+              key={`${path}:${date}`}
               date={date}
               dayData={dayData}
-              studyPath={studyPath}
+              studyPath={path}
               textLanguage={textLanguage}
               autoMarkPrevious={autoMarkPrevious}
               defaultOpen={date === today || viewingDate === date}
+              showPathBadge={(activePaths?.length ?? 0) > 1}
             />
-          );
-        })}
+          ))}
       </main>
 
       <SettingsPanel
@@ -451,7 +594,6 @@ export default function HomePage() {
       />
 
       <InstallPrompt />
-      <UpdateBanner />
 
       {/* Location setup dialog - shown on first visit */}
       <LocationSetupDialog
@@ -468,6 +610,20 @@ export default function HomePage() {
         today={today}
         startDate={startDate}
       />
+
+      {/* Scroll to first incomplete FAB - show during jump-button tutorial stage */}
+      {hasCompletedSetup &&
+        !viewingDate &&
+        (!isTutorialActive || isJumpButtonStage) && (
+          <ScrollToIncompleteFAB
+            activePaths={activePaths}
+            days={days}
+            sortedDates={sortedDates}
+          />
+        )}
+
+      {/* Tutorial overlay - shown only after onboarding is complete */}
+      {hasCompletedSetup && <Tutorial />}
     </div>
   );
 }
