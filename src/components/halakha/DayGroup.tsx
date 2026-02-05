@@ -8,6 +8,7 @@ import { useJewishDate } from "@/hooks/useJewishDate";
 import { daysBetween } from "@/lib/dates";
 import { HalakhaCard } from "./HalakhaCard";
 import { ChapterDivider } from "./ChapterDivider";
+import { PathBadge } from "./PathBadge";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { DayData, StudyPath, TextLanguage } from "@/types";
 
@@ -19,6 +20,7 @@ interface DayGroupProps {
   autoMarkPrevious: boolean;
   defaultOpen?: boolean;
   onScrollToIncomplete?: () => void;
+  showPathBadge?: boolean;
 }
 
 export function DayGroup({
@@ -29,6 +31,7 @@ export function DayGroup({
   autoMarkPrevious,
   defaultOpen = false,
   onScrollToIncomplete,
+  showPathBadge = false,
 }: DayGroupProps) {
   const locale = useLocale();
   const t = useTranslations();
@@ -45,6 +48,7 @@ export function DayGroup({
   const { halakhot, chapterBreaks, isLoading, error } = useHalakhaData(
     isOpen ? dayData.ref : "",
     date,
+    studyPath,
     isOpen ? dayData.refs : undefined, // Pass multiple refs for Sefer HaMitzvot
   );
 
@@ -157,8 +161,10 @@ export function DayGroup({
     <details
       open={isOpen}
       onToggle={(e) => setIsOpen((e.target as HTMLDetailsElement).open)}
+      data-day-group={`${studyPath}:${date}`}
       className={`
-        mb-4 border rounded-xl bg-white
+        mb-4 border sm:rounded-xl rounded-none bg-white
+        sm:mx-0 -mx-0
         ${isOpen ? "" : "overflow-hidden"}
         ${isComplete ? "opacity-60 border-green-500" : "border-gray-200"}
       `}
@@ -173,8 +179,16 @@ export function DayGroup({
           bg-gradient-to-b from-white to-gray-50 border-b border-gray-200
           flex items-center justify-between gap-3
           hover:bg-gray-50 active:bg-gray-100
-          ${isOpen ? "sticky top-[60px] z-10 rounded-t-xl shadow-sm" : ""}
+          ${isOpen ? "sticky z-10 sm:rounded-t-xl rounded-none shadow-sm" : ""}
         `}
+        style={
+          isOpen
+            ? {
+                top: "var(--daygroup-sticky-top, 120px)",
+                transition: "top 300ms ease",
+              }
+            : undefined
+        }
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <span
@@ -183,8 +197,11 @@ export function DayGroup({
             {arrow}
           </span>
           <div className="flex-1 min-w-0">
-            <div className="text-lg font-semibold text-gray-800 truncate">
-              {displayTitle}
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-semibold text-gray-800 truncate">
+                {displayTitle}
+              </span>
+              {showPathBadge && <PathBadge path={studyPath} />}
             </div>
             <div className="text-sm text-gray-500 mt-0.5">
               {dateLabel} • {doneCount}/{dayData.count}
@@ -252,6 +269,7 @@ export function DayGroup({
                   textLanguage={textLanguage}
                   autoMarkPrevious={autoMarkPrevious}
                   onMarkComplete={handleMarkComplete}
+                  dayData={dayData}
                 />
               </div>
             ))}
