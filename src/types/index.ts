@@ -1,6 +1,9 @@
 // Study path options
 export type StudyPath = "rambam3" | "rambam1" | "mitzvot";
 
+// Hide completed mode options
+export type HideCompletedMode = "show" | "immediate" | "after1h" | "after24h";
+
 // Sefaria calendar name mapping
 // - "Daily Rambam (3 Chapters)" = 3 chapters per day
 // - "Daily Rambam" = 1 chapter per day (NOT "Daily Rambam (1 Chapter)")
@@ -58,9 +61,11 @@ export interface SunsetData {
 
 // App settings - persisted
 export interface AppSettings {
-  studyPath: StudyPath;
+  studyPath: StudyPath; // Legacy: primary path (kept for backward compatibility)
+  activePaths: StudyPath[]; // NEW: Multiple paths can be active simultaneously
   textLanguage: TextLanguage;
   autoMarkPrevious: boolean;
+  hideCompleted: HideCompletedMode; // NEW: Hide completed days/items setting
   // Per-path start dates (allows switching paths while preserving progress)
   startDates: {
     rambam3: string;
@@ -97,6 +102,36 @@ export interface Stats {
   backlog: number;
 }
 
+// Bookmark - saved halakha with optional personal note
+export interface Bookmark {
+  id: string; // "path:date:index"
+  path: StudyPath;
+  date: string;
+  index: number;
+  note?: string; // Personal annotation
+  createdAt: string;
+  updatedAt: string;
+  titleHe: string; // Cached for list display
+  titleEn?: string;
+  ref: string; // Sefaria reference
+}
+
+// Map of bookmark ID to Bookmark
+export type BookmarksMap = Record<string, Bookmark>;
+
+// Day summary - "What I Learned" reflection
+export interface DaySummary {
+  id: string; // "path:date"
+  path: StudyPath;
+  date: string;
+  text: string; // User's summary
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Map of summary ID to DaySummary
+export type SummariesMap = Record<string, DaySummary>;
+
 // Default coordinates (Tel Aviv)
 export const DEFAULT_COORDS = {
   latitude: 32.0853,
@@ -109,8 +144,10 @@ export const CYCLE_46_START = "2026-02-03";
 // Default settings
 export const DEFAULT_SETTINGS: AppSettings = {
   studyPath: "rambam3",
+  activePaths: ["rambam3"], // Default: single path matching studyPath
   textLanguage: "hebrew",
   autoMarkPrevious: false, // Default to manual marking
+  hideCompleted: "after24h", // Default: hide completed after 24 hours
   startDates: {
     rambam3: CYCLE_46_START,
     rambam1: CYCLE_46_START,

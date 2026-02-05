@@ -88,6 +88,7 @@ export function Tutorial({ onComplete }: TutorialProps) {
     canAdvanceManually,
     actionsThisStage,
     minActionsRequired,
+    isWhatsNewMode,
     reportAction,
     advanceStage,
     skipTutorial,
@@ -513,6 +514,7 @@ export function Tutorial({ onComplete }: TutorialProps) {
         actionPerformed={actionPerformed}
         actionsThisStage={actionsThisStage}
         minActionsRequired={minActionsRequired}
+        isWhatsNewMode={isWhatsNewMode}
       />
     </>
   );

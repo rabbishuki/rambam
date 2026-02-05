@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
+import { useAppStore, countBookmarks } from "@/stores/appStore";
+import { BookmarksList } from "@/components/bookmarks";
+import { BookmarkIcon } from "@/components/ui/icons/BookmarkIcon";
 
 interface HeaderProps {
   onSettingsClick: () => void;
@@ -26,11 +29,17 @@ export function Header({
   const t = useTranslations("app");
   const tOffline = useTranslations("offline");
   const tAria = useTranslations("aria");
+  const tBookmarks = useTranslations("bookmarks");
   const locale = useLocale();
   const isHebrew = locale === "he";
   const [datePickerValue, setDatePickerValue] = useState("");
   const [showOfflineTooltip, setShowOfflineTooltip] = useState(false);
+  const [showBookmarks, setShowBookmarks] = useState(false);
   const { isOffline } = useOfflineStatus();
+
+  // Bookmarks count
+  const bookmarks = useAppStore((state) => state.bookmarks);
+  const bookmarkCount = countBookmarks(bookmarks);
 
   // Update body background based on state
   // Priority: forceDefaultColor (blue) > viewing other date (red) > offline (amber) > normal (blue)
@@ -143,6 +152,20 @@ export function Header({
           </button>
         )}
 
+        {/* Bookmarks button */}
+        <button
+          onClick={() => setShowBookmarks(true)}
+          className="relative w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 active:bg-white/40 transition-colors"
+          aria-label={tBookmarks("title")}
+        >
+          <BookmarkIcon size={20} filled={bookmarkCount > 0} />
+          {bookmarkCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {bookmarkCount > 99 ? "99+" : bookmarkCount}
+            </span>
+          )}
+        </button>
+
         {/* Calendar button */}
         <button
           id="calendar-button"
@@ -189,6 +212,12 @@ export function Header({
           </svg>
         </button>
       </div>
+
+      {/* Bookmarks list bottom sheet */}
+      <BookmarksList
+        isOpen={showBookmarks}
+        onClose={() => setShowBookmarks(false)}
+      />
     </header>
   );
 }

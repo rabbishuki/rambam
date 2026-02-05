@@ -9,6 +9,7 @@ import { daysBetween } from "@/lib/dates";
 import { HalakhaCard } from "./HalakhaCard";
 import { ChapterDivider } from "./ChapterDivider";
 import { PathBadge } from "./PathBadge";
+import { DaySummaryEditor } from "./DaySummaryEditor";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { DayData, StudyPath, TextLanguage } from "@/types";
 
@@ -273,6 +274,14 @@ export function DayGroup({
                 />
               </div>
             ))}
+
+            {/* Day summary editor - "What I Learned" */}
+            <DaySummaryEditor
+              path={studyPath}
+              date={date}
+              isComplete={isComplete}
+              dayTitle={displayTitle}
+            />
           </>
         )}
       </div>

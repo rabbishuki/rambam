@@ -3,7 +3,11 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
-import { useAppStore, isHalakhaDone } from "@/stores/appStore";
+import {
+  useAppStore,
+  isHalakhaDone,
+  isHalakhaBookmarked,
+} from "@/stores/appStore";
 import { toHebrewLetter } from "@/lib/hebrew";
 import { AutoMarkPrompt, type AutoMarkChoice } from "./AutoMarkPrompt";
 import { HalakhaInfoSheet } from "./HalakhaInfoSheet";
@@ -37,6 +41,7 @@ export function HalakhaCard({
 }: HalakhaCardProps) {
   const t = useTranslations("swipe");
   const done = useAppStore((state) => state.done);
+  const bookmarks = useAppStore((state) => state.bookmarks);
   const markComplete = useAppStore((state) => state.markComplete);
   const markIncomplete = useAppStore((state) => state.markIncomplete);
   const hasSeenAutoMarkPrompt = useAppStore(
@@ -51,6 +56,7 @@ export function HalakhaCard({
   const [showInfoSheet, setShowInfoSheet] = useState(false);
 
   const isCompleted = isHalakhaDone(done, studyPath, date, index);
+  const isBookmarked = isHalakhaBookmarked(bookmarks, studyPath, date, index);
   const hebrewNum = toHebrewLetter(index + 1);
 
   // Count how many previous halakhot are incomplete (for "mark all previous" display)
@@ -374,6 +380,26 @@ export function HalakhaCard({
               />
             </svg>
           </button>
+        )}
+
+        {/* Bookmark indicator - positioned on right corner */}
+        {isBookmarked && (
+          <div
+            className="absolute top-2 right-2 sm:-top-2 sm:-right-2
+                       w-6 h-6 text-amber-500 bg-white border border-amber-200
+                       flex items-center justify-center rounded-full shadow-sm z-10"
+            aria-label="Bookmarked"
+          >
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+          </div>
         )}
 
         {/* Bilingual layout: side-by-side on wide (Hebrew RIGHT, English LEFT), stacked on narrow */}

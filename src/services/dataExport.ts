@@ -5,13 +5,19 @@
 
 import { useAppStore } from "@/stores/appStore";
 import { useLocationStore } from "@/stores/locationStore";
-import type { StudyPath, TextLanguage, CompletionMap } from "@/types";
+import type {
+  StudyPath,
+  TextLanguage,
+  CompletionMap,
+  BookmarksMap,
+  SummariesMap,
+} from "@/types";
 
 /**
  * Export data format (versioned for future compatibility)
  */
 export interface ExportData {
-  version: 1;
+  version: 2;
   exportedAt: string;
   app: {
     studyPath: StudyPath;
@@ -20,6 +26,8 @@ export interface ExportData {
     hasSeenAutoMarkPrompt: boolean;
     startDates: Record<StudyPath, string>;
     done: CompletionMap;
+    bookmarks?: BookmarksMap;
+    summaries?: SummariesMap;
   };
   location?: {
     coords: { latitude: number; longitude: number };
@@ -36,7 +44,7 @@ export function exportData(): ExportData {
   const locationState = useLocationStore.getState();
 
   const data: ExportData = {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     app: {
       studyPath: appState.studyPath,
@@ -45,6 +53,8 @@ export function exportData(): ExportData {
       hasSeenAutoMarkPrompt: appState.hasSeenAutoMarkPrompt,
       startDates: appState.startDates,
       done: appState.done,
+      bookmarks: appState.bookmarks,
+      summaries: appState.summaries,
     },
   };
 
@@ -93,8 +103,8 @@ export function validateImportData(data: unknown): data is ExportData {
 
   const obj = data as Record<string, unknown>;
 
-  // Check version
-  if (obj.version !== 1) {
+  // Check version (support v1 and v2)
+  if (obj.version !== 1 && obj.version !== 2) {
     return false;
   }
 
@@ -205,6 +215,35 @@ export function importData(data: ExportData): void {
 
   // Merge completion data (imported takes precedence)
   appStore.importDone(data.app.done);
+
+  // Import bookmarks if present (v2 format)
+  if (data.app.bookmarks) {
+    for (const bookmark of Object.values(data.app.bookmarks)) {
+      appStore.addBookmark(
+        bookmark.path,
+        bookmark.date,
+        bookmark.index,
+        bookmark.titleHe,
+        bookmark.titleEn,
+        bookmark.ref,
+      );
+      if (bookmark.note) {
+        appStore.updateBookmarkNote(
+          bookmark.path,
+          bookmark.date,
+          bookmark.index,
+          bookmark.note,
+        );
+      }
+    }
+  }
+
+  // Import summaries if present (v2 format)
+  if (data.app.summaries) {
+    for (const summary of Object.values(data.app.summaries)) {
+      appStore.saveSummary(summary.path, summary.date, summary.text);
+    }
+  }
 
   // Apply location if present
   if (data.location) {

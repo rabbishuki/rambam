@@ -24,6 +24,8 @@ interface TutorialOverlayProps {
   actionsThisStage?: number;
   /** Minimum actions required to advance */
   minActionsRequired?: number;
+  /** Whether this is "What's New" mode for returning users */
+  isWhatsNewMode?: boolean;
 }
 
 export function TutorialOverlay({
@@ -37,11 +39,13 @@ export function TutorialOverlay({
   actionPerformed = false,
   actionsThisStage = 0,
   minActionsRequired = 0,
+  isWhatsNewMode = false,
 }: TutorialOverlayProps) {
   const t = useTranslations();
   const isManualAdvance = stage.advanceOn.type === "manual";
   const isFinalStage = stage.id === "complete";
   const requiresAction = (stage.minActionsRequired ?? 0) > 0;
+  const isWelcomeStage = stage.id === "welcome";
 
   // Check if this is a multi-action stage (more than 1 action required)
   const isMultiActionStage = minActionsRequired > 1;
@@ -62,16 +66,30 @@ export function TutorialOverlay({
     <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-md">
       <div className="bg-white rounded-xl shadow-2xl border-2 border-blue-200 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-100 to-indigo-100 px-4 py-2 flex items-center justify-between">
-          <h3 className="font-bold text-blue-800 text-sm">
-            {t(stage.titleKey)}
+        <div
+          className={`px-4 py-2 flex items-center justify-between ${
+            isWhatsNewMode
+              ? "bg-gradient-to-r from-purple-100 to-pink-100"
+              : "bg-gradient-to-r from-blue-100 to-indigo-100"
+          }`}
+        >
+          <h3
+            className={`font-bold text-sm ${isWhatsNewMode ? "text-purple-800" : "text-blue-800"}`}
+          >
+            {isWhatsNewMode && isWelcomeStage
+              ? t("tutorial.whatsNew.title")
+              : t(stage.titleKey)}
           </h3>
           <button
             onClick={onSkip}
             tabIndex={-1}
-            className="text-xs text-blue-500 hover:text-blue-700 transition-colors"
+            className={`text-xs transition-colors ${
+              isWhatsNewMode
+                ? "text-purple-500 hover:text-purple-700"
+                : "text-blue-500 hover:text-blue-700"
+            }`}
           >
-            {t("tutorial.skip")}
+            {isWhatsNewMode ? t("tutorial.whatsNew.skip") : t("tutorial.skip")}
           </button>
         </div>
 

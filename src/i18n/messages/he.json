@@ -43,7 +43,10 @@
     "exportData": "ייצוא",
     "importData": "ייבוא",
     "importSuccess": "הנתונים יובאו בהצלחה!",
-    "importError": "שגיאה בייבוא הקובץ"
+    "importError": "שגיאה בייבוא הקובץ",
+    "tutorial": "הדרכה",
+    "restartTutorial": "הפעל מחדש את ההדרכה",
+    "showWhatsNew": "הצג מה חדש"
   },
   "welcome": {
     "title": "ברוכים הבאים!",
@@ -208,8 +211,40 @@
   "scroll": {
     "jumpToNext": "קפוץ להלכה הבאה"
   },
+  "bookmarks": {
+    "title": "סימניות",
+    "addBookmark": "הוסף לסימניות",
+    "removeBookmark": "הסר סימנייה",
+    "personalNote": "הערה אישית",
+    "addNote": "הוסף הערה",
+    "editNote": "ערוך",
+    "saveNote": "שמור",
+    "noBookmarks": "אין סימניות",
+    "noBookmarksHint": "לחץ על ⓘ בכל הלכה כדי להוסיף סימנייה"
+  },
+  "summary": {
+    "title": "מה למדתי",
+    "placeholder": "כתוב מה למדת היום...",
+    "save": "שמור",
+    "share": "שתף",
+    "empty": "הרהר במה שלמדת"
+  },
+  "share": {
+    "title": "שתף התקדמות",
+    "copied": "הועתק!",
+    "shareError": "לא ניתן לשתף",
+    "progress": "ההתקדמות שלי ברמב\"ם",
+    "completed": "הושלמו",
+    "days": "ימים",
+    "current": "כרגע",
+    "learned": "מה למדתי היום"
+  },
   "tutorial": {
     "skip": "דלג על ההדרכה",
+    "whatsNew": {
+      "title": "מה חדש!",
+      "skip": "דלג"
+    },
     "hint": "רמז",
     "next": "הבא",
     "start": "בוא נתחיל!",

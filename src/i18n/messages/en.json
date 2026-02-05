@@ -43,7 +43,10 @@
     "exportData": "Export",
     "importData": "Import",
     "importSuccess": "Data imported successfully!",
-    "importError": "Error importing file"
+    "importError": "Error importing file",
+    "tutorial": "Tutorial",
+    "restartTutorial": "Restart tutorial",
+    "showWhatsNew": "Show what's new"
   },
   "welcome": {
     "title": "Welcome!",
@@ -208,8 +211,40 @@
   "scroll": {
     "jumpToNext": "Jump to next unread"
   },
+  "bookmarks": {
+    "title": "Bookmarks",
+    "addBookmark": "Add to bookmarks",
+    "removeBookmark": "Remove bookmark",
+    "personalNote": "Personal note",
+    "addNote": "Add note",
+    "editNote": "Edit",
+    "saveNote": "Save",
+    "noBookmarks": "No bookmarks yet",
+    "noBookmarksHint": "Tap ⓘ on any halakha to bookmark it"
+  },
+  "summary": {
+    "title": "What I Learned",
+    "placeholder": "Write what you learned today...",
+    "save": "Save",
+    "share": "Share",
+    "empty": "Reflect on what you learned"
+  },
+  "share": {
+    "title": "Share Progress",
+    "copied": "Copied to clipboard!",
+    "shareError": "Unable to share",
+    "progress": "My Rambam Study Progress",
+    "completed": "Completed",
+    "days": "days",
+    "current": "Current",
+    "learned": "What I learned today"
+  },
   "tutorial": {
     "skip": "Skip tutorial",
+    "whatsNew": {
+      "title": "What's New!",
+      "skip": "Skip"
+    },
     "hint": "Hint",
     "next": "Next",
     "start": "Start Learning!",
