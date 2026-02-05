@@ -32,7 +32,10 @@ export type HighlightTarget =
   | "stats-bar"
   | "fab-button"
   | "day-checkmark"
-  | "info-icon";
+  | "info-icon"
+  | "bookmarks-button"
+  | "summary-editor"
+  | "share-button";
 
 /**
  * Tutorial stages in order
@@ -136,6 +139,29 @@ export const TUTORIAL_STAGES: TutorialStage[] = [
     instructionKey: "tutorial.headerColors.instruction",
     hintKey: "tutorial.headerColors.hint",
     advanceOn: { type: "manual" },
+  },
+  {
+    id: "bookmarks",
+    titleKey: "tutorial.bookmarks.title",
+    instructionKey: "tutorial.bookmarks.instruction",
+    hintKey: "tutorial.bookmarks.hint",
+    advanceOn: { type: "manual" },
+    highlightElement: "bookmarks-button",
+  },
+  {
+    id: "summaries",
+    titleKey: "tutorial.summaries.title",
+    instructionKey: "tutorial.summaries.instruction",
+    hintKey: "tutorial.summaries.hint",
+    advanceOn: { type: "manual" },
+    highlightElement: "summary-editor",
+  },
+  {
+    id: "sharing",
+    titleKey: "tutorial.sharing.title",
+    instructionKey: "tutorial.sharing.instruction",
+    advanceOn: { type: "manual" },
+    highlightElement: "share-button",
   },
   {
     id: "complete",

@@ -307,6 +307,21 @@
       "amber": "Amber = Offline",
       "red": "Red = Other date"
     },
+    "bookmarks": {
+      "title": "Bookmarks",
+      "instruction": "Save any halakha to your bookmarks! Tap the ⓘ button on any card, then tap 'Add to bookmarks'. You can also add personal notes.",
+      "hint": "Use the bookmark button in the header to view all your saved items"
+    },
+    "summaries": {
+      "title": "Daily Summary",
+      "instruction": "At the bottom of each day's halakhot, you'll find a 'What I Learned' section. Write a short reflection to help remember what you studied.",
+      "hint": "Summaries appear after you complete some halakhot"
+    },
+    "sharing": {
+      "title": "Share Progress",
+      "instruction": "Share your learning journey! After writing a summary, tap the share button to share your progress with friends and family.",
+      "hint": "Sharing includes your progress stats and daily reflection"
+    },
     "demo": {
       "externalLinks": "External Links",
       "halakhaExample": "Example halakha - tap info button to see links to Sefaria and Chabad.org",
