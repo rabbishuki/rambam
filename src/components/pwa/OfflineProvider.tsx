@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { initializeOffline } from "@/services/offlineInit";
-import { OfflineIndicator } from "./OfflineIndicator";
 import { UpdateBanner } from "./UpdateBanner";
 
 interface OfflineProviderProps {
@@ -21,7 +20,6 @@ export function OfflineProvider({ children }: OfflineProviderProps) {
 
   return (
     <>
-      <OfflineIndicator />
       {children}
       <UpdateBanner />
     </>

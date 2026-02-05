@@ -16,7 +16,6 @@ import {
   useInstallPrompt,
 } from "@/components/pwa/InstallPrompt";
 import { UpdateBanner } from "@/components/pwa/UpdateBanner";
-import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
 import { initializeOffline } from "@/services/offlineInit";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
 import { fetchCalendar, fetchHalakhot } from "@/services/sefaria";
@@ -453,7 +452,6 @@ export default function HomePage() {
 
       <InstallPrompt />
       <UpdateBanner />
-      <OfflineIndicator />
 
       {/* Location setup dialog - shown on first visit */}
       <LocationSetupDialog
