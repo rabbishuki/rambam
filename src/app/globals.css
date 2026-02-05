@@ -1,8 +1,12 @@
+/* Load Noto Sans Hebrew from Google Fonts at runtime (avoids build-time fetch issues) */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;600;700&display=swap');
+
 @import "tailwindcss";
 
 :root {
   --foreground: #171717;
   --app-bg: #2563eb; /* blue-600 default */
+  --font-noto-sans-hebrew: "Noto Sans Hebrew", sans-serif;
 }
 
 @theme inline {

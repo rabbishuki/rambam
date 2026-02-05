@@ -1,17 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_Hebrew } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Providers } from "@/components/Providers";
 import "../globals.css";
-
-const notoSansHebrew = Noto_Sans_Hebrew({
-  variable: "--font-noto-sans-hebrew",
-  subsets: ["hebrew", "latin"],
-  weight: ["400", "600", "700"],
-});
 
 export const metadata: Metadata = {
   title: 'רמב"ם יומי - Daily Rambam',
@@ -64,11 +57,14 @@ export default async function LocaleLayout({
         {/* Prevent Google Translate from prompting - we handle Hebrew and English */}
         <meta name="google" content="notranslate" />
         <meta httpEquiv="Content-Language" content="he, en" />
+        {/* Preconnect to external resources for faster loading */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://www.sefaria.org" />
         <link rel="preconnect" href="https://www.hebcal.com" />
       </head>
       <body
-        className={`${notoSansHebrew.variable} font-sans antialiased min-h-screen`}
+        className="font-sans antialiased min-h-screen"
         style={{
           padding:
             "env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)",
