@@ -663,11 +663,14 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     );
                   })}
 
-                {/* Credits section */}
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3 text-center">
-                    {isHebrew ? "קרדיטים" : "Credits"}
-                  </h4>
+                {/* Credits section - collapsible */}
+                <details className="mt-4 pt-4 border-t border-gray-200 group">
+                  <summary className="text-sm font-semibold text-gray-700 mb-3 text-center cursor-pointer list-none">
+                    <span>{isHebrew ? "קרדיטים" : "Credits"}</span>
+                    <span className="text-xs text-gray-400 inline-block transition-transform group-open:rotate-180 mx-1">
+                      ▼
+                    </span>
+                  </summary>
                   <div className="flex flex-col gap-3">
                     {/* Rambam - the author */}
                     <a
@@ -875,7 +878,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                       </svg>
                     </a>
                   </div>
-                </div>
+                </details>
               </div>
             </details>
           </section>

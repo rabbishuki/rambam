@@ -3,7 +3,7 @@
  * Handles offline caching and background sync
  */
 
-const CACHE_NAME = "rambam-v5";
+const CACHE_NAME = "rambam-v6";
 const OFFLINE_URL = "/offline.html";
 
 // Assets to precache on install
