@@ -40,16 +40,28 @@ export function LocationSetupDialog({
   const [step, setStep] = useState<Step>("language");
   const [manualCity, setManualCity] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [selectedPath, setSelectedPath] = useState<StudyPath>("rambam3");
+  const [selectedPaths, setSelectedPaths] = useState<StudyPath[]>(["rambam3"]);
   const [selectedTextLang, setSelectedTextLang] =
     useState<TextLanguage>("hebrew");
+
+  // Toggle path selection (multi-select)
+  const togglePath = useCallback((path: StudyPath) => {
+    setSelectedPaths((prev) => {
+      if (prev.includes(path)) {
+        // Don't allow removing if it's the last one
+        if (prev.length === 1) return prev;
+        return prev.filter((p) => p !== path);
+      }
+      return [...prev, path];
+    });
+  }, []);
 
   const setLocation = useLocationStore((state) => state.setLocation);
   const setSunset = useLocationStore((state) => state.setSunset);
   const markLocationSetup = useLocationStore(
     (state) => state.markLocationSetup,
   );
-  const setStudyPath = useAppStore((state) => state.setStudyPath);
+  const setActivePaths = useAppStore((state) => state.setActivePaths);
   const setTextLanguage = useAppStore((state) => state.setTextLanguage);
 
   // Handle language selection
@@ -68,9 +80,9 @@ export function LocationSetupDialog({
 
   // Handle path selection and continue to text language
   const handlePathContinue = useCallback(() => {
-    setStudyPath(selectedPath);
+    setActivePaths(selectedPaths);
     setStep("textLang");
-  }, [selectedPath, setStudyPath]);
+  }, [selectedPaths, setActivePaths]);
 
   // Handle text language selection and continue to location
   const handleTextLangContinue = useCallback(() => {
@@ -220,6 +232,7 @@ export function LocationSetupDialog({
               : t("title")
       }
       onClose={() => {}}
+      showCloseButton={false}
     >
       <div className="text-center">
         {/* Step 1: Language Selection */}
@@ -252,126 +265,75 @@ export function LocationSetupDialog({
           </>
         )}
 
-        {/* Step 2: Study Path Selection */}
+        {/* Step 2: Study Path Selection (Multi-select) */}
         {step === "path" && (
           <>
             <div className="text-5xl mb-4">📚</div>
             <p className="text-gray-600 mb-6">{t("pathDescription")}</p>
 
             <div className="space-y-3 mb-6">
-              {/* 3 Chapters option */}
-              <button
-                type="button"
-                onClick={() => setSelectedPath("rambam3")}
-                className={`
-                  w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all text-start
-                  ${
-                    selectedPath === "rambam3"
-                      ? "border-blue-600 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                  }
-                `}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      selectedPath === "rambam3"
-                        ? "border-blue-600"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    {selectedPath === "rambam3" && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-                    )}
-                  </div>
-                  <div>
-                    <div
-                      className={`font-medium ${selectedPath === "rambam3" ? "text-blue-600" : ""}`}
-                    >
-                      {tPaths("rambam3.label")}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {tPaths("rambam3.description")}
-                    </div>
-                  </div>
-                </div>
-              </button>
+              {(["rambam3", "rambam1", "mitzvot"] as StudyPath[]).map(
+                (path) => {
+                  const isSelected = selectedPaths.includes(path);
+                  const isLastSelected =
+                    isSelected && selectedPaths.length === 1;
 
-              {/* 1 Chapter option */}
-              <button
-                type="button"
-                onClick={() => setSelectedPath("rambam1")}
-                className={`
-                  w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all text-start
-                  ${
-                    selectedPath === "rambam1"
-                      ? "border-blue-600 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                  }
-                `}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      selectedPath === "rambam1"
-                        ? "border-blue-600"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    {selectedPath === "rambam1" && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-                    )}
-                  </div>
-                  <div>
-                    <div
-                      className={`font-medium ${selectedPath === "rambam1" ? "text-blue-600" : ""}`}
+                  return (
+                    <button
+                      key={path}
+                      type="button"
+                      onClick={() => togglePath(path)}
+                      disabled={isLastSelected}
+                      className={`
+                      w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all text-start
+                      ${
+                        isSelected
+                          ? "border-blue-600 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      }
+                      ${isLastSelected ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
+                    `}
                     >
-                      {tPaths("rambam1.label")}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {tPaths("rambam1.description")}
-                    </div>
-                  </div>
-                </div>
-              </button>
-
-              {/* Sefer HaMitzvot option */}
-              <button
-                type="button"
-                onClick={() => setSelectedPath("mitzvot")}
-                className={`
-                  w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all text-start
-                  ${
-                    selectedPath === "mitzvot"
-                      ? "border-blue-600 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                  }
-                `}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      selectedPath === "mitzvot"
-                        ? "border-blue-600"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    {selectedPath === "mitzvot" && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-                    )}
-                  </div>
-                  <div>
-                    <div
-                      className={`font-medium ${selectedPath === "mitzvot" ? "text-blue-600" : ""}`}
-                    >
-                      {tPaths("mitzvot.label")}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {tPaths("mitzvot.description")}
-                    </div>
-                  </div>
-                </div>
-              </button>
+                      <div className="flex items-center gap-3">
+                        {/* Checkbox indicator */}
+                        <div
+                          className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${
+                            isSelected
+                              ? "bg-blue-600 text-white"
+                              : "border-2 border-gray-300"
+                          }`}
+                        >
+                          {isSelected && (
+                            <svg
+                              className="w-3.5 h-3.5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={3}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <div
+                            className={`font-medium ${isSelected ? "text-blue-600" : ""}`}
+                          >
+                            {tPaths(`${path}.label`)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {tPaths(`${path}.description`)}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                },
+              )}
             </div>
 
             <div className="space-y-3">

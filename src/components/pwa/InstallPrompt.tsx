@@ -3,12 +3,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
-import { useLocationStore } from "@/stores/locationStore";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
+
+// Tutorial storage key (must match useTutorial.ts)
+const TUTORIAL_STORAGE_KEY = "rambam-tutorial-progress-v1";
+
+// Minimum delay after tutorial completion before showing install prompt (10 minutes)
+const INSTALL_PROMPT_DELAY_MS = 10 * 60 * 1000;
 
 // Check if running in standalone mode (installed PWA)
 function checkIsStandalone(): boolean {
@@ -19,11 +24,34 @@ function checkIsStandalone(): boolean {
   );
 }
 
+// Check if tutorial is complete and enough time has passed
+function canShowInstallPrompt(): boolean {
+  if (typeof window === "undefined") return false;
+
+  try {
+    const tutorialData = localStorage.getItem(TUTORIAL_STORAGE_KEY);
+    if (!tutorialData) return false;
+
+    const progress = JSON.parse(tutorialData);
+    const isFinished = progress.completed || progress.skipped;
+    if (!isFinished) return false;
+
+    // Check if enough time has passed since completion
+    const completedAt = progress.completedAt;
+    if (!completedAt) {
+      // Legacy data without timestamp - allow showing
+      return true;
+    }
+
+    const elapsedMs = Date.now() - new Date(completedAt).getTime();
+    return elapsedMs >= INSTALL_PROMPT_DELAY_MS;
+  } catch {
+    return false;
+  }
+}
+
 export function InstallPrompt() {
   const t = useTranslations();
-  const hasCompletedSetup = useLocationStore(
-    (state) => state.hasCompletedSetup,
-  );
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -41,8 +69,8 @@ export function InstallPrompt() {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
 
-      // Show prompt after a delay if not dismissed before AND onboarding is complete
-      if (!dismissed && hasCompletedSetup) {
+      // Only show if not dismissed and tutorial is complete with enough time passed
+      if (!dismissed && canShowInstallPrompt()) {
         setTimeout(() => {
           setShowPrompt(true);
         }, 3000);
@@ -62,19 +90,36 @@ export function InstallPrompt() {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
-  }, [hasCompletedSetup]);
+  }, [isInstalled]);
 
-  // Show prompt when onboarding completes (if we have a deferred prompt)
+  // Periodically check if we should show the prompt (after tutorial completion + delay)
   useEffect(() => {
-    if (hasCompletedSetup && deferredPrompt && !showPrompt) {
-      const dismissed = localStorage.getItem("install_prompt_dismissed");
-      if (!dismissed) {
-        setTimeout(() => {
-          setShowPrompt(true);
-        }, 3000);
+    if (isInstalled || showPrompt || !deferredPrompt) return;
+
+    const dismissed = localStorage.getItem("install_prompt_dismissed");
+    if (dismissed) return;
+
+    // Check every 30 seconds if conditions are met (also serves as initial check)
+    const checkInterval = setInterval(() => {
+      if (canShowInstallPrompt()) {
+        setShowPrompt(true);
+        clearInterval(checkInterval);
       }
-    }
-  }, [hasCompletedSetup, deferredPrompt, showPrompt]);
+    }, 30000);
+
+    // Initial check after a short delay to avoid synchronous setState
+    const initialCheck = setTimeout(() => {
+      if (canShowInstallPrompt()) {
+        setShowPrompt(true);
+        clearInterval(checkInterval);
+      }
+    }, 100);
+
+    return () => {
+      clearInterval(checkInterval);
+      clearTimeout(initialCheck);
+    };
+  }, [isInstalled, showPrompt, deferredPrompt]);
 
   const handleInstall = useCallback(async () => {
     if (!deferredPrompt) return;
@@ -96,8 +141,8 @@ export function InstallPrompt() {
     localStorage.setItem("install_prompt_dismissed", "true");
   }, []);
 
-  // Don't show if: already installed, not ready to show, or onboarding not complete
-  if (isInstalled || !showPrompt || !hasCompletedSetup) return null;
+  // Don't show if: already installed or not ready to show
+  if (isInstalled || !showPrompt) return null;
 
   return (
     <div

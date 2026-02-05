@@ -17,8 +17,8 @@ export function OfflineProvider({ children }: OfflineProviderProps) {
     // Initialize offline infrastructure on mount
     initializeOffline();
 
-    // Register service worker
-    if ("serviceWorker" in navigator) {
+    // Register service worker (skip in development to avoid caching issues)
+    if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
       navigator.serviceWorker
         .register("/sw.js", {
           scope: "/",
