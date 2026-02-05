@@ -90,18 +90,15 @@ export function ExternalLinks({
 }: ExternalLinksProps) {
   const locale = useLocale();
   const t = useTranslations("info");
-  const isHebrew = locale === "he";
 
   return (
-    <div className="space-y-3" dir={isHebrew ? "rtl" : "ltr"}>
+    <div className="space-y-3" dir={locale === "he" ? "rtl" : "ltr"}>
       {/* Sefaria link */}
       <ExternalLinkItem
         href={isPreview ? undefined : sefariaLink}
         logo="/contributors/sefaria.png"
         name="Sefaria"
-        description={
-          isHebrew ? "צפה בטקסט המלא עם פירושים" : t("viewOnSefaria")
-        }
+        description={t("viewOnSefaria")}
         bgColor="bg-blue-50"
         borderColor="border-blue-200"
         textColor="text-blue-900"
@@ -112,7 +109,7 @@ export function ExternalLinks({
         href={isPreview ? undefined : chabadLink}
         logo="/contributors/chabad.png"
         name="Chabad.org"
-        description={isHebrew ? "צפה עם תרגום ופירוש" : t("viewOnChabad")}
+        description={t("viewOnChabad")}
         bgColor="bg-amber-50"
         borderColor="border-amber-200"
         textColor="text-amber-900"
