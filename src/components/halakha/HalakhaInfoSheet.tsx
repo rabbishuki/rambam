@@ -255,13 +255,19 @@ export function HalakhaInfoSheet({
                     </div>
                   </div>
                 ) : bookmark?.note ? (
-                  <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                  <button
+                    onClick={handleStartEditNote}
+                    className="text-sm text-gray-600 whitespace-pre-wrap text-start w-full hover:bg-gray-100 rounded p-1 -m-1 transition-colors"
+                  >
                     {bookmark.note}
-                  </p>
+                  </button>
                 ) : (
-                  <p className="text-sm text-gray-400 italic">
+                  <button
+                    onClick={handleStartEditNote}
+                    className="text-sm text-gray-400 italic text-start w-full hover:bg-gray-100 rounded p-1 -m-1 transition-colors"
+                  >
                     {tBookmarks("addNote")}...
-                  </p>
+                  </button>
                 )}
               </div>
             )}
