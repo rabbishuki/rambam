@@ -7,6 +7,7 @@ import {
   shareContent,
   canUseWebShare,
 } from "@/lib/shareContent";
+import { useStats } from "@/hooks/useStats";
 import type { StudyPath } from "@/types";
 
 interface ShareButtonProps {
@@ -14,8 +15,6 @@ interface ShareButtonProps {
   date: string;
   summaryText?: string;
   dayTitle?: string;
-  completedDays?: number;
-  totalDays?: number;
 }
 
 export function ShareButton({
@@ -23,11 +22,10 @@ export function ShareButton({
   date,
   summaryText,
   dayTitle,
-  completedDays,
-  totalDays,
 }: ShareButtonProps) {
   const locale = useLocale();
   const t = useTranslations("share");
+  const { completedDays, totalDays } = useStats();
   const [showCopied, setShowCopied] = useState(false);
   const [showError, setShowError] = useState(false);
 

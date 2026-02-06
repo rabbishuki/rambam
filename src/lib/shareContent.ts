@@ -72,7 +72,7 @@ export function generateShareContent(
   // Summary text (if available)
   if (summaryText) {
     lines.push(isHebrew ? "💭 מה למדתי היום:" : "💭 What I learned today:");
-    lines.push(`"${summaryText}"`);
+    lines.push(summaryText);
     lines.push("");
   }
 
@@ -91,7 +91,7 @@ export function generateShareContent(
  * Share content using Web Share API or clipboard fallback
  */
 export async function shareContent(content: ShareContent): Promise<boolean> {
-  const { text, url } = content;
+  const { text } = content;
 
   // Try Web Share API first (mobile)
   if (navigator.share) {
@@ -99,7 +99,6 @@ export async function shareContent(content: ShareContent): Promise<boolean> {
       await navigator.share({
         title: "Daily Rambam",
         text,
-        url,
       });
       return true;
     } catch (err) {

@@ -235,6 +235,7 @@
     "delete": "Delete entry"
   },
   "share": {
+    "share": "Share",
     "title": "Share Progress",
     "copied": "Copied to clipboard!",
     "shareError": "Unable to share",
