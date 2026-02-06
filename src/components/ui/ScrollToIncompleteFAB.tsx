@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { useAppStore } from "@/stores/appStore";
 import {
@@ -13,6 +13,36 @@ interface ScrollToIncompleteFABProps {
   activePaths: StudyPath[];
   days: Record<StudyPath, Record<string, DayData>>;
   sortedDates: string[];
+}
+
+/**
+ * Check if the target card is within one viewport height of the current scroll position.
+ * Returns true if the card is "nearby" (visible or within 1vh scroll distance).
+ */
+function isTargetNearby(path: StudyPath, date: string, index: number): boolean {
+  const dayGroupKey = `${path}:${date}`;
+  const cardSelector = `[data-day-group="${dayGroupKey}"] [data-index="${index}"]`;
+  let el = document.querySelector(cardSelector);
+
+  if (!el) {
+    const cardId = getHalakhaCardId(path, date, index);
+    el = document.getElementById(cardId);
+  }
+
+  // If the element isn't in the DOM (collapsed group), it's far away
+  if (!el) return false;
+
+  const rect = el.getBoundingClientRect();
+  const vh = window.innerHeight;
+
+  // Card is "nearby" if its top is between -1vh and +2vh from the viewport
+  return rect.top > -vh && rect.top < vh * 2;
+}
+
+/** Subscribe to scroll events — used by useSyncExternalStore */
+function subscribeScroll(callback: () => void) {
+  window.addEventListener("scroll", callback, { passive: true });
+  return () => window.removeEventListener("scroll", callback);
 }
 
 export function ScrollToIncompleteFAB({
@@ -28,6 +58,20 @@ export function ScrollToIncompleteFAB({
     days,
     done,
     sortedDates,
+  );
+
+  const path = firstIncomplete.path;
+  const date = firstIncomplete.date;
+  const index = firstIncomplete.index;
+
+  // Subscribe to scroll position to determine if target card is nearby
+  const isNearby = useSyncExternalStore(
+    subscribeScroll,
+    () =>
+      path && date && index !== null
+        ? isTargetNearby(path, date, index)
+        : false,
+    () => false,
   );
 
   const handleClick = useCallback(() => {
@@ -82,8 +126,8 @@ export function ScrollToIncompleteFAB({
     }, 100);
   }, [firstIncomplete]);
 
-  // Don't show FAB if there's nothing incomplete
-  if (!firstIncomplete.date) {
+  // Don't show FAB if there's nothing incomplete or target is nearby
+  if (!firstIncomplete.date || isNearby) {
     return null;
   }
 
