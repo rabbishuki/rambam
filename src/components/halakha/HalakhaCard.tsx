@@ -11,7 +11,13 @@ import {
 import { toHebrewLetter } from "@/lib/hebrew";
 import { AutoMarkPrompt, type AutoMarkChoice } from "./AutoMarkPrompt";
 import { HalakhaInfoSheet } from "./HalakhaInfoSheet";
-import type { HalakhaText, TextLanguage, StudyPath, DayData } from "@/types";
+import type {
+  HalakhaText,
+  TextLanguage,
+  StudyPath,
+  DayData,
+  CardStyle,
+} from "@/types";
 
 interface HalakhaCardProps {
   halakha: HalakhaText;
@@ -59,6 +65,8 @@ const HalakhaCardInner = React.memo(function HalakhaCard({
   const setHasSeenAutoMarkPrompt = useAppStore(
     (state) => state.setHasSeenAutoMarkPrompt,
   );
+
+  const cardStyle = useAppStore((state) => state.cardStyle) as CardStyle;
 
   const [showPrompt, setShowPrompt] = useState(false);
   const [showInfoSheet, setShowInfoSheet] = useState(false);
@@ -249,8 +257,10 @@ const HalakhaCardInner = React.memo(function HalakhaCard({
   // HTML-formatted text with bold tags, small tags, etc. This is trusted
   // content from the Sefaria API, not user-generated content.
 
+  const isList = cardStyle === "list";
+
   return (
-    <div className="relative mt-3 mx-2 sm:mx-0">
+    <div className={`relative ${isList ? "mx-0" : "mt-3 mx-2 sm:mx-0"}`}>
       {/* Swipe feedback overlays - positioned behind the card */}
       {state.isSwiping && (
         <>
@@ -258,7 +268,7 @@ const HalakhaCardInner = React.memo(function HalakhaCard({
           {state.direction === "right" && (
             <div
               className={`
-                absolute inset-y-0 left-0 rounded-xl
+                absolute inset-y-0 left-0 ${isList ? "" : "rounded-xl"}
                 flex items-center justify-center
                 transition-colors duration-150
                 ${
@@ -298,17 +308,17 @@ const HalakhaCardInner = React.memo(function HalakhaCard({
           {state.direction === "left" && (
             <div
               className={`
-                absolute inset-y-0 right-0 rounded-xl
+                absolute inset-y-0 right-0 ${isList ? "" : "rounded-xl"}
                 flex items-center justify-center
                 transition-colors duration-150
                 ${
                   isOverThreshold
                     ? isCompleted
                       ? "bg-orange-500"
-                      : "bg-blue-500"
+                      : "bg-[var(--color-primary)]"
                     : isCompleted
                       ? "bg-orange-200"
-                      : "bg-blue-200"
+                      : "bg-[var(--color-primary)]/40"
                 }
               `}
               style={{
@@ -343,61 +353,37 @@ const HalakhaCardInner = React.memo(function HalakhaCard({
       {/* The actual card */}
       <div
         className={`
-          bg-white border-2 rounded-xl p-4
-          text-lg leading-relaxed
           relative cursor-grab active:cursor-grabbing
-          shadow-sm hover:shadow-md
           touch-pan-y select-none
-          transition-[box-shadow]
           ${
-            isCompleted
-              ? "opacity-50 bg-green-50 border-green-200"
-              : "border-gray-200"
+            isList
+              ? `border-b border-[var(--color-surface-border)] p-4 ${
+                  isCompleted
+                    ? "bg-[var(--color-completion-bg)]"
+                    : "bg-transparent"
+                }`
+              : `bg-[var(--color-surface)] rounded-xl border border-[var(--color-surface-border)] ${
+                  isCompleted
+                    ? "bg-[var(--color-completion-bg)] border-[var(--color-completion-border)]"
+                    : ""
+                }`
           }
+          ${isCompleted ? "opacity-60" : ""}
         `}
         style={style}
         {...handlers}
         data-index={index}
       >
-        {/* Info icon - opens info sheet. sm:-left-2 shifts it half off the card edge on desktop */}
-        {dayData && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowInfoSheet(true);
-            }}
-            className="absolute -top-3 -left-1
-                       w-6 h-6 text-gray-400 hover:text-gray-600 bg-white border border-gray-200
-                       flex items-center justify-center rounded-full hover:bg-gray-100
-                       transition-colors z-[1] shadow-sm"
-            aria-label="More information"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </button>
-        )}
-
-        {/* Bookmark indicator - positioned on right corner */}
-        {isBookmarked && (
+        {/* Bookmark indicator - positioned on corner */}
+        {isBookmarked && !isList && (
           <div
-            className="absolute -top-3 -right-1
-                       w-6 h-6 text-amber-500 bg-white border border-amber-200
+            className="absolute -top-2 -left-2
+                       w-6 h-6 text-amber-500 bg-[var(--color-surface)] border border-amber-200
                        flex items-center justify-center rounded-full shadow-sm z-[1]"
             aria-label="Bookmarked"
           >
             <svg
-              className="w-4 h-4"
+              className="w-3.5 h-3.5"
               viewBox="0 0 24 24"
               fill="currentColor"
               stroke="currentColor"
@@ -408,50 +394,100 @@ const HalakhaCardInner = React.memo(function HalakhaCard({
           </div>
         )}
 
-        {/* Bilingual layout: side-by-side on wide (Hebrew RIGHT, English LEFT), stacked on narrow */}
+        {/* Card content: inline number + text */}
         <div
-          className={`
-        ${textLanguage === "both" ? "flex flex-col sm:flex-row-reverse" : ""}
-      `}
+          className={`flex items-start gap-2 ${isList ? "" : "p-4"}`}
+          dir={textLanguage === "english" ? "ltr" : "rtl"}
         >
-          {/* Hebrew text - always on the right in bilingual mode */}
-          {showHebrew && (
+          {/* Number indicator + info icon */}
+          <div className="flex flex-col items-center flex-shrink-0 mt-1 gap-0.5">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (dayData) setShowInfoSheet(true);
+              }}
+              className={`
+                text-sm font-bold leading-none
+                ${
+                  isCompleted
+                    ? "text-[var(--color-completion-accent)]"
+                    : "text-[var(--color-primary)]"
+                }
+              `}
+              aria-label={dayData ? "More information" : undefined}
+            >
+              {isCompleted
+                ? "✓"
+                : textLanguage === "english"
+                  ? String(index + 1)
+                  : hebrewNum}
+            </button>
+            {/* ⓘ icon - visible when info sheet is available and card not completed */}
+            {dayData && !isCompleted && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowInfoSheet(true);
+                }}
+                className="text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
+                aria-label="More information"
+              >
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* Text content */}
+          <div className="flex-1 min-w-0">
             <div
               className={`
-              ${isCompleted ? "line-through text-gray-500" : "text-gray-800"}
-              ${textLanguage === "both" ? "sm:flex-1 sm:pl-4" : ""}
-              text-justify
-            `}
-              dir="rtl"
+                ${textLanguage === "both" ? "flex flex-col sm:flex-row" : ""}
+              `}
             >
-              <span className="font-bold text-gray-900">{hebrewNum}.</span>{" "}
-              {/* Trusted content from Sefaria API */}
-              <span dangerouslySetInnerHTML={{ __html: halakha.he }} />
-            </div>
-          )}
+              {/* Hebrew text - trusted content from Sefaria API */}
+              {showHebrew && (
+                <div
+                  className={`
+                    text-lg leading-relaxed text-justify
+                    ${isCompleted ? "line-through text-[var(--color-text-muted)]" : "text-[var(--color-text-primary)]"}
+                    ${textLanguage === "both" ? "sm:flex-1 sm:pl-4" : ""}
+                  `}
+                  dir="rtl"
+                  dangerouslySetInnerHTML={{ __html: halakha.he }}
+                />
+              )}
 
-          {/* Separator - only in both mode on wide screens */}
-          {textLanguage === "both" && showHebrew && showEnglish && (
-            <div className="hidden sm:block w-px bg-gray-300 mx-2" />
-          )}
+              {/* Separator - only in both mode on wide screens */}
+              {textLanguage === "both" && showHebrew && showEnglish && (
+                <div className="hidden sm:block w-px bg-[var(--color-surface-border)] mx-2" />
+              )}
 
-          {/* English text - always on the left in bilingual mode */}
-          {showEnglish && (
-            <div
-              className={`
-              ${isCompleted ? "line-through text-gray-500" : "text-gray-700"}
-              ${textLanguage === "both" ? "sm:flex-1 sm:pr-4 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-200" : ""}
-              text-justify text-base
-            `}
-              dir="ltr"
-            >
-              {textLanguage === "english" && (
-                <span className="font-bold">{index + 1}.</span>
-              )}{" "}
-              {/* Trusted content from Sefaria API */}
-              <span dangerouslySetInnerHTML={{ __html: halakha.en || "" }} />
+              {/* English text - trusted content from Sefaria API */}
+              {showEnglish && (
+                <div
+                  className={`
+                    text-base leading-relaxed text-justify
+                    ${isCompleted ? "line-through text-[var(--color-text-muted)]" : "text-[var(--color-text-secondary)]"}
+                    ${textLanguage === "both" ? "sm:flex-1 sm:pr-4 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-[var(--color-surface-border)]" : ""}
+                  `}
+                  dir="ltr"
+                  dangerouslySetInnerHTML={{ __html: halakha.en || "" }}
+                />
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
 

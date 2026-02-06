@@ -73,10 +73,11 @@ export function StatsBar({ selectedDate }: StatsBarProps = {}) {
   }, []);
 
   const baseClasses = `
-    bg-gray-50 px-4 py-3 flex justify-around border-b-2 border-gray-200 gap-2
+    bg-[var(--color-surface-hover)] border-b-2 border-[var(--color-surface-border)]
     sticky top-[60px] z-[100] transition-transform duration-300
     ${isVisible ? "translate-y-0" : "-translate-y-full"}
   `;
+  const innerClasses = "px-4 py-3 flex justify-around gap-2";
 
   // Compute per-path completion for selected date
   const getPathCompletion = (path: StudyPath, date: string) => {
@@ -112,21 +113,33 @@ export function StatsBar({ selectedDate }: StatsBarProps = {}) {
   if (!hasCompletedSetup || totalDays === 0) {
     return (
       <div ref={statsBarRef} className={baseClasses}>
-        <div className="text-center flex-1">
-          <span className="block text-2xl font-bold text-gray-300">—</span>
-          <span className="text-sm text-gray-500 mt-0.5">
-            {t("completedDays")}
-          </span>
-        </div>
+        <div className={innerClasses}>
+          <div className="text-center flex-1">
+            <span className="block text-2xl font-bold text-[var(--color-text-muted)]">
+              —
+            </span>
+            <span className="text-sm text-[var(--color-text-secondary)] mt-0.5">
+              {t("completedDays")}
+            </span>
+          </div>
 
-        <div className="text-center flex-1">
-          <span className="block text-2xl font-bold text-gray-300">—</span>
-          <span className="text-sm text-gray-500 mt-0.5">{t("today")}</span>
-        </div>
+          <div className="text-center flex-1">
+            <span className="block text-2xl font-bold text-[var(--color-text-muted)]">
+              —
+            </span>
+            <span className="text-sm text-[var(--color-text-secondary)] mt-0.5">
+              {t("today")}
+            </span>
+          </div>
 
-        <div className="text-center flex-1">
-          <span className="block text-2xl font-bold text-gray-300">—</span>
-          <span className="text-sm text-gray-500 mt-0.5">{t("backlog")}</span>
+          <div className="text-center flex-1">
+            <span className="block text-2xl font-bold text-[var(--color-text-muted)]">
+              —
+            </span>
+            <span className="text-sm text-[var(--color-text-secondary)] mt-0.5">
+              {t("backlog")}
+            </span>
+          </div>
         </div>
       </div>
     );
@@ -135,44 +148,45 @@ export function StatsBar({ selectedDate }: StatsBarProps = {}) {
   // Per-path breakdown view when viewing a specific date
   if (selectedDate && activePaths.length > 0) {
     const pathBreakdownClasses = `
-      bg-gray-50 px-4 py-2 flex flex-wrap justify-center gap-3 border-b-2 border-gray-200
+      bg-[var(--color-surface-hover)] border-b-2 border-[var(--color-surface-border)]
       sticky top-[60px] z-[100] transition-transform duration-300
       ${isVisible ? "translate-y-0" : "-translate-y-full"}
     `;
 
     return (
-      <div
-        ref={statsBarRef}
-        className={pathBreakdownClasses}
-        dir={isHebrew ? "rtl" : "ltr"}
-      >
-        {activePaths.map((path) => {
-          const completion = getPathCompletion(path, selectedDate);
-          if (!completion) return null;
+      <div ref={statsBarRef} className={pathBreakdownClasses}>
+        <div
+          className="px-4 py-2 flex flex-wrap justify-center gap-3"
+          dir={isHebrew ? "rtl" : "ltr"}
+        >
+          {activePaths.map((path) => {
+            const completion = getPathCompletion(path, selectedDate);
+            if (!completion) return null;
 
-          return (
-            <div
-              key={path}
-              className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                completion.isComplete
-                  ? "bg-green-100 text-green-800"
-                  : completion.percent > 0
-                    ? "bg-amber-100 text-amber-800"
-                    : "bg-gray-100 text-gray-600"
-              }`}
-            >
-              <span className="font-medium">{getPathName(path)}:</span>
-              <span>
-                {completion.done}/{completion.total}
-              </span>
-              {completion.isComplete ? (
-                <span className="text-green-600">✓</span>
-              ) : (
-                <span className="text-xs">({completion.percent}%)</span>
-              )}
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={path}
+                className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+                  completion.isComplete
+                    ? "bg-green-100 text-green-800"
+                    : completion.percent > 0
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                <span className="font-medium">{getPathName(path)}:</span>
+                <span>
+                  {completion.done}/{completion.total}
+                </span>
+                {completion.isComplete ? (
+                  <span className="text-green-600">✓</span>
+                ) : (
+                  <span className="text-xs">({completion.percent}%)</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   }
@@ -180,27 +194,33 @@ export function StatsBar({ selectedDate }: StatsBarProps = {}) {
   // Default stats view
   return (
     <div ref={statsBarRef} className={baseClasses}>
-      <div className="text-center flex-1">
-        <span className="block text-2xl font-bold text-blue-600">
-          {completedDays}/{totalDays}
-        </span>
-        <span className="text-sm text-gray-500 mt-0.5">
-          {t("completedDays")}
-        </span>
-      </div>
+      <div className={innerClasses}>
+        <div className="text-center flex-1">
+          <span className="block text-2xl font-bold text-[var(--color-primary)]">
+            {completedDays}/{totalDays}
+          </span>
+          <span className="text-sm text-[var(--color-text-secondary)] mt-0.5">
+            {t("completedDays")}
+          </span>
+        </div>
 
-      <div className="text-center flex-1">
-        <span className="block text-2xl font-bold text-blue-600">
-          {todayPercent}%
-        </span>
-        <span className="text-sm text-gray-500 mt-0.5">{t("today")}</span>
-      </div>
+        <div className="text-center flex-1">
+          <span className="block text-2xl font-bold text-[var(--color-primary)]">
+            {todayPercent}%
+          </span>
+          <span className="text-sm text-[var(--color-text-secondary)] mt-0.5">
+            {t("today")}
+          </span>
+        </div>
 
-      <div className="text-center flex-1">
-        <span className="block text-2xl font-bold text-blue-600">
-          {backlog}
-        </span>
-        <span className="text-sm text-gray-500 mt-0.5">{t("backlog")}</span>
+        <div className="text-center flex-1">
+          <span className="block text-2xl font-bold text-[var(--color-primary)]">
+            {backlog}
+          </span>
+          <span className="text-sm text-[var(--color-text-secondary)] mt-0.5">
+            {t("backlog")}
+          </span>
+        </div>
       </div>
     </div>
   );

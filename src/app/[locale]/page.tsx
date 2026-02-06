@@ -50,12 +50,16 @@ const Tutorial = dynamic(
 );
 import { fetchHebrewDate } from "@/services/hebcal";
 import { dateRange } from "@/lib/dates";
+import { useTheme } from "@/hooks/useTheme";
 import type { DayData, StudyPath } from "@/types";
 
 export default function HomePage() {
   const locale = useLocale();
   const t = useTranslations();
   const isHebrew = locale === "he";
+
+  // Apply theme CSS variables to document root
+  useTheme();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [showSummaries, setShowSummaries] = useState(false);
@@ -517,7 +521,7 @@ export default function HomePage() {
   const summaryCount = Object.keys(summaries).length;
 
   return (
-    <div className="container">
+    <div className="app-shell">
       <Header
         onSettingsClick={handleSettingsClick}
         onCalendarClick={handleCalendarClick}
@@ -534,10 +538,10 @@ export default function HomePage() {
         {/* Date filter indicator - shown when viewing a specific date */}
         {isFiltering && (
           <div
-            className="mb-4 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between"
+            className="mb-4 px-4 py-3 bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/30 rounded-xl flex items-center justify-between"
             dir={isHebrew ? "rtl" : "ltr"}
           >
-            <div className="flex items-center gap-2 text-blue-800">
+            <div className="flex items-center gap-2 text-[var(--color-primary-dark)]">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -557,7 +561,7 @@ export default function HomePage() {
             </div>
             <button
               onClick={handleClearFilter}
-              className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 border-2 border-red-500 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 active:bg-red-100 transition-colors"
             >
               <svg
                 className="w-4 h-4"
@@ -581,10 +585,12 @@ export default function HomePage() {
         {!hasCompletedSetup && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📚</div>
-            <div className="text-2xl font-bold text-gray-800 mb-2">
+            <div className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
               {t("welcome.title")}
             </div>
-            <div className="text-gray-500">{t("welcome.setupLocation")}</div>
+            <div className="text-[var(--color-text-muted)]">
+              {t("welcome.setupLocation")}
+            </div>
           </div>
         )}
 
@@ -592,10 +598,10 @@ export default function HomePage() {
         {hasCompletedSetup && isTutorialActive && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📚</div>
-            <div className="text-2xl font-bold text-gray-800 mb-2">
+            <div className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
               {t("welcome.title")}
             </div>
-            <div className="text-gray-500">
+            <div className="text-[var(--color-text-muted)]">
               {t("tutorial.completeTutorial")}
             </div>
           </div>
@@ -605,10 +611,12 @@ export default function HomePage() {
         {hasCompletedSetup && !isTutorialActive && isLoading && !hasAnyData && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📚</div>
-            <div className="text-2xl font-bold text-gray-800 mb-2">
+            <div className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
               {t("messages.loading")}
             </div>
-            <div className="text-gray-500">{t("welcome.loading")}</div>
+            <div className="text-[var(--color-text-muted)]">
+              {t("welcome.loading")}
+            </div>
           </div>
         )}
 
@@ -616,13 +624,15 @@ export default function HomePage() {
         {hasCompletedSetup && !isLoading && !hasAnyData && isOffline && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📴</div>
-            <div className="text-2xl font-bold text-gray-800 mb-2">
+            <div className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
               {t("offline.noConnection")}
             </div>
-            <div className="text-gray-500 mb-4">{t("offline.noData")}</div>
+            <div className="text-[var(--color-text-muted)] mb-4">
+              {t("offline.noData")}
+            </div>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)]"
             >
               {t("offline.tryAgain")}
             </button>
@@ -640,15 +650,15 @@ export default function HomePage() {
               dir={isHebrew ? "rtl" : "ltr"}
             >
               <div className="text-6xl mb-4">🎉</div>
-              <div className="text-2xl font-bold text-gray-800 mb-2">
+              <div className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
                 {t("messages.allComplete")}
               </div>
-              <div className="text-gray-500 mb-4">
+              <div className="text-[var(--color-text-muted)] mb-4">
                 {t("messages.allCompleteHint")}
               </div>
               <button
                 onClick={() => setSettingsOpen(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)]"
               >
                 {t("messages.openSettings")}
               </button>
@@ -674,11 +684,11 @@ export default function HomePage() {
         {!isTutorialActive && hiddenCount > 0 && !viewingDate && (
           <button
             onClick={() => setSettingsOpen(true)}
-            className="w-full mt-4 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+            className="w-full mt-4 px-4 py-3 bg-[var(--color-surface-hover)] border border-[var(--color-surface-border)] rounded-xl hover:bg-[var(--color-surface-border)]/50 transition-colors flex items-center justify-center gap-2"
             dir={isHebrew ? "rtl" : "ltr"}
           >
             <svg
-              className="w-4 h-4 text-gray-400"
+              className="w-4 h-4 text-[var(--color-text-muted)]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -690,10 +700,10 @@ export default function HomePage() {
                 d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
               />
             </svg>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-[var(--color-text-muted)]">
               {t("messages.hiddenEntries", { count: hiddenCount })}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-[var(--color-text-muted)]">
               · {t("messages.tapToShow")}
             </span>
           </button>

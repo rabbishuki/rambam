@@ -9,7 +9,8 @@ interface PathBadgeProps {
 }
 
 const PATH_COLORS: Record<StudyPath, string> = {
-  rambam3: "bg-blue-100 text-blue-800 border-blue-200",
+  rambam3:
+    "bg-[var(--color-primary)]/10 text-[var(--color-primary-dark)] border-[var(--color-primary)]/30",
   rambam1: "bg-purple-100 text-purple-800 border-purple-200",
   mitzvot: "bg-amber-100 text-amber-800 border-amber-200",
 };

@@ -79,6 +79,7 @@ export function Tutorial({ onComplete }: TutorialProps) {
   // Wait for client-side hydration before rendering
   const isClient = useIsClient();
   const t = useTranslations("tutorial");
+  const tBookmarks = useTranslations("bookmarks");
 
   const {
     isActive,
@@ -89,6 +90,8 @@ export function Tutorial({ onComplete }: TutorialProps) {
     actionsThisStage,
     minActionsRequired,
     isWhatsNewMode,
+    canGoBack,
+    goBack,
     reportAction,
     advanceStage,
     skipTutorial,
@@ -106,6 +109,9 @@ export function Tutorial({ onComplete }: TutorialProps) {
 
   // Info icon preview state
   const [showInfoPreview, setShowInfoPreview] = useState(false);
+
+  // Bookmark demo state for info-icon stage
+  const [bookmarkDemoActive, setBookmarkDemoActive] = useState(false);
 
   // Day checkmark demo state
   const [dayCheckmarkClicked, setDayCheckmarkClicked] = useState(false);
@@ -253,6 +259,15 @@ export function Tutorial({ onComplete }: TutorialProps) {
     [goToStage],
   );
 
+  const handleGoBack = useCallback(() => {
+    goBack();
+    // Reset card state when going back to early stages
+    if (currentStageIndex <= 2) {
+      setSwipeRightCompletedCards(new Set());
+      setMarkAllCompletedCards(new Set());
+    }
+  }, [goBack, currentStageIndex]);
+
   // Don't render during SSR or if tutorial is not active
   if (!isClient || !isActive || !currentStage) {
     return null;
@@ -353,7 +368,29 @@ export function Tutorial({ onComplete }: TutorialProps) {
                 ✕
               </button>
             </div>
-            <div className="p-4">
+            <div className="p-4 space-y-3">
+              {/* Bookmark toggle demo */}
+              <button
+                onClick={() => setBookmarkDemoActive((v) => !v)}
+                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  bookmarkDemoActive
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill={bookmarkDemoActive ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+                {bookmarkDemoActive
+                  ? tBookmarks("removeBookmark")
+                  : tBookmarks("addBookmark")}
+              </button>
               <ExternalLinks isPreview />
             </div>
           </div>
@@ -508,6 +545,8 @@ export function Tutorial({ onComplete }: TutorialProps) {
         onSkip={handleSkip}
         onNext={handleNext}
         onGoToStage={handleGoToStage}
+        onGoBack={handleGoBack}
+        canGoBack={canGoBack}
         canAdvance={canAdvance}
         currentStageIndex={currentStageIndex}
         totalStages={totalStages}

@@ -48,7 +48,19 @@
     "tutorial": "Tutorial",
     "restartTutorial": "Restart tutorial",
     "showWhatsNew": "Show what's new",
-    "daysAheadLabel": "Days ahead for offline"
+    "daysAheadLabel": "Days to pre-download",
+    "daysAheadHint": "Number of days automatically downloaded for offline use",
+    "feedback": {
+      "title": "Feedback",
+      "sendFeedback": "Send Feedback",
+      "suggestions": "Suggestions & Ideas",
+      "placeholder": "Tell us what you think...",
+      "send": "Send",
+      "sending": "Sending...",
+      "success": "Thank you for your feedback!",
+      "error": "Failed to send. Please try again.",
+      "charCount": "{count}/1000"
+    }
   },
   "welcome": {
     "title": "Welcome!",
@@ -167,7 +179,11 @@
     "downloadRetry": "Try again",
     "downloadSuccess": "7 days downloaded for offline use",
     "downloadFailed": "Failed {failed} of {total} days",
-    "downloadingDate": "Downloading data for {date}"
+    "downloadingDate": "Downloading data for {date}",
+    "downloadedStatus": "Downloaded dates",
+    "downloadNow": "Download now",
+    "autoDownloadHint": "Missing dates download automatically when the app opens",
+    "allDownloaded": "All dates downloaded for offline use"
   },
   "update": {
     "appAvailable": "Update available!",
@@ -264,6 +280,7 @@
     },
     "hint": "Hint",
     "next": "Next",
+    "back": "Previous step",
     "start": "Start Learning!",
     "goToStep": "Go back to step {step}",
     "restartTutorial": "Restart tutorial",

@@ -287,17 +287,14 @@ export const CONTRIBUTORS: Record<string, Contributor> = {
   "2": {
     name: { he: "הרב שוקי", en: "Rabbi Shuki" },
     avatar: "/contributors/rabbi.jpeg",
-    link: "https://wa.me/972586030770?text=אהבתי%20את%20האפליקציה%20של%20הרמבם",
   },
   "1": {
     name: { he: "הרב שוקי", en: "Rabbi Shuki" },
     avatar: "/contributors/rabbi.jpeg",
-    link: "https://wa.me/972586030770?text=אהבתי%20את%20האפליקציה%20של%20הרמבם",
   },
   "0": {
     name: { he: "הרב שוקי", en: "Rabbi Shuki" },
     avatar: "/contributors/rabbi.jpeg",
-    link: "https://wa.me/972586030770?text=אהבתי%20את%20האפליקציה%20של%20הרמבם",
   },
 };
 

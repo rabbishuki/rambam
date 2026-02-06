@@ -171,10 +171,9 @@ const DayGroupInner = React.memo(function DayGroup({
       onToggle={(e) => setIsOpen((e.target as HTMLDetailsElement).open)}
       data-day-group={`${studyPath}:${date}`}
       className={`
-        mb-4 border sm:rounded-xl rounded-none bg-white
+        mb-4 sm:rounded-xl rounded-none bg-transparent
         sm:mx-0 -mx-0
         ${isOpen ? "" : "overflow-hidden"}
-        ${isComplete ? "opacity-60 border-green-500" : "border-gray-200"}
       `}
     >
       <summary
@@ -184,10 +183,14 @@ const DayGroupInner = React.memo(function DayGroup({
         }}
         className={`
           px-4 py-3 cursor-pointer select-none list-none
-          bg-gradient-to-b from-white to-gray-50 border-b border-gray-200
+          rounded-xl
           flex items-center justify-between gap-3
-          hover:bg-gray-50 active:bg-gray-100
-          ${isOpen ? "sticky z-10 sm:rounded-t-xl rounded-none shadow-sm" : ""}
+          ${
+            isOpen
+              ? "sticky z-10 shadow-sm bg-[var(--color-surface-hover)]"
+              : "bg-[var(--color-primary)]/8 hover:bg-[var(--color-primary)]/12 active:bg-[var(--color-primary)]/16"
+          }
+          ${isComplete ? "opacity-60" : ""}
         `}
         style={
           isOpen
@@ -200,18 +203,18 @@ const DayGroupInner = React.memo(function DayGroup({
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <span
-            className={`text-gray-500 transition-transform ${isOpen ? "rotate-90" : ""}`}
+            className={`text-[var(--color-primary)] transition-transform ${isOpen ? "rotate-90" : ""}`}
           >
             {arrow}
           </span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold text-gray-800 truncate">
+              <span className="text-lg font-semibold text-[var(--color-primary-dark)] truncate">
                 {displayTitle}
               </span>
               {showPathBadge && <PathBadge path={studyPath} />}
             </div>
-            <div className="text-sm text-gray-500 mt-0.5">
+            <div className="text-sm text-[var(--color-primary)] mt-0.5">
               {dateLabel} • {doneCount}/{dayData.count}
             </div>
           </div>
@@ -222,7 +225,7 @@ const DayGroupInner = React.memo(function DayGroup({
           {!isComplete && (
             <button
               onClick={handleCompleteAll}
-              className="w-9 h-9 flex items-center justify-center rounded-md text-gray-400 hover:bg-black/5 hover:text-gray-600 active:bg-black/10 text-xl"
+              className="w-9 h-9 flex items-center justify-center rounded-md text-[var(--color-primary)]/50 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)] active:bg-[var(--color-primary)]/20 text-xl"
               title={t("actions.markComplete")}
               aria-label={t("actions.markComplete")}
             >
@@ -234,7 +237,7 @@ const DayGroupInner = React.memo(function DayGroup({
           {doneCount > 0 && (
             <button
               onClick={handleReset}
-              className="w-9 h-9 flex items-center justify-center rounded-md text-gray-400 hover:bg-black/5 hover:text-gray-600 active:bg-black/10 text-2xl"
+              className="w-9 h-9 flex items-center justify-center rounded-md text-[var(--color-primary)]/50 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)] active:bg-[var(--color-primary)]/20 text-2xl"
               title={t("actions.reset")}
               aria-label={t("actions.reset")}
             >
@@ -246,7 +249,7 @@ const DayGroupInner = React.memo(function DayGroup({
 
       <div ref={containerRef} className="p-4 flex flex-col gap-3">
         {isLoading && (
-          <div className="text-center py-8 text-gray-500 italic">
+          <div className="text-center py-8 text-[var(--color-text-muted)] italic">
             {t("messages.loading")}
           </div>
         )}

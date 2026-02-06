@@ -9,6 +9,9 @@ import type {
   StudyPath,
   TextLanguage,
   HideCompletedMode,
+  ThemeId,
+  HeaderStyle,
+  CardStyle,
   DayData,
   CompletionMap,
   AppSettings,
@@ -44,6 +47,9 @@ interface AppStore extends AppSettings {
   setActivePaths: (paths: StudyPath[]) => void;
   setHideCompleted: (mode: HideCompletedMode) => void;
   setDaysAhead: (days: number) => void;
+  setTheme: (theme: ThemeId) => void;
+  setHeaderStyle: (style: HeaderStyle) => void;
+  setCardStyle: (style: CardStyle) => void;
 
   // Day data actions
   setDayData: (path: StudyPath, date: string, data: DayData) => void;
@@ -187,6 +193,10 @@ export const useAppStore = create<AppStore>()(
 
       setDaysAhead: (days) =>
         set({ daysAhead: Math.max(1, Math.min(14, days)) }),
+
+      setTheme: (theme) => set({ theme }),
+      setHeaderStyle: (style) => set({ headerStyle: style }),
+      setCardStyle: (style) => set({ cardStyle: style }),
 
       // Day data actions
       setDayData: (path, date, data) =>
@@ -476,6 +486,9 @@ export const useAppStore = create<AppStore>()(
           autoMarkPrevious: state.autoMarkPrevious,
           hideCompleted: state.hideCompleted,
           daysAhead: state.daysAhead,
+          theme: state.theme,
+          headerStyle: state.headerStyle,
+          cardStyle: state.cardStyle,
           hasSeenAutoMarkPrompt: state.hasSeenAutoMarkPrompt,
           startDates: state.startDates,
           days: cleanedDays,
@@ -505,6 +518,19 @@ export const useAppStore = create<AppStore>()(
         const bookmarks = persisted.bookmarks || {};
         const summaries = persisted.summaries || {};
 
+        // Migrate: if no theme settings, use defaults
+        // Also migrate old theme IDs: indigo→lavender, forest→sage
+        const rawTheme = (persisted.theme as string) || "teal";
+        const theme = (
+          rawTheme === "indigo"
+            ? "lavender"
+            : rawTheme === "forest"
+              ? "sage"
+              : rawTheme
+        ) as ThemeId;
+        const headerStyle = persisted.headerStyle || "minimal";
+        const cardStyle = persisted.cardStyle || "list";
+
         return {
           ...currentState,
           ...persisted,
@@ -513,6 +539,9 @@ export const useAppStore = create<AppStore>()(
           daysAhead,
           bookmarks,
           summaries,
+          theme,
+          headerStyle,
+          cardStyle,
         };
       },
     },

@@ -48,7 +48,19 @@
     "tutorial": "הדרכה",
     "restartTutorial": "הפעל מחדש את ההדרכה",
     "showWhatsNew": "הצג מה חדש",
-    "daysAheadLabel": "ימים קדימה לאופליין"
+    "daysAheadLabel": "ימים להורדה מראש",
+    "daysAheadHint": "מספר ימים שיורדו אוטומטית לשימוש אופליין",
+    "feedback": {
+      "title": "משוב",
+      "sendFeedback": "שלח משוב",
+      "suggestions": "הצעות ורעיונות",
+      "placeholder": "ספר לנו מה דעתך...",
+      "send": "שלח",
+      "sending": "שולח...",
+      "success": "תודה על המשוב!",
+      "error": "השליחה נכשלה. נסה שוב.",
+      "charCount": "{count}/1000"
+    }
   },
   "welcome": {
     "title": "ברוכים הבאים!",
@@ -167,7 +179,11 @@
     "downloadRetry": "נסה שוב",
     "downloadSuccess": "7 ימים הורדו בהצלחה לשימוש אופליין",
     "downloadFailed": "נכשלו {failed} ימים מתוך {total}",
-    "downloadingDate": "מוריד נתונים עבור {date}"
+    "downloadingDate": "מוריד נתונים עבור {date}",
+    "downloadedStatus": "תאריכים שהורדו",
+    "downloadNow": "הורד עכשיו",
+    "autoDownloadHint": "תאריכים חסרים יורדו אוטומטית בפתיחת האפליקציה",
+    "allDownloaded": "כל התאריכים הורדו לשימוש אופליין"
   },
   "update": {
     "appAvailable": "גרסה חדשה זמינה!",
@@ -264,6 +280,7 @@
     },
     "hint": "רמז",
     "next": "הבא",
+    "back": "שלב קודם",
     "start": "בוא נתחיל!",
     "goToStep": "חזור לשלב {step}",
     "restartTutorial": "התחל הדרכה מחדש",

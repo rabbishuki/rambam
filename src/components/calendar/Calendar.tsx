@@ -160,11 +160,11 @@ export function Calendar({
       >
         {/* Modal content */}
         <div
-          className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden"
+          className="bg-[var(--color-surface)] rounded-xl shadow-xl w-full max-w-md overflow-hidden"
           dir={isHebrew ? "rtl" : "ltr"}
         >
           {/* Title bar with close button */}
-          <div className="bg-blue-600 text-white px-4 py-3 flex items-center justify-between">
+          <div className="bg-[var(--color-primary)] text-white px-4 py-3 flex items-center justify-between">
             <h2 id="calendar-title" className="text-lg font-bold">
               {t("title")}
             </h2>
@@ -203,7 +203,7 @@ export function Calendar({
 
           {/* Legend */}
           <div
-            className="px-4 pb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-gray-600"
+            className="px-4 pb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-[var(--color-text-secondary)]"
             dir={isHebrew ? "rtl" : "ltr"}
           >
             <div className="flex items-center gap-1.5">
@@ -219,7 +219,7 @@ export function Calendar({
               <span>{t("partial", { percent: "%" })}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-4 h-4 rounded ring-2 ring-blue-600" />
+              <div className="w-4 h-4 rounded ring-2 ring-[var(--color-primary)]" />
               <span>{t("today")}</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -229,8 +229,8 @@ export function Calendar({
               <span>{t("bookmark")}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-4 h-4 rounded bg-green-200 flex items-center justify-center">
-                <span className="text-[8px]">💭</span>
+              <div className="relative w-4 h-4 rounded bg-gray-100">
+                <div className="absolute top-0 left-0 w-0 h-0 border-t-[6px] border-l-[6px] border-t-emerald-500 border-l-emerald-500 border-r-[6px] border-b-[6px] border-r-transparent border-b-transparent rounded-tl" />
               </div>
               <span>{t("note")}</span>
             </div>

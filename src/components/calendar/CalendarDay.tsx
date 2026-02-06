@@ -64,7 +64,7 @@ export function CalendarDay({
   if (isDisabled) {
     containerClasses += " bg-gray-100 text-gray-700 cursor-not-allowed";
   } else if (isSelected) {
-    containerClasses += " bg-blue-600 text-white cursor-pointer";
+    containerClasses += " bg-[var(--color-primary)] text-white cursor-pointer";
   } else if (useMultiPath) {
     // Multi-path background colors with proper contrast
     switch (bgColor) {
@@ -78,14 +78,16 @@ export function CalendarDay({
         containerClasses += " bg-amber-100 text-amber-900 cursor-pointer";
         break;
       default:
-        containerClasses += " text-gray-800 hover:bg-gray-100 cursor-pointer";
+        containerClasses +=
+          " text-[var(--color-text-primary)] hover:bg-gray-100 cursor-pointer";
     }
   } else if (allComplete) {
     containerClasses += " bg-green-200 text-green-900 cursor-pointer";
   } else if (hasAnyProgress) {
     containerClasses += " bg-amber-100 text-amber-900 cursor-pointer";
   } else {
-    containerClasses += " text-gray-800 hover:bg-gray-100 cursor-pointer";
+    containerClasses +=
+      " text-[var(--color-text-primary)] hover:bg-gray-100 cursor-pointer";
   }
 
   // Today ring (visible even when selected)
@@ -95,20 +97,44 @@ export function CalendarDay({
   const renderPathDots = () => {
     if (!useMultiPath || multiPathStatus.pathStatuses.length <= 1) return null;
 
-    return (
-      <div className="flex gap-0.5 absolute top-0.5 left-1/2 -translate-x-1/2">
-        {multiPathStatus.pathStatuses.map((status) => (
+    // If all paths complete, show a single checkmark
+    if (allComplete) {
+      return (
+        <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2">
           <span
-            key={status.path}
-            className={`w-1.5 h-1.5 rounded-full ${
-              status.isComplete
-                ? "bg-green-700"
-                : status.percent > 0
-                  ? "bg-amber-600"
-                  : "bg-gray-400"
-            }`}
-          />
-        ))}
+            className={`text-[10px] leading-none font-bold ${isSelected ? "text-white" : "text-green-700"}`}
+          >
+            ✓
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex gap-0.5 items-center absolute bottom-1 left-1/2 -translate-x-1/2">
+        {multiPathStatus.pathStatuses.map((status) =>
+          status.isComplete ? (
+            <span
+              key={status.path}
+              className={`text-[8px] leading-none font-bold ${isSelected ? "text-white" : "text-green-700"}`}
+            >
+              ✓
+            </span>
+          ) : (
+            <span
+              key={status.path}
+              className={`w-2 h-2 rounded-full ${
+                status.percent > 0
+                  ? isSelected
+                    ? "bg-white/60"
+                    : "bg-[var(--color-primary)]"
+                  : isSelected
+                    ? "bg-white/30"
+                    : "bg-gray-400"
+              }`}
+            />
+          ),
+        )}
       </div>
     );
   };
@@ -118,7 +144,10 @@ export function CalendarDay({
     if (isDisabled || isSelected) return null;
 
     if (useMultiPath) {
-      // Multi-path: show aggregate percent if not all complete
+      // Path dots at bottom already show per-path status; skip aggregate indicator
+      if (multiPathStatus.pathStatuses.length > 1) return null;
+
+      // Single-path in multi-path mode: show aggregate
       if (allComplete) {
         return (
           <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2">
@@ -178,7 +207,7 @@ export function CalendarDay({
     >
       {/* Today indicator ring */}
       {todayRing && (
-        <div className="absolute inset-0 rounded-lg ring-2 ring-blue-500 ring-offset-1" />
+        <div className="absolute inset-0 rounded-lg ring-2 ring-[var(--color-primary)] ring-offset-1" />
       )}
 
       {/* Path dots for multi-path mode */}
@@ -199,16 +228,32 @@ export function CalendarDay({
         </div>
       )}
 
-      {/* Bookmark indicator - top right corner */}
+      {/* Bookmark indicator - blue corner fold with white bookmark icon */}
       {hasBookmark && !isDisabled && (
-        <div className="absolute top-0 right-0 w-0 h-0 border-t-[8px] border-r-[8px] border-t-blue-500 border-r-blue-500 border-l-[8px] border-b-[8px] border-l-transparent border-b-transparent rounded-tr-lg" />
+        <>
+          <div className="absolute top-0 right-0 w-0 h-0 border-t-[12px] border-r-[12px] border-t-blue-500 border-r-blue-500 border-l-[12px] border-b-[12px] border-l-transparent border-b-transparent rounded-tr-lg" />
+          <svg
+            className="absolute top-[2px] right-[2px] w-[9px] h-[9px] text-white"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M5 4a2 2 0 012-2h10a2 2 0 012 2v18l-7-3-7 3V4z" />
+          </svg>
+        </>
       )}
 
-      {/* Summary/note indicator - bottom left corner */}
+      {/* Summary/note indicator - top left corner fold */}
       {hasSummary && !isDisabled && (
-        <div className="absolute bottom-0.5 left-0.5">
-          <span className="text-[8px]">💭</span>
-        </div>
+        <>
+          <div className="absolute top-0 left-0 w-0 h-0 border-t-[12px] border-l-[12px] border-t-emerald-500 border-l-emerald-500 border-r-[12px] border-b-[12px] border-r-transparent border-b-transparent rounded-tl-lg" />
+          <svg
+            className="absolute top-[2px] left-[2px] w-[9px] h-[9px] text-white"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2z" />
+          </svg>
+        </>
       )}
     </button>
   );

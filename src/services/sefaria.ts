@@ -13,6 +13,7 @@ import {
   saveCalendarToDB,
   isStale,
 } from "./database";
+import { isReachable } from "./connectivity";
 
 const SEFARIA_API = "https://www.sefaria.org";
 const HEBCAL_API = "https://www.hebcal.com";
@@ -59,12 +60,7 @@ interface HebcalResponse {
   items: HebcalItem[];
 }
 
-/**
- * Check if the browser is online
- */
-function isOnline(): boolean {
-  return typeof navigator !== "undefined" ? navigator.onLine : true;
-}
+// Connectivity check is now handled by ./connectivity.ts (isReachable)
 
 /**
  * Parse HebCal Sefer HaMitzvot title to extract Sefaria references
@@ -144,7 +140,7 @@ async function fetchSeferHaMitzvotCalendar(
   }
 
   // If offline, return stale cache if available
-  if (!isOnline()) {
+  if (!(await isReachable())) {
     if (cached) {
       const refs = cached.ref.includes(",")
         ? cached.ref.split(",").map((r) => r.trim())
@@ -237,7 +233,7 @@ async function fetchSefariaCalendar(
   }
 
   // If offline, return stale cache if available
-  if (!isOnline()) {
+  if (!(await isReachable())) {
     if (cached) {
       return {
         he: cached.he,
@@ -422,7 +418,7 @@ export async function fetchHalakhot(
   }
 
   // 2. If offline, return stale cache if available
-  if (!isOnline()) {
+  if (!(await isReachable())) {
     if (cached) {
       return {
         halakhot: cached.halakhot,

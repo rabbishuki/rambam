@@ -62,7 +62,7 @@ function CalendarMonth({
     >
       {/* Sticky month header */}
       <div
-        className="sticky top-0 z-10 bg-gray-50 px-4 py-2 border-b border-gray-200"
+        className="sticky top-0 z-10 bg-[var(--color-surface-hover)] px-4 py-2 border-b border-[var(--color-surface-border)]"
         dir={isHebrew ? "rtl" : "ltr"}
       >
         <span className="text-base font-semibold text-gray-700">
@@ -107,7 +107,11 @@ export function InfiniteCalendar({
   const [currentViewDate, setCurrentViewDate] = useState(selectedDate || today);
 
   // Get store data for finding incomplete days
-  const activePaths = useAppStore((state) => state.activePaths) ?? ["rambam3"];
+  const rawActivePaths = useAppStore((state) => state.activePaths);
+  const activePaths = useMemo(
+    () => rawActivePaths ?? ["rambam3"],
+    [rawActivePaths],
+  );
   const days = useAppStore((state) => state.days);
   const done = useAppStore((state) => state.done);
 
@@ -399,11 +403,11 @@ export function InfiniteCalendar({
       >
         {/* Modal content */}
         <div
-          className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh]"
+          className="bg-[var(--color-surface)] rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh]"
           dir={isHebrew ? "rtl" : "ltr"}
         >
           {/* Title bar with close button */}
-          <div className="bg-blue-600 text-white px-4 py-3 flex items-center justify-between shrink-0">
+          <div className="bg-[var(--color-primary)] text-white px-4 py-3 flex items-center justify-between shrink-0">
             <h2 id="calendar-title" className="text-lg font-bold">
               {t("title")}
             </h2>
@@ -427,7 +431,7 @@ export function InfiniteCalendar({
           >
             {/* Loading indicator at top */}
             {canLoadPrevious && (
-              <div className="flex justify-center py-2 text-gray-400">
+              <div className="flex justify-center py-2 text-[var(--color-text-muted)]">
                 <span className="text-sm">{t("loadingMore")}</span>
               </div>
             )}
@@ -450,7 +454,7 @@ export function InfiniteCalendar({
 
             {/* Loading indicator at bottom */}
             {canLoadNext && (
-              <div className="flex justify-center py-2 text-gray-400">
+              <div className="flex justify-center py-2 text-[var(--color-text-muted)]">
                 <span className="text-sm">{t("loadingMore")}</span>
               </div>
             )}
@@ -458,7 +462,7 @@ export function InfiniteCalendar({
 
           {/* Navigation bottom bar */}
           <div
-            className="border-t border-gray-200 bg-white shrink-0"
+            className="border-t border-[var(--color-surface-border)] bg-[var(--color-surface)] shrink-0"
             dir={isHebrew ? "rtl" : "ltr"}
           >
             <div className="flex items-center justify-between">
@@ -491,13 +495,13 @@ export function InfiniteCalendar({
               </button>
 
               {/* Divider */}
-              <div className="w-px h-8 bg-gray-200" />
+              <div className="w-px h-8 bg-[var(--color-surface-border)]" />
 
               {/* Jump to today */}
               <button
                 type="button"
                 onClick={handleJumpToToday}
-                className="flex-1 py-3 flex items-center justify-center gap-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 active:bg-blue-100 transition-colors"
+                className="flex-1 py-3 flex items-center justify-center gap-1.5 text-sm font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 active:bg-[var(--color-primary)]/10 transition-colors"
                 aria-label={t("jumpToToday")}
               >
                 <svg
@@ -517,7 +521,7 @@ export function InfiniteCalendar({
               </button>
 
               {/* Divider */}
-              <div className="w-px h-8 bg-gray-200" />
+              <div className="w-px h-8 bg-[var(--color-surface-border)]" />
 
               {/* Next incomplete */}
               <button
@@ -549,7 +553,7 @@ export function InfiniteCalendar({
             </div>
 
             {/* Legend - below navigation */}
-            <div className="px-4 py-2.5 border-t border-gray-100 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-sm text-gray-600">
+            <div className="px-4 py-2.5 border-t border-[var(--color-surface-border)] flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-sm text-[var(--color-text-secondary)]">
               <div className="flex items-center gap-1.5">
                 <div className="w-4 h-4 rounded bg-green-200 flex items-center justify-center">
                   <span className="text-green-700 text-[8px] font-bold">✓</span>
@@ -561,7 +565,7 @@ export function InfiniteCalendar({
                 <span>{t("partial", { percent: "%" })}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded ring-2 ring-blue-600" />
+                <div className="w-4 h-4 rounded ring-2 ring-[var(--color-primary)]" />
                 <span>{t("today")}</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -571,8 +575,8 @@ export function InfiniteCalendar({
                 <span>{t("bookmark")}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded bg-green-200 flex items-center justify-center">
-                  <span className="text-[8px]">💭</span>
+                <div className="relative w-4 h-4 rounded bg-gray-100">
+                  <div className="absolute top-0 left-0 w-0 h-0 border-t-[6px] border-l-[6px] border-t-emerald-500 border-l-emerald-500 border-r-[6px] border-b-[6px] border-r-transparent border-b-transparent rounded-tl" />
                 </div>
                 <span>{t("note")}</span>
               </div>
@@ -593,13 +597,13 @@ function DayNamesHeader({ isHebrew }: { isHebrew: boolean }) {
 
   return (
     <div
-      className="grid grid-cols-7 gap-1.5 px-4 py-2 border-b border-gray-200 bg-white shrink-0"
+      className="grid grid-cols-7 gap-1.5 px-4 py-2 border-b border-[var(--color-surface-border)] bg-[var(--color-surface)] shrink-0"
       dir={isHebrew ? "rtl" : "ltr"}
     >
       {dayNames.map((name, index) => (
         <div
           key={index}
-          className="h-6 flex items-center justify-center text-xs font-medium text-gray-500"
+          className="h-6 flex items-center justify-center text-xs font-medium text-[var(--color-text-secondary)]"
         >
           {name}
         </div>

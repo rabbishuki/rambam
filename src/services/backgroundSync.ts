@@ -12,6 +12,7 @@ import { getJewishDate, formatDateString } from "@/lib/dates";
 import { useLocationStore } from "@/stores/locationStore";
 import { useAppStore } from "@/stores/appStore";
 import { useOfflineStore } from "@/stores/offlineStore";
+import { isReachable } from "./connectivity";
 
 // Sync interval: 30 minutes
 const SYNC_INTERVAL_MS = 30 * 60 * 1000;
@@ -24,14 +25,10 @@ let syncInProgress = false;
 let syncIntervalId: ReturnType<typeof setInterval> | null = null;
 
 /**
- * Check if conditions are right for background sync
+ * Check if conditions are right for background sync.
+ * Uses a real ping to Sefaria instead of navigator.onLine.
  */
-function canSync(): boolean {
-  // Must be online
-  if (typeof navigator !== "undefined" && !navigator.onLine) {
-    return false;
-  }
-
+async function canSync(): Promise<boolean> {
   // Tab must be visible (respect battery/data)
   if (
     typeof document !== "undefined" &&
@@ -40,7 +37,8 @@ function canSync(): boolean {
     return false;
   }
 
-  return true;
+  // Must be truly reachable (pings Sefaria, cached 30s)
+  return await isReachable();
 }
 
 /**
@@ -190,7 +188,7 @@ const BANNER_DISMISS_MS = 3000;
  * Reports progress through the offline store for UI feedback
  */
 async function runSync(): Promise<void> {
-  if (syncInProgress || !canSync()) {
+  if (syncInProgress || !(await canSync())) {
     return;
   }
 

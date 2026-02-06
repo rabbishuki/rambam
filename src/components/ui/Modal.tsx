@@ -57,20 +57,20 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? "modal-title" : undefined}
-        className="fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-md mx-auto bg-white rounded-xl shadow-xl z-[1000] overflow-hidden"
+        className="fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-md mx-auto bg-[var(--color-surface)] rounded-xl shadow-xl z-[1000] overflow-hidden"
       >
         {title && (
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-surface-border)]">
             <h2
               id="modal-title"
-              className="text-lg font-semibold text-gray-900"
+              className="text-lg font-semibold text-[var(--color-text-primary)]"
             >
               {title}
             </h2>
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 text-xl"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] text-xl"
                 aria-label={tAria("close")}
               >
                 ×

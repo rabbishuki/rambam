@@ -100,7 +100,7 @@ export function UpdateBanner() {
   // App update banner (blue)
   if (showAppBanner) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-blue-600 text-white px-3 py-2.5 z-[1001] shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 bg-[var(--color-primary)] text-white px-3 py-2.5 z-[1001] shadow-lg">
         <div className="max-w-md mx-auto flex items-center justify-between gap-3">
           <span className="text-sm font-medium">{t("appAvailable")}</span>
           <div className="flex gap-1.5">
@@ -108,7 +108,7 @@ export function UpdateBanner() {
               variant="ghost"
               size="sm"
               onClick={handleAppUpdate}
-              className="bg-white text-blue-600 hover:bg-blue-50 font-semibold px-3 py-1 rounded-md"
+              className="bg-white text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 font-semibold px-3 py-1 rounded-md"
             >
               {t("refresh")}
             </Button>
@@ -116,7 +116,7 @@ export function UpdateBanner() {
               variant="ghost"
               size="sm"
               onClick={handleDismissApp}
-              className="bg-blue-500 text-white hover:bg-blue-400 px-3 py-1 rounded-md"
+              className="bg-[var(--color-primary-dark)] text-white hover:opacity-80 px-3 py-1 rounded-md"
             >
               {t("later")}
             </Button>

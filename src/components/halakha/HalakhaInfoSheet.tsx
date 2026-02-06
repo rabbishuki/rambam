@@ -157,22 +157,22 @@ export function HalakhaInfoSheet({
         aria-modal="true"
       >
         <div
-          className="bg-white rounded-xl shadow-2xl border-2 border-blue-200 overflow-hidden w-full max-w-md pointer-events-auto"
+          className="bg-[var(--color-surface)] rounded-xl shadow-2xl border-2 border-[var(--color-primary)]/30 overflow-hidden w-full max-w-md pointer-events-auto"
           dir={isHebrew ? "rtl" : "ltr"}
         >
           {/* Header */}
-          <div className="px-4 py-2.5 bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-between">
+          <div className="px-4 py-2.5 bg-[var(--color-primary)]/10 flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-sm text-blue-800">
+              <h3 className="font-bold text-sm text-[var(--color-primary-dark)]">
                 {displayTitle}
               </h3>
-              <p className="text-xs text-blue-600 mt-0.5">
+              <p className="text-xs text-[var(--color-primary)] mt-0.5">
                 {t("halakha")} {halakhaIndex + 1}
               </p>
             </div>
             <button
               onClick={onClose}
-              className="text-blue-400 hover:text-blue-600 transition-colors p-1"
+              className="text-[var(--color-primary)]/50 hover:text-[var(--color-primary)] transition-colors p-1"
               aria-label="Close"
             >
               <svg
@@ -199,7 +199,7 @@ export function HalakhaInfoSheet({
               className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
                 isBookmarked
                   ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
-                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                  : "bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-border)]"
               }`}
             >
               <BookmarkIcon filled={isBookmarked} className="flex-shrink-0" />
@@ -212,15 +212,15 @@ export function HalakhaInfoSheet({
 
             {/* Note section - only show when bookmarked */}
             {isBookmarked && (
-              <div className="bg-gray-50 rounded-lg p-3">
+              <div className="bg-[var(--color-surface-hover)] rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-[var(--color-text-secondary)]">
                     {tBookmarks("personalNote")}
                   </span>
                   {!isEditingNote && (
                     <button
                       onClick={handleStartEditNote}
-                      className="text-sm text-blue-600 hover:text-blue-700"
+                      className="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-dark)]"
                     >
                       {bookmark?.note
                         ? tBookmarks("editNote")
@@ -235,20 +235,20 @@ export function HalakhaInfoSheet({
                       value={noteText}
                       onChange={(e) => setNoteText(e.target.value)}
                       placeholder={tBookmarks("personalNote")}
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-[var(--color-surface-border)] rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                       rows={3}
                       autoFocus
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={handleSaveNote}
-                        className="flex-1 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                        className="flex-1 py-1.5 bg-[var(--color-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-primary-dark)]"
                       >
                         {tBookmarks("saveNote")}
                       </button>
                       <button
                         onClick={() => setIsEditingNote(false)}
-                        className="px-4 py-1.5 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
+                        className="px-4 py-1.5 bg-[var(--color-surface-border)] text-[var(--color-text-secondary)] text-sm rounded-lg hover:opacity-80"
                       >
                         ✕
                       </button>
@@ -257,14 +257,14 @@ export function HalakhaInfoSheet({
                 ) : bookmark?.note ? (
                   <button
                     onClick={handleStartEditNote}
-                    className="text-sm text-gray-600 whitespace-pre-wrap text-start w-full hover:bg-gray-100 rounded p-1 -m-1 transition-colors"
+                    className="text-sm text-[var(--color-text-secondary)] whitespace-pre-wrap text-start w-full hover:bg-[var(--color-surface-border)] rounded p-1 -m-1 transition-colors"
                   >
                     {bookmark.note}
                   </button>
                 ) : (
                   <button
                     onClick={handleStartEditNote}
-                    className="text-sm text-gray-400 italic text-start w-full hover:bg-gray-100 rounded p-1 -m-1 transition-colors"
+                    className="text-sm text-[var(--color-text-muted)] italic text-start w-full hover:bg-[var(--color-surface-border)] rounded p-1 -m-1 transition-colors"
                   >
                     {tBookmarks("addNote")}...
                   </button>
@@ -291,8 +291,8 @@ export function HalakhaInfoSheet({
             />
 
             {/* Reference */}
-            <div className="pt-3 border-t border-gray-200">
-              <p className="text-xs text-gray-500">{ref}</p>
+            <div className="pt-3 border-t border-[var(--color-surface-border)]">
+              <p className="text-xs text-[var(--color-text-muted)]">{ref}</p>
             </div>
           </div>
         </div>
@@ -319,7 +319,7 @@ export function HalakhaInfoSheet({
         aria-modal="true"
       >
         <div
-          className="bg-white rounded-xl shadow-2xl border-2 border-indigo-200 overflow-hidden w-full max-w-md pointer-events-auto"
+          className="bg-[var(--color-surface)] rounded-xl shadow-2xl border-2 border-indigo-200 overflow-hidden w-full max-w-md pointer-events-auto"
           dir={textLanguage === "hebrew" ? "ltr" : "rtl"}
         >
           {/* Header */}
@@ -362,7 +362,7 @@ export function HalakhaInfoSheet({
                 }}
               />
             ) : (
-              <p className="text-sm text-gray-400 italic">
+              <p className="text-sm text-[var(--color-text-muted)] italic">
                 {t("noTranslation")}
               </p>
             )}

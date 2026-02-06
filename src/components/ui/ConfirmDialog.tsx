@@ -130,7 +130,7 @@ function ConfirmDialog({
   const confirmButtonClass =
     variant === "danger"
       ? "bg-red-600 hover:bg-red-700 active:bg-red-800 text-white"
-      : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white";
+      : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] active:opacity-80 text-white";
 
   return (
     <div
@@ -140,16 +140,20 @@ function ConfirmDialog({
       }}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 animate-in fade-in zoom-in-95 duration-200"
+        className="bg-[var(--color-surface)] rounded-2xl shadow-xl max-w-sm w-full p-6 animate-in fade-in zoom-in-95 duration-200"
         dir="auto"
       >
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-        <p className="text-gray-600 mb-6 leading-relaxed">{message}</p>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
+          {title}
+        </h3>
+        <p className="text-[var(--color-text-secondary)] mb-6 leading-relaxed">
+          {message}
+        </p>
 
         <div className="flex gap-3 justify-end">
           <button
             onClick={onCancel}
-            className="px-4 py-2.5 rounded-xl text-gray-700 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 font-medium transition-colors"
+            className="px-4 py-2.5 rounded-xl text-[var(--color-text-secondary)] bg-[var(--color-surface-hover)] hover:bg-[var(--color-surface-border)] active:opacity-80 font-medium transition-colors"
           >
             {cancelLabel}
           </button>

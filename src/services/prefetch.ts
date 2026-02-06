@@ -8,6 +8,7 @@ import { formatDateString } from "@/lib/dates";
 import { fetchCalendar, prefetchText } from "./sefaria";
 import { fetchHebrewDate } from "./hebcal";
 import { updateCalendarHebrewDate } from "./database";
+import { isReachable } from "./connectivity";
 
 export interface PrefetchProgress {
   total: number;
@@ -154,8 +155,8 @@ export async function prefetchWeekAhead(
 }
 
 /**
- * Check if prefetch is possible (online)
+ * Check if prefetch is possible (truly reachable, not just navigator.onLine)
  */
-export function canPrefetch(): boolean {
-  return typeof navigator !== "undefined" && navigator.onLine;
+export async function canPrefetch(): Promise<boolean> {
+  return await isReachable();
 }
