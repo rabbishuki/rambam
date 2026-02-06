@@ -360,10 +360,10 @@ export function HalakhaCard({
               e.stopPropagation();
               setShowInfoSheet(true);
             }}
-            className="absolute bottom-2 left-2 sm:bottom-auto sm:-top-2 sm:-left-2
+            className="absolute -top-1 left-2 sm:-top-2 sm:-left-2
                        w-6 h-6 text-gray-400 hover:text-gray-600 bg-white border border-gray-200
                        flex items-center justify-center rounded-full hover:bg-gray-100
-                       transition-colors z-10 shadow-sm"
+                       transition-colors z-[1] shadow-sm"
             aria-label="More information"
           >
             <svg
@@ -387,7 +387,7 @@ export function HalakhaCard({
           <div
             className="absolute top-2 right-2 sm:-top-2 sm:-right-2
                        w-6 h-6 text-amber-500 bg-white border border-amber-200
-                       flex items-center justify-center rounded-full shadow-sm z-10"
+                       flex items-center justify-center rounded-full shadow-sm z-[1]"
             aria-label="Bookmarked"
           >
             <svg
