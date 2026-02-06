@@ -450,7 +450,7 @@ export default function HomePage() {
       {/* Hide stats bar during tutorial */}
       {!isTutorialActive && <StatsBar selectedDate={viewingDate} />}
 
-      <main className="px-0 sm:px-4 pb-8 pt-4">
+      <main className="px-0 sm:px-4 pb-24 pt-4">
         {/* Date filter indicator - shown when viewing a specific date */}
         {isFiltering && (
           <div
