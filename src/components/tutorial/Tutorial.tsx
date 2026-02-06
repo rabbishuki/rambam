@@ -250,23 +250,19 @@ export function Tutorial({ onComplete }: TutorialProps) {
   const handleGoToStage = useCallback(
     (index: number) => {
       goToStage(index);
-      // Reset card state when going back to swipe-right stage
-      if (index <= 1) {
-        setSwipeRightCompletedCards(new Set());
-        setMarkAllCompletedCards(new Set());
-      }
+      // Always reset demo card state so gestures can be re-practiced
+      setSwipeRightCompletedCards(new Set());
+      setMarkAllCompletedCards(new Set());
     },
     [goToStage],
   );
 
   const handleGoBack = useCallback(() => {
     goBack();
-    // Reset card state when going back to early stages
-    if (currentStageIndex <= 2) {
-      setSwipeRightCompletedCards(new Set());
-      setMarkAllCompletedCards(new Set());
-    }
-  }, [goBack, currentStageIndex]);
+    // Always reset demo card state so gestures can be re-practiced
+    setSwipeRightCompletedCards(new Set());
+    setMarkAllCompletedCards(new Set());
+  }, [goBack]);
 
   // Don't render during SSR or if tutorial is not active
   if (!isClient || !isActive || !currentStage) {

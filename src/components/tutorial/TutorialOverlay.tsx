@@ -169,7 +169,7 @@ export function TutorialOverlay({
                 title={t("tutorial.back")}
               >
                 <svg
-                  className="w-3.5 h-3.5"
+                  className="w-3.5 h-3.5 rtl:rotate-180"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -220,8 +220,8 @@ export function TutorialOverlay({
               className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 canAdvance
                   ? actionPerformed && requiresAction
-                    ? "bg-green-500 text-white hover:bg-green-600 shadow-sm"
-                    : "bg-blue-500 text-white hover:bg-blue-600 shadow-sm"
+                    ? "bg-green-500 text-white hover:bg-green-600 shadow-sm animate-[btn-pulse_2s_ease-in-out_infinite]"
+                    : "bg-blue-500 text-white hover:bg-blue-600 shadow-sm animate-[btn-pulse_2s_ease-in-out_infinite]"
                   : "bg-gray-200 text-gray-400 cursor-not-allowed"
               }`}
             >

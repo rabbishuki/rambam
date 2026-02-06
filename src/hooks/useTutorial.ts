@@ -162,14 +162,17 @@ export function useTutorial(): UseTutorialReturn {
   }, [knownStageIds]);
 
   // Determine tutorial mode
-  const hasAnyProgress = knownStageIds.size > 0;
   const hasNewStages = uncompletedStages.length > 0;
 
   // Fresh user: no progress → show full tutorial
   // Returning user with new stages → show "What's New"
   // All stages known → no tutorial needed
   const showTutorial = hasNewStages;
-  const isWhatsNewMode = hasAnyProgress && hasNewStages;
+
+  // "What's New" only when user previously SKIPPED the tutorial and new stages exist.
+  // During normal first-run, stages get completed (not skipped), so this stays false.
+  // This prevents stagesToShow from shrinking mid-tutorial.
+  const isWhatsNewMode = progress.skippedStageIds.length > 0 && hasNewStages;
 
   // Get the stages to show
   // "What's New" mode (returning user with new stages): only show new stages
