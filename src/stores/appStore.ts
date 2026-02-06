@@ -12,6 +12,7 @@ import type {
   ThemeId,
   HeaderStyle,
   CardStyle,
+  ContentWidth,
   DayData,
   CompletionMap,
   AppSettings,
@@ -50,6 +51,7 @@ interface AppStore extends AppSettings {
   setTheme: (theme: ThemeId) => void;
   setHeaderStyle: (style: HeaderStyle) => void;
   setCardStyle: (style: CardStyle) => void;
+  setContentWidth: (width: ContentWidth) => void;
 
   // Day data actions
   setDayData: (path: StudyPath, date: string, data: DayData) => void;
@@ -197,6 +199,7 @@ export const useAppStore = create<AppStore>()(
       setTheme: (theme) => set({ theme }),
       setHeaderStyle: (style) => set({ headerStyle: style }),
       setCardStyle: (style) => set({ cardStyle: style }),
+      setContentWidth: (width) => set({ contentWidth: width }),
 
       // Day data actions
       setDayData: (path, date, data) =>
@@ -530,6 +533,7 @@ export const useAppStore = create<AppStore>()(
         ) as ThemeId;
         const headerStyle = persisted.headerStyle || "minimal";
         const cardStyle = persisted.cardStyle || "list";
+        const contentWidth = persisted.contentWidth || "full";
 
         return {
           ...currentState,
@@ -542,6 +546,7 @@ export const useAppStore = create<AppStore>()(
           theme,
           headerStyle,
           cardStyle,
+          contentWidth,
         };
       },
     },

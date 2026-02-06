@@ -26,6 +26,7 @@ import type {
   ThemeId,
   HeaderStyle,
   CardStyle,
+  ContentWidth,
   HideCompletedMode,
 } from "@/types";
 
@@ -203,6 +204,9 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const theme = useAppStore((state) => state.theme) as ThemeId;
   const headerStyle = useAppStore((state) => state.headerStyle) as HeaderStyle;
   const cardStyle = useAppStore((state) => state.cardStyle) as CardStyle;
+  const contentWidth = useAppStore(
+    (state) => state.contentWidth,
+  ) as ContentWidth;
   const setTextLanguage = useAppStore((state) => state.setTextLanguage);
   const setAutoMarkPrevious = useAppStore((state) => state.setAutoMarkPrevious);
   const setHideCompleted = useAppStore((state) => state.setHideCompleted);
@@ -210,6 +214,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const setTheme = useAppStore((state) => state.setTheme);
   const setHeaderStyle = useAppStore((state) => state.setHeaderStyle);
   const setCardStyle = useAppStore((state) => state.setCardStyle);
+  const setContentWidth = useAppStore((state) => state.setContentWidth);
   const resetPath = useAppStore((state) => state.resetPath);
   const resetAll = useAppStore((state) => state.resetAll);
 
@@ -556,6 +561,34 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 />
               )}
             </SettingRow>
+
+            {/* Content width */}
+            <SettingRow
+              label={isHebrew ? "רוחב תוכן" : "Content Width"}
+              chevron
+              onClick={() => toggleExpand("contentWidth")}
+            >
+              {expanded === "contentWidth" && (
+                <Toggle
+                  options={[
+                    {
+                      value: "narrow" as const,
+                      label: isHebrew ? "צר" : "Narrow",
+                    },
+                    {
+                      value: "medium" as const,
+                      label: isHebrew ? "בינוני" : "Medium",
+                    },
+                    {
+                      value: "full" as const,
+                      label: isHebrew ? "מלא" : "Full",
+                    },
+                  ]}
+                  value={contentWidth}
+                  onChange={(val) => setContentWidth(val as ContentWidth)}
+                />
+              )}
+            </SettingRow>
           </SettingsGroup>
 
           {/* ── Study ── */}
@@ -607,21 +640,30 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           <SettingsGroup title={isHebrew ? "התנהגות" : "Behavior"}>
             <SettingRow
               label={t("autoMark")}
-              control={
-                <ToggleSwitch
-                  checked={autoMarkPrevious}
-                  onChange={setAutoMarkPrevious}
-                />
+              value={
+                autoMarkPrevious
+                  ? isHebrew
+                    ? "פעיל"
+                    : "On"
+                  : isHebrew
+                    ? "כבוי"
+                    : "Off"
               }
               chevron
               onClick={() => toggleExpand("autoMark")}
             >
               {expanded === "autoMark" && (
-                <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-                  {isHebrew
-                    ? "כשמסמנים הלכה כנקראה, כל ההלכות הקודמות שלא סומנו יסומנו גם כן באופן אוטומטי."
-                    : "When marking a halakha as read, all previous unmarked halakhot will be automatically marked as well."}
-                </p>
+                <div className="space-y-2">
+                  <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+                    {isHebrew
+                      ? "כשמסמנים הלכה כנקראה, כל ההלכות הקודמות שלא סומנו יסומנו גם כן באופן אוטומטי."
+                      : "When marking a halakha as read, all previous unmarked halakhot will be automatically marked as well."}
+                  </p>
+                  <ToggleSwitch
+                    checked={autoMarkPrevious}
+                    onChange={setAutoMarkPrevious}
+                  />
+                </div>
               )}
             </SettingRow>
 

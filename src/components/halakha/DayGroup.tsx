@@ -17,7 +17,7 @@ import { ChapterDivider } from "./ChapterDivider";
 import { PathBadge } from "./PathBadge";
 import { DaySummaryEditor } from "./DaySummaryEditor";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
-import type { DayData, StudyPath, TextLanguage } from "@/types";
+import type { DayData, StudyPath, TextLanguage, CardStyle } from "@/types";
 
 interface DayGroupProps {
   date: string;
@@ -54,6 +54,7 @@ const DayGroupInner = React.memo(function DayGroup({
   );
   const markAllComplete = useAppStore((state) => state.markAllComplete);
   const resetDay = useAppStore((state) => state.resetDay);
+  const cardStyle = useAppStore((state) => state.cardStyle) as CardStyle;
   const { confirm } = useConfirmDialog();
 
   const { halakhot, chapterBreaks, isLoading, error } = useHalakhaData(
@@ -247,7 +248,10 @@ const DayGroupInner = React.memo(function DayGroup({
         </div>
       </summary>
 
-      <div ref={containerRef} className="p-4 flex flex-col gap-3">
+      <div
+        ref={containerRef}
+        className={`flex flex-col ${cardStyle === "list" ? "px-0 pt-2 pb-4 gap-0" : "p-4 gap-3"}`}
+      >
         {isLoading && (
           <div className="text-center py-8 text-[var(--color-text-muted)] italic">
             {t("messages.loading")}

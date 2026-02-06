@@ -469,21 +469,31 @@ export function Tutorial({ onComplete }: TutorialProps) {
         </div>
       )}
 
-      {/* Header colors visual mock-up */}
+      {/* Header colors visual mock-up — matches new minimal header with accent bar */}
       {currentStage.id === "header-colors" && (
         <div className="fixed inset-0 z-45 flex items-center justify-center px-4">
           <div className="w-full max-w-md space-y-3">
-            {/* Blue header - normal */}
-            <div className="bg-blue-600 text-white px-4 py-3 rounded-xl flex items-center gap-3 shadow-md">
-              <div className="w-3 h-3 rounded-full bg-white/30" />
-              <span className="font-medium flex-1">
+            {/* Normal — theme primary accent bar */}
+            <div
+              className="bg-[var(--color-surface)] border-b-[3px] rounded-xl px-4 py-3 flex items-center gap-3 shadow-md"
+              style={{ borderBottomColor: "var(--color-status-normal)" }}
+            >
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: "var(--color-status-normal)" }}
+              />
+              <span className="font-medium flex-1 text-[var(--color-text-primary)]">
                 {t("headerColors.blue")}
               </span>
             </div>
-            {/* Amber header - offline */}
-            <div className="bg-amber-500 text-white px-4 py-3 rounded-xl flex items-center gap-3 shadow-md">
+            {/* Offline — amber accent bar */}
+            <div
+              className="bg-[var(--color-surface)] border-b-[3px] rounded-xl px-4 py-3 flex items-center gap-3 shadow-md"
+              style={{ borderBottomColor: "var(--color-status-offline)" }}
+            >
               <svg
                 className="w-5 h-5"
+                style={{ color: "var(--color-status-offline)" }}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -498,14 +508,21 @@ export function Tutorial({ onComplete }: TutorialProps) {
                   strokeWidth="2"
                 />
               </svg>
-              <span className="font-medium flex-1">
+              <span className="font-medium flex-1 text-[var(--color-text-primary)]">
                 {t("headerColors.amber")}
               </span>
             </div>
-            {/* Red header - other date */}
-            <div className="bg-red-600 text-white px-4 py-3 rounded-xl flex items-center gap-3 shadow-md">
+            {/* Other date — red accent bar (top + bottom) */}
+            <div
+              className="bg-[var(--color-surface)] border-b-[3px] border-t-[3px] rounded-xl px-4 py-3 flex items-center gap-3 shadow-md"
+              style={{
+                borderBottomColor: "var(--color-status-other-date)",
+                borderTopColor: "var(--color-status-other-date)",
+              }}
+            >
               <svg
                 className="w-5 h-5"
+                style={{ color: "var(--color-status-other-date)" }}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -516,7 +533,7 @@ export function Tutorial({ onComplete }: TutorialProps) {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              <span className="font-medium flex-1">
+              <span className="font-medium flex-1 text-[var(--color-text-primary)]">
                 {t("headerColors.red")}
               </span>
             </div>

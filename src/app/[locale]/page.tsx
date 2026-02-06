@@ -51,7 +51,7 @@ const Tutorial = dynamic(
 import { fetchHebrewDate } from "@/services/hebcal";
 import { dateRange } from "@/lib/dates";
 import { useTheme } from "@/hooks/useTheme";
-import type { DayData, StudyPath } from "@/types";
+import type { DayData, StudyPath, ContentWidth } from "@/types";
 
 export default function HomePage() {
   const locale = useLocale();
@@ -129,6 +129,8 @@ export default function HomePage() {
 
   // Jewish date
   const today = useJewishDate();
+
+  const contentWidth = useAppStore((s) => s.contentWidth) as ContentWidth;
 
   // Tutorial state - used to hide UI elements during tutorial
   const { isActive: isTutorialActive, currentStage } = useTutorial();
@@ -534,7 +536,15 @@ export default function HomePage() {
       {/* Hide stats bar during tutorial */}
       {!isTutorialActive && <StatsBar selectedDate={viewingDate} />}
 
-      <main className="px-0 sm:px-4 pb-24 pt-4">
+      <main
+        className={`px-0 sm:px-4 pb-24 pt-4 mx-auto ${
+          contentWidth === "narrow"
+            ? "max-w-2xl"
+            : contentWidth === "medium"
+              ? "max-w-4xl"
+              : ""
+        }`}
+      >
         {/* Date filter indicator - shown when viewing a specific date */}
         {isFiltering && (
           <div

@@ -5,6 +5,7 @@ export type StudyPath = "rambam3" | "rambam1" | "mitzvot";
 export type ThemeId = "teal" | "sky" | "lavender" | "rose" | "sage" | "dark";
 export type HeaderStyle = "minimal" | "glass";
 export type CardStyle = "list" | "cards";
+export type ContentWidth = "narrow" | "medium" | "full";
 
 // Hide completed mode options
 export type HideCompletedMode = "show" | "immediate" | "after1h" | "after24h";
@@ -75,6 +76,7 @@ export interface AppSettings {
   theme: ThemeId;
   headerStyle: HeaderStyle;
   cardStyle: CardStyle;
+  contentWidth: ContentWidth;
   // Per-path start dates (allows switching paths while preserving progress)
   startDates: {
     rambam3: string;
@@ -161,6 +163,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: "teal",
   headerStyle: "minimal",
   cardStyle: "list",
+  contentWidth: "full",
   startDates: {
     rambam3: CYCLE_46_START,
     rambam1: CYCLE_46_START,

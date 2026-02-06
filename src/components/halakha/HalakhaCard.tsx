@@ -374,40 +374,20 @@ const HalakhaCardInner = React.memo(function HalakhaCard({
         {...handlers}
         data-index={index}
       >
-        {/* Bookmark indicator - positioned on corner */}
-        {isBookmarked && !isList && (
-          <div
-            className="absolute -top-2 -left-2
-                       w-6 h-6 text-amber-500 bg-[var(--color-surface)] border border-amber-200
-                       flex items-center justify-center rounded-full shadow-sm z-[1]"
-            aria-label="Bookmarked"
-          >
-            <svg
-              className="w-3.5 h-3.5"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-            </svg>
-          </div>
-        )}
-
         {/* Card content: inline number + text */}
         <div
           className={`flex items-start gap-2 ${isList ? "" : "p-4"}`}
           dir={textLanguage === "english" ? "ltr" : "rtl"}
         >
           {/* Number indicator + info icon */}
-          <div className="flex flex-col items-center flex-shrink-0 mt-1 gap-0.5">
+          <div className="flex flex-col items-center flex-shrink-0 mt-1 gap-1.5">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 if (dayData) setShowInfoSheet(true);
               }}
               className={`
-                text-sm font-bold leading-none
+                text-base font-bold leading-none
                 ${
                   isCompleted
                     ? "text-[var(--color-completion-accent)]"
@@ -416,11 +396,7 @@ const HalakhaCardInner = React.memo(function HalakhaCard({
               `}
               aria-label={dayData ? "More information" : undefined}
             >
-              {isCompleted
-                ? "✓"
-                : textLanguage === "english"
-                  ? String(index + 1)
-                  : hebrewNum}
+              {textLanguage === "english" ? String(index + 1) : hebrewNum}
             </button>
             {/* ⓘ icon - visible when info sheet is available and card not completed */}
             {dayData && !isCompleted && (
@@ -433,7 +409,7 @@ const HalakhaCardInner = React.memo(function HalakhaCard({
                 aria-label="More information"
               >
                 <svg
-                  className="w-3.5 h-3.5"
+                  className="w-4 h-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -446,6 +422,19 @@ const HalakhaCardInner = React.memo(function HalakhaCard({
                   />
                 </svg>
               </button>
+            )}
+            {/* Bookmark indicator - inline under number/info */}
+            {isBookmarked && (
+              <svg
+                className="w-4 h-4 text-amber-500"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-label="Bookmarked"
+              >
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+              </svg>
             )}
           </div>
 
