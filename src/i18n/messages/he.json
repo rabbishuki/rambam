@@ -199,8 +199,13 @@
   "info": {
     "moreInfo": "מידע נוסף",
     "viewOnSefaria": "צפה בטקסט המלא עם פירושים",
-    "viewOnChabad": "צפה עם תרגום ופירוש",
-    "halakha": "הלכה"
+    "viewOnChabad": "שיעורי אודיו ווידאו",
+    "halakha": "הלכה",
+    "showTranslation": "English",
+    "showOriginal": "עברית",
+    "noTranslation": "התרגום אינו זמין",
+    "translationTitle": "תרגום לאנגלית",
+    "originalTitle": "מקור בעברית"
   },
   "aria": {
     "close": "סגור",

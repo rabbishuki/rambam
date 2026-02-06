@@ -199,8 +199,13 @@
   "info": {
     "moreInfo": "More information",
     "viewOnSefaria": "View full text with commentaries",
-    "viewOnChabad": "View with translation and commentary",
-    "halakha": "Halakha"
+    "viewOnChabad": "Audio & video classes",
+    "halakha": "Halakha",
+    "showTranslation": "English",
+    "showOriginal": "Hebrew",
+    "noTranslation": "Translation not available",
+    "translationTitle": "English Translation",
+    "originalTitle": "Hebrew Original"
   },
   "aria": {
     "close": "Close",
