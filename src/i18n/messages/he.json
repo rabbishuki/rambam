@@ -157,7 +157,7 @@
     "allComplete": "סיימת הכל!",
     "allCompleteHint": "פריטים שהושלמו מוסתרים. ניתן לשנות זאת בהגדרות תחת \"הסתר שהושלמו\".",
     "openSettings": "פתח הגדרות",
-    "hiddenEntries": "{count} {count, plural, one {פריט מוסתר} other {פריטים מוסתרים}}",
+    "hiddenEntries": "{count, plural, one {פריט {count} מוסתר} other {{count} פריטים מוסתרים}}",
     "tapToShow": "לחץ להצגה"
   },
   "dates": {
