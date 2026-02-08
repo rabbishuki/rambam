@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useStats } from "@/hooks/useStats";
 import { useLocationStore } from "@/stores/locationStore";
 import { useAppStore, isHalakhaDone } from "@/stores/appStore";
-import type { StudyPath, ContentWidth, HeaderStyle } from "@/types";
+import type { StudyPath, ContentWidth } from "@/types";
 
 interface StatsBarProps {
   /** Optional selected date to show per-path breakdown */
@@ -26,9 +26,6 @@ export function StatsBar({ selectedDate }: StatsBarProps = {}) {
   const days = useAppStore((state) => state.days);
   const done = useAppStore((state) => state.done);
   const contentWidth = useAppStore((s) => s.contentWidth) as ContentWidth;
-  const headerStyle = useAppStore((s) => s.headerStyle) as HeaderStyle;
-  const isGlass = headerStyle === "glass";
-
   // Scroll direction detection for hide/show behavior
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
@@ -75,9 +72,7 @@ export function StatsBar({ selectedDate }: StatsBarProps = {}) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const surfaceBg = isGlass
-    ? "bg-[var(--color-surface-glass)] backdrop-blur-xl"
-    : "bg-[var(--color-surface-hover)]";
+  const surfaceBg = "bg-[var(--color-surface-hover)]";
   const baseClasses = `${surfaceBg} border-b-2 border-[var(--color-surface-border)] sticky top-[60px] z-[100] transition-transform duration-300 ${isVisible ? "translate-y-0" : "-translate-y-full"}`;
   const widthClass =
     contentWidth === "narrow"

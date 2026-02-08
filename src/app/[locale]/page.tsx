@@ -777,7 +777,7 @@ export default function HomePage() {
           <div
             className={`mt-4 ${
               showHidden
-                ? "sticky z-20 mb-4 bg-[var(--color-surface-glass)] backdrop-blur-xl shadow-md border border-[var(--color-surface-border)] rounded-xl"
+                ? "sticky z-20 mb-4 bg-[var(--color-surface)] shadow-md border border-[var(--color-surface-border)] rounded-xl"
                 : ""
             }`}
             style={

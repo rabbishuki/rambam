@@ -10,7 +10,6 @@ import type {
   TextLanguage,
   HideCompletedMode,
   ThemeId,
-  HeaderStyle,
   CardStyle,
   ContentWidth,
   CompletionMap,
@@ -37,7 +36,6 @@ export interface ExportData {
   };
   settings?: {
     theme: ThemeId;
-    headerStyle: HeaderStyle;
     cardStyle: CardStyle;
     contentWidth: ContentWidth;
     activePaths: StudyPath[];
@@ -74,7 +72,6 @@ export function exportData(): ExportData {
     },
     settings: {
       theme: appState.theme,
-      headerStyle: appState.headerStyle,
       cardStyle: appState.cardStyle,
       contentWidth: appState.contentWidth,
       activePaths: appState.activePaths,
@@ -277,8 +274,6 @@ export function importData(data: ExportData): void {
   // Apply settings if present (v3 format)
   if (data.settings) {
     if (data.settings.theme) appStore.setTheme(data.settings.theme);
-    if (data.settings.headerStyle)
-      appStore.setHeaderStyle(data.settings.headerStyle);
     if (data.settings.cardStyle) appStore.setCardStyle(data.settings.cardStyle);
     if (data.settings.contentWidth)
       appStore.setContentWidth(data.settings.contentWidth);

@@ -10,7 +10,6 @@ import type {
   TextLanguage,
   HideCompletedMode,
   ThemeId,
-  HeaderStyle,
   CardStyle,
   ContentWidth,
   DayData,
@@ -53,7 +52,6 @@ interface AppStore extends AppSettings {
   setHideCompleted: (mode: HideCompletedMode) => void;
   setDaysAhead: (days: number) => void;
   setTheme: (theme: ThemeId) => void;
-  setHeaderStyle: (style: HeaderStyle) => void;
   setCardStyle: (style: CardStyle) => void;
   setContentWidth: (width: ContentWidth) => void;
   setTextRetentionDays: (days: number) => void;
@@ -209,7 +207,6 @@ export const useAppStore = create<AppStore>()(
         set({ daysAhead: Math.max(1, Math.min(14, days)) }),
 
       setTheme: (theme) => set({ theme }),
-      setHeaderStyle: (style) => set({ headerStyle: style }),
       setCardStyle: (style) => set({ cardStyle: style }),
       setContentWidth: (width) => set({ contentWidth: width }),
       setTextRetentionDays: (days) => set({ textRetentionDays: days }),
@@ -501,7 +498,6 @@ export const useAppStore = create<AppStore>()(
           hideCompleted: state.hideCompleted,
           daysAhead: state.daysAhead,
           theme: state.theme,
-          headerStyle: state.headerStyle,
           cardStyle: state.cardStyle,
           contentWidth: state.contentWidth,
           textRetentionDays: state.textRetentionDays,
@@ -545,7 +541,6 @@ export const useAppStore = create<AppStore>()(
               ? "sage"
               : rawTheme
         ) as ThemeId;
-        const headerStyle = persisted.headerStyle || "minimal";
         const cardStyle = persisted.cardStyle || "list";
         const contentWidth = persisted.contentWidth || "full";
 
@@ -564,7 +559,6 @@ export const useAppStore = create<AppStore>()(
           bookmarks,
           summaries,
           theme,
-          headerStyle,
           cardStyle,
           contentWidth,
           textRetentionDays,

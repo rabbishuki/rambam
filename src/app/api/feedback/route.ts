@@ -8,7 +8,6 @@ export async function POST(request: NextRequest) {
       locale,
       studyPath,
       theme,
-      headerStyle,
       cardStyle,
       textLanguage,
       hideCompleted,
@@ -18,7 +17,6 @@ export async function POST(request: NextRequest) {
       locale?: string;
       studyPath?: string;
       theme?: string;
-      headerStyle?: string;
       cardStyle?: string;
       textLanguage?: string;
       hideCompleted?: string;
@@ -80,7 +78,7 @@ export async function POST(request: NextRequest) {
       "",
       `🌐 UI: ${locale === "he" ? "Hebrew" : "English"}  ·  Text: ${textLanguage ?? "—"}`,
       `📖 Paths: ${paths}`,
-      `🎨 Theme: ${theme ?? "—"}  ·  Header: ${headerStyle ?? "—"}  ·  Cards: ${cardStyle ?? "—"}`,
+      `🎨 Theme: ${theme ?? "—"}  ·  Cards: ${cardStyle ?? "—"}`,
       `👁 Hide completed: ${hideCompleted ?? "—"}`,
       "",
       `<i>🕐 ${date} (${tz})</i>`,

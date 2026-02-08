@@ -23,13 +23,7 @@ import { PathBadge } from "./PathBadge";
 import { DaySummaryEditor } from "./DaySummaryEditor";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ProgressCircle } from "@/components/ui/ProgressCircle";
-import type {
-  DayData,
-  StudyPath,
-  TextLanguage,
-  CardStyle,
-  HeaderStyle,
-} from "@/types";
+import type { DayData, StudyPath, TextLanguage, CardStyle } from "@/types";
 
 interface DayGroupProps {
   date: string;
@@ -67,8 +61,6 @@ const DayGroupInner = React.memo(function DayGroup({
   const markAllComplete = useAppStore((state) => state.markAllComplete);
   const resetDay = useAppStore((state) => state.resetDay);
   const cardStyle = useAppStore((state) => state.cardStyle) as CardStyle;
-  const headerStyle = useAppStore((state) => state.headerStyle) as HeaderStyle;
-  const isGlass = headerStyle === "glass";
   const hasBookmarks = useAppStore((s) =>
     hasDayBookmarks(s.bookmarks, studyPath, date),
   );
@@ -211,7 +203,7 @@ const DayGroupInner = React.memo(function DayGroup({
         }}
         className={`px-4 py-3 cursor-pointer select-none list-none rounded-xl flex items-center justify-between gap-3 ${
           isOpen
-            ? `sticky z-10 shadow-sm ${isGlass ? "bg-[var(--color-surface-glass)] backdrop-blur-xl" : "bg-[var(--color-surface-hover)]"}`
+            ? `sticky z-10 shadow-sm bg-[var(--color-surface-hover)]`
             : "bg-[var(--color-primary)]/8 hover:bg-[var(--color-primary)]/12 active:bg-[var(--color-primary)]/16"
         } ${isComplete && !isOpen ? "opacity-60" : ""}`}
         style={

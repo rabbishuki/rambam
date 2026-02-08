@@ -13,7 +13,6 @@ export type ThemeId =
   | "dark"
   | "light"
   | "oled";
-export type HeaderStyle = "minimal" | "glass";
 export type CardStyle = "list" | "cards";
 export type ContentWidth = "narrow" | "medium" | "full";
 
@@ -84,7 +83,6 @@ export interface AppSettings {
   hideCompleted: HideCompletedMode; // NEW: Hide completed days/items setting
   daysAhead: number; // Days to prefetch ahead for offline (1-14, default 7)
   theme: ThemeId;
-  headerStyle: HeaderStyle;
   cardStyle: CardStyle;
   contentWidth: ContentWidth;
   // Per-path start dates (allows switching paths while preserving progress)
@@ -173,7 +171,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   hideCompleted: "after24h", // Default: hide completed after 24 hours
   daysAhead: 3, // Prefetch 3 days ahead by default
   theme: "teal",
-  headerStyle: "glass",
   cardStyle: "list",
   contentWidth: "full",
   startDates: {

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useAppStore } from "@/stores/appStore";
 import { getTheme } from "@/config/themes";
-import type { ThemeId, HeaderStyle, CardStyle } from "@/types";
+import type { ThemeId, CardStyle } from "@/types";
 
 /**
  * Hook that applies the current theme's CSS variables to the document root.
@@ -11,12 +11,10 @@ import type { ThemeId, HeaderStyle, CardStyle } from "@/types";
  */
 export function useTheme(): {
   theme: ThemeId;
-  headerStyle: HeaderStyle;
   cardStyle: CardStyle;
   isDark: boolean;
 } {
   const theme = useAppStore((s) => s.theme);
-  const headerStyle = useAppStore((s) => s.headerStyle);
   const cardStyle = useAppStore((s) => s.cardStyle);
 
   const themeDef = getTheme(theme);
@@ -47,7 +45,6 @@ export function useTheme(): {
 
   return {
     theme,
-    headerStyle,
     cardStyle,
     isDark: themeDef.isDark,
   };

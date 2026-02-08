@@ -25,7 +25,6 @@ import { CHANGELOG, CONTRIBUTORS } from "@/config/changelog";
 import { THEMES } from "@/config/themes";
 import type {
   ThemeId,
-  HeaderStyle,
   CardStyle,
   ContentWidth,
   HideCompletedMode,
@@ -210,7 +209,6 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const hideCompleted = useAppStore((state) => state.hideCompleted);
   const daysAhead = useAppStore((state) => state.daysAhead);
   const theme = useAppStore((state) => state.theme) as ThemeId;
-  const headerStyle = useAppStore((state) => state.headerStyle) as HeaderStyle;
   const cardStyle = useAppStore((state) => state.cardStyle) as CardStyle;
   const contentWidth = useAppStore(
     (state) => state.contentWidth,
@@ -220,7 +218,6 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const setHideCompleted = useAppStore((state) => state.setHideCompleted);
   const setDaysAhead = useAppStore((state) => state.setDaysAhead);
   const setTheme = useAppStore((state) => state.setTheme);
-  const setHeaderStyle = useAppStore((state) => state.setHeaderStyle);
   const setCardStyle = useAppStore((state) => state.setCardStyle);
   const setContentWidth = useAppStore((state) => state.setContentWidth);
   const textRetentionDays = useAppStore((state) => state.textRetentionDays);
@@ -442,7 +439,6 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           locale,
           studyPath,
           theme,
-          headerStyle,
           cardStyle,
           textLanguage,
           hideCompleted,
@@ -467,7 +463,6 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     locale,
     studyPath,
     theme,
-    headerStyle,
     cardStyle,
     textLanguage,
     hideCompleted,
@@ -599,19 +594,6 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 </div>
               )}
             </SettingRow>
-
-            {/* Glass effect */}
-            <SettingRow
-              label={isHebrew ? "אפקט זכוכית" : "Glass Effect"}
-              control={
-                <ToggleSwitch
-                  checked={headerStyle === "glass"}
-                  onChange={(checked) =>
-                    setHeaderStyle(checked ? "glass" : "minimal")
-                  }
-                />
-              }
-            />
 
             {/* Card style */}
             <SettingRow
