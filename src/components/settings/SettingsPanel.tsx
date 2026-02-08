@@ -1065,7 +1065,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         {isHebrew ? "הרב שוקי" : "Rabbi Shuki"}
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)]">
-                        {isHebrew ? "הגה והכווין" : "Conceived & directed"}
+                        {isHebrew ? "השראה לפרויקט" : "Project inspiration"}
                       </div>
                     </div>
                   </div>
@@ -1090,7 +1090,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                         {isHebrew ? "מאיר" : "Meir"}
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)]">
-                        {isHebrew ? "שודרג עם ❤️" : "Upgraded with ❤️"}
+                        {isHebrew ? "פיתוח ועיצוב" : "Design & development"}
                       </div>
                     </div>
                     <ExternalLinkIcon />
