@@ -288,7 +288,7 @@ export function LocationSetupDialog({
                       w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all text-start
                       ${
                         isSelected
-                          ? "border-blue-600 bg-blue-50"
+                          ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10"
                           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                       }
                       ${isLastSelected ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
@@ -299,7 +299,7 @@ export function LocationSetupDialog({
                         <div
                           className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${
                             isSelected
-                              ? "bg-blue-600 text-white"
+                              ? "bg-[var(--color-primary)] text-white"
                               : "border-2 border-gray-300"
                           }`}
                         >
@@ -321,7 +321,7 @@ export function LocationSetupDialog({
                         </div>
                         <div>
                           <div
-                            className={`font-medium ${isSelected ? "text-blue-600" : ""}`}
+                            className={`font-medium ${isSelected ? "text-[var(--color-primary)]" : ""}`}
                           >
                             {tPaths(`${path}.label`)}
                           </div>
@@ -367,7 +367,7 @@ export function LocationSetupDialog({
                   w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-start
                   ${
                     selectedTextLang === "hebrew"
-                      ? "border-blue-600 bg-blue-50"
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10"
                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                   }
                 `}
@@ -375,16 +375,16 @@ export function LocationSetupDialog({
                 <div
                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     selectedTextLang === "hebrew"
-                      ? "border-blue-600"
+                      ? "border-[var(--color-primary)]"
                       : "border-gray-300"
                   }`}
                 >
                   {selectedTextLang === "hebrew" && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-primary)]" />
                   )}
                 </div>
                 <span
-                  className={`font-medium ${selectedTextLang === "hebrew" ? "text-blue-600" : ""}`}
+                  className={`font-medium ${selectedTextLang === "hebrew" ? "text-[var(--color-primary)]" : ""}`}
                 >
                   {tLang("hebrew")}
                 </span>
@@ -398,7 +398,7 @@ export function LocationSetupDialog({
                   w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-start
                   ${
                     selectedTextLang === "english"
-                      ? "border-blue-600 bg-blue-50"
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10"
                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                   }
                 `}
@@ -406,16 +406,16 @@ export function LocationSetupDialog({
                 <div
                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     selectedTextLang === "english"
-                      ? "border-blue-600"
+                      ? "border-[var(--color-primary)]"
                       : "border-gray-300"
                   }`}
                 >
                   {selectedTextLang === "english" && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-primary)]" />
                   )}
                 </div>
                 <span
-                  className={`font-medium ${selectedTextLang === "english" ? "text-blue-600" : ""}`}
+                  className={`font-medium ${selectedTextLang === "english" ? "text-[var(--color-primary)]" : ""}`}
                 >
                   {tLang("english")}
                 </span>
@@ -429,7 +429,7 @@ export function LocationSetupDialog({
                   w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-start
                   ${
                     selectedTextLang === "both"
-                      ? "border-blue-600 bg-blue-50"
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10"
                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                   }
                 `}
@@ -437,16 +437,16 @@ export function LocationSetupDialog({
                 <div
                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     selectedTextLang === "both"
-                      ? "border-blue-600"
+                      ? "border-[var(--color-primary)]"
                       : "border-gray-300"
                   }`}
                 >
                   {selectedTextLang === "both" && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-primary)]" />
                   )}
                 </div>
                 <span
-                  className={`font-medium ${selectedTextLang === "both" ? "text-blue-600" : ""}`}
+                  className={`font-medium ${selectedTextLang === "both" ? "text-[var(--color-primary)]" : ""}`}
                 >
                   {tLang("both")}
                 </span>
@@ -476,7 +476,9 @@ export function LocationSetupDialog({
         {/* Loading state */}
         {step === "loading" && (
           <div className="py-8">
-            <div className="text-5xl mb-4 animate-pulse text-blue-500">📍</div>
+            <div className="text-5xl mb-4 animate-pulse text-[var(--color-primary)]">
+              📍
+            </div>
             <div className="text-gray-600">{t("detecting")}</div>
           </div>
         )}
@@ -485,7 +487,7 @@ export function LocationSetupDialog({
         {step === "choice" && (
           <>
             <svg
-              className="w-16 h-16 mx-auto mb-4 text-blue-500"
+              className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary)]"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -526,7 +528,7 @@ export function LocationSetupDialog({
         {step === "manual" && (
           <>
             <svg
-              className="w-16 h-16 mx-auto mb-4 text-blue-500"
+              className="w-16 h-16 mx-auto mb-4 text-[var(--color-primary)]"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -549,7 +551,7 @@ export function LocationSetupDialog({
               value={manualCity}
               onChange={(e) => setManualCity(e.target.value)}
               placeholder={t("cityPlaceholder")}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg text-center focus:border-blue-500 focus:outline-none mb-4"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg text-center focus:border-[var(--color-primary)] focus:outline-none mb-4"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === "Enter") {

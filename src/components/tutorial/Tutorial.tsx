@@ -17,6 +17,7 @@ import { useTutorial, TutorialAction } from "@/hooks/useTutorial";
 import { TutorialOverlay } from "./TutorialOverlay";
 import { DemoCard } from "./DemoCard";
 import { ExternalLinks } from "@/components/halakha/ExternalLinks";
+import { ProgressCircle } from "@/components/ui/ProgressCircle";
 
 /**
  * Dynamic highlight that positions itself based on an element ID
@@ -79,6 +80,7 @@ export function Tutorial({ onComplete }: TutorialProps) {
   // Wait for client-side hydration before rendering
   const isClient = useIsClient();
   const t = useTranslations("tutorial");
+  const tBookmarks = useTranslations("bookmarks");
 
   const {
     isActive,
@@ -89,6 +91,8 @@ export function Tutorial({ onComplete }: TutorialProps) {
     actionsThisStage,
     minActionsRequired,
     isWhatsNewMode,
+    canGoBack,
+    goBack,
     reportAction,
     advanceStage,
     skipTutorial,
@@ -106,6 +110,9 @@ export function Tutorial({ onComplete }: TutorialProps) {
 
   // Info icon preview state
   const [showInfoPreview, setShowInfoPreview] = useState(false);
+
+  // Bookmark demo state for info-icon stage
+  const [bookmarkDemoActive, setBookmarkDemoActive] = useState(false);
 
   // Day checkmark demo state
   const [dayCheckmarkClicked, setDayCheckmarkClicked] = useState(false);
@@ -244,14 +251,19 @@ export function Tutorial({ onComplete }: TutorialProps) {
   const handleGoToStage = useCallback(
     (index: number) => {
       goToStage(index);
-      // Reset card state when going back to swipe-right stage
-      if (index <= 1) {
-        setSwipeRightCompletedCards(new Set());
-        setMarkAllCompletedCards(new Set());
-      }
+      // Always reset demo card state so gestures can be re-practiced
+      setSwipeRightCompletedCards(new Set());
+      setMarkAllCompletedCards(new Set());
     },
     [goToStage],
   );
+
+  const handleGoBack = useCallback(() => {
+    goBack();
+    // Always reset demo card state so gestures can be re-practiced
+    setSwipeRightCompletedCards(new Set());
+    setMarkAllCompletedCards(new Set());
+  }, [goBack]);
 
   // Don't render during SSR or if tutorial is not active
   if (!isClient || !isActive || !currentStage) {
@@ -297,8 +309,8 @@ export function Tutorial({ onComplete }: TutorialProps) {
         </div>
       )}
 
-      {/* Info icon visual mock-up */}
-      {currentStage.id === "info-icon" && (
+      {/* Info icon visual mock-up — shared by info-icon and bookmarks stages */}
+      {(currentStage.id === "info-icon" || currentStage.id === "bookmarks") && (
         <div className="fixed inset-0 z-45 flex items-center justify-center px-4">
           <div className="w-full max-w-md">
             {/* Mock card with info icon highlighted */}
@@ -335,30 +347,53 @@ export function Tutorial({ onComplete }: TutorialProps) {
       )}
 
       {/* Info sheet preview - centered overlay */}
-      {currentStage.id === "info-icon" && showInfoPreview && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-          <div
-            className="absolute inset-0 bg-black/20"
-            onClick={() => setShowInfoPreview(false)}
-          />
-          <div className="relative w-full max-w-sm bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-              <span className="font-semibold text-gray-800">
-                {t("demo.externalLinks")}
-              </span>
-              <button
-                onClick={() => setShowInfoPreview(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-4">
-              <ExternalLinks isPreview />
+      {(currentStage.id === "info-icon" || currentStage.id === "bookmarks") &&
+        showInfoPreview && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+            <div
+              className="absolute inset-0 bg-black/20"
+              onClick={() => setShowInfoPreview(false)}
+            />
+            <div className="relative w-full max-w-sm bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                <span className="font-semibold text-gray-800">
+                  {t("demo.externalLinks")}
+                </span>
+                <button
+                  onClick={() => setShowInfoPreview(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-4 space-y-3">
+                {/* Bookmark toggle demo */}
+                <button
+                  onClick={() => setBookmarkDemoActive((v) => !v)}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    bookmarkDemoActive
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  <svg
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill={bookmarkDemoActive ? "currentColor" : "none"}
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                  </svg>
+                  {bookmarkDemoActive
+                    ? tBookmarks("removeBookmark")
+                    : tBookmarks("addBookmark")}
+                </button>
+                <ExternalLinks isPreview />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Day checkmark visual mock-up */}
       {currentStage.id === "day-checkmark" && (
@@ -381,24 +416,21 @@ export function Tutorial({ onComplete }: TutorialProps) {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  {/* Highlighted checkmark button - clickable */}
-                  {!dayCheckmarkClicked ? (
-                    <button
-                      onClick={() => setDayCheckmarkClicked(true)}
-                      className="w-10 h-10 flex items-center justify-center rounded-md bg-blue-500 text-white text-xl ring-4 ring-yellow-400 ring-opacity-75 animate-pulse shadow-lg hover:bg-blue-600 active:scale-95 transition-all cursor-pointer"
-                    >
-                      ✓
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setDayCheckmarkClicked(false)}
-                      className="w-10 h-10 flex items-center justify-center rounded-md text-gray-400 hover:bg-black/5 text-2xl cursor-pointer"
-                    >
-                      ↺
-                    </button>
-                  )}
-                </div>
+                {/* Progress circle button — highlighted for tutorial */}
+                <button
+                  onClick={() => setDayCheckmarkClicked(!dayCheckmarkClicked)}
+                  className={`w-10 h-10 flex items-center justify-center rounded-md cursor-pointer transition-all active:scale-95 ${
+                    !dayCheckmarkClicked
+                      ? "ring-4 ring-yellow-400 ring-opacity-75 animate-pulse shadow-lg"
+                      : "hover:bg-black/5"
+                  }`}
+                >
+                  <ProgressCircle
+                    percentage={dayCheckmarkClicked ? 100 : 0}
+                    size={28}
+                    color="#3b82f6"
+                  />
+                </button>
               </div>
               {/* Mock cards preview */}
               <div className="p-4 bg-gray-50 space-y-2">
@@ -436,21 +468,37 @@ export function Tutorial({ onComplete }: TutorialProps) {
         </div>
       )}
 
-      {/* Header colors visual mock-up */}
+      {/* Header colors visual mock-up — matches new minimal header with accent bar */}
       {currentStage.id === "header-colors" && (
         <div className="fixed inset-0 z-45 flex items-center justify-center px-4">
           <div className="w-full max-w-md space-y-3">
-            {/* Blue header - normal */}
-            <div className="bg-blue-600 text-white px-4 py-3 rounded-xl flex items-center gap-3 shadow-md">
-              <div className="w-3 h-3 rounded-full bg-white/30" />
-              <span className="font-medium flex-1">
+            {/* Normal — theme primary accent bar */}
+            <div
+              className="bg-[var(--color-surface)] border-b-[3px] border-t-[3px] px-4 py-3 flex items-center gap-3 shadow-md"
+              style={{
+                borderBottomColor: "var(--color-status-normal)",
+                borderTopColor: "var(--color-status-normal)",
+              }}
+            >
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: "var(--color-status-normal)" }}
+              />
+              <span className="font-medium flex-1 text-[var(--color-text-primary)]">
                 {t("headerColors.blue")}
               </span>
             </div>
-            {/* Amber header - offline */}
-            <div className="bg-amber-500 text-white px-4 py-3 rounded-xl flex items-center gap-3 shadow-md">
+            {/* Offline — accent bar */}
+            <div
+              className="bg-[var(--color-surface)] border-b-[3px] border-t-[3px] px-4 py-3 flex items-center gap-3 shadow-md"
+              style={{
+                borderBottomColor: "var(--color-status-offline)",
+                borderTopColor: "var(--color-status-offline)",
+              }}
+            >
               <svg
                 className="w-5 h-5"
+                style={{ color: "var(--color-status-offline)" }}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -465,14 +513,21 @@ export function Tutorial({ onComplete }: TutorialProps) {
                   strokeWidth="2"
                 />
               </svg>
-              <span className="font-medium flex-1">
+              <span className="font-medium flex-1 text-[var(--color-text-primary)]">
                 {t("headerColors.amber")}
               </span>
             </div>
-            {/* Red header - other date */}
-            <div className="bg-red-600 text-white px-4 py-3 rounded-xl flex items-center gap-3 shadow-md">
+            {/* Other date — red accent bar (top + bottom) */}
+            <div
+              className="bg-[var(--color-surface)] border-b-[3px] border-t-[3px] px-4 py-3 flex items-center gap-3 shadow-md"
+              style={{
+                borderBottomColor: "var(--color-status-other-date)",
+                borderTopColor: "var(--color-status-other-date)",
+              }}
+            >
               <svg
                 className="w-5 h-5"
+                style={{ color: "var(--color-status-other-date)" }}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -483,7 +538,7 @@ export function Tutorial({ onComplete }: TutorialProps) {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              <span className="font-medium flex-1">
+              <span className="font-medium flex-1 text-[var(--color-text-primary)]">
                 {t("headerColors.red")}
               </span>
             </div>
@@ -508,6 +563,8 @@ export function Tutorial({ onComplete }: TutorialProps) {
         onSkip={handleSkip}
         onNext={handleNext}
         onGoToStage={handleGoToStage}
+        onGoBack={handleGoBack}
+        canGoBack={canGoBack}
         canAdvance={canAdvance}
         currentStageIndex={currentStageIndex}
         totalStages={totalStages}

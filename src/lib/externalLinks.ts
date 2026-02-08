@@ -55,6 +55,14 @@ export function sefariaHalakhaUrl(
   let chapter: number;
   let halakhaNum: number;
 
+  if (match[3] && (!chapterBreaks || chapterBreaks.length === 0)) {
+    // Flat-list section (e.g., Positive Mitzvot 1-248): 2-level URL Book.Item
+    // These intro sections have no chapter hierarchy — each item is directly numbered
+    const itemNum = startChapter + halakhaIndex;
+    const encodedBook = encodeURIComponent(bookName.replace(/ /g, "_"));
+    return `https://www.sefaria.org/${encodedBook}.${itemNum}?lang=${lang}`;
+  }
+
   if (!chapterBreaks || chapterBreaks.length === 0) {
     // Single chapter case
     chapter = startChapter;

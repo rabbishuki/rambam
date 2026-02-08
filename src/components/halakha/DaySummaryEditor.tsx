@@ -65,26 +65,28 @@ export function DaySummaryEditor({
 
   return (
     <div
-      className="mt-4 border-t border-dashed border-gray-300 pt-4"
+      className="mt-4 border-t border-dashed border-[var(--color-surface-border)] pt-4"
       dir={isHebrew ? "rtl" : "ltr"}
     >
       {/* Collapsed header */}
       <button
         onClick={handleToggleExpand}
-        className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg hover:from-indigo-100 hover:to-purple-100 transition-colors"
+        className="w-full flex items-center justify-between p-3 bg-[var(--color-primary)]/8 rounded-lg hover:bg-[var(--color-primary)]/12 transition-colors"
       >
         <div className="flex items-center gap-2">
           <span className="text-xl">💭</span>
-          <span className="font-medium text-indigo-700">{t("title")}</span>
+          <span className="font-medium text-[var(--color-primary-dark)]">
+            {t("title")}
+          </span>
           {existingSummary?.text && !isExpanded && (
-            <span className="text-xs text-indigo-400 truncate max-w-[150px]">
+            <span className="text-xs text-[var(--color-primary)] opacity-60 truncate max-w-[150px]">
               — {existingSummary.text.slice(0, 50)}
               {existingSummary.text.length > 50 ? "..." : ""}
             </span>
           )}
         </div>
         <span
-          className={`text-indigo-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+          className={`text-[var(--color-primary)] opacity-50 transition-transform ${isExpanded ? "rotate-180" : ""}`}
         >
           ▼
         </span>
@@ -98,7 +100,7 @@ export function DaySummaryEditor({
             onChange={(e) => setText(e.target.value)}
             onBlur={handleBlur}
             placeholder={t("placeholder")}
-            className="w-full p-3 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-h-[100px]"
+            className="w-full p-3 border border-[var(--color-surface-border)] rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/40 focus:border-[var(--color-primary)] min-h-[100px] bg-[var(--color-surface)]"
             rows={4}
           />
 
@@ -110,8 +112,8 @@ export function DaySummaryEditor({
                 disabled={isSaved || !text.trim()}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isSaved || !text.trim()
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-indigo-600 text-white hover:bg-indigo-700"
+                    ? "bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] cursor-not-allowed"
+                    : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)]"
                 }`}
               >
                 {isSaved ? "✓" : t("save")}

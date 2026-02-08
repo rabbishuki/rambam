@@ -2,8 +2,27 @@
 
 :root {
   --foreground: #171717;
-  --app-bg: #2563eb; /* blue-600 default */
   --font-noto-sans-hebrew: "Noto Sans Hebrew", sans-serif;
+  /* Theme colors — defaults are teal, overridden by useTheme hook */
+  --color-primary: #0d9488;
+  --color-primary-dark: #0f766e;
+  --color-accent: #f59e0b;
+  --color-alt-date: #9333ea;
+  --color-bg: #0d9488;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f0fdfa;
+  --color-surface-border: #e5e7eb;
+  --color-text-primary: #1f2937;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #9ca3af;
+  --color-completion-bg: #f0fdfa;
+  --color-completion-border: #99f6e4;
+  --color-completion-accent: #0d9488;
+  --color-status-normal: #0d9488;
+  --color-status-other-date: #dc2626;
+  --color-status-offline: #f59e0b;
+  --header-accent: var(--color-status-normal);
+  --app-bg: var(--color-bg);
 }
 
 @theme inline {
@@ -18,15 +37,34 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   touch-action: pan-y;
-  background: var(--app-bg);
+  background: var(--color-surface-hover);
 }
 
-/* Container for the app */
-.container {
-  max-width: 640px;
-  margin: 0 auto;
+/* App shell — NOT Tailwind's .container (which adds responsive max-width) */
+.app-shell {
   min-height: 100vh;
-  background: #ffffff;
+  background: var(--color-surface-hover);
+}
+
+/* Dark theme overrides */
+[data-theme="dark"] .halakha-text b {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .halakha-text small {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 /* RTL support */
@@ -39,6 +77,11 @@ body {
 }
 
 /* Animations */
+@keyframes btn-pulse {
+  0%, 100% { filter: brightness(1); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+  50% { filter: brightness(1.25); box-shadow: 0 2px 12px rgba(59,130,246,0.5); }
+}
+
 @keyframes slide-up {
   from {
     transform: translateY(100px);

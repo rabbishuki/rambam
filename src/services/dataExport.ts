@@ -8,6 +8,10 @@ import { useLocationStore } from "@/stores/locationStore";
 import type {
   StudyPath,
   TextLanguage,
+  HideCompletedMode,
+  ThemeId,
+  CardStyle,
+  ContentWidth,
   CompletionMap,
   BookmarksMap,
   SummariesMap,
@@ -15,9 +19,10 @@ import type {
 
 /**
  * Export data format (versioned for future compatibility)
+ * v3 adds settings block with all user preferences
  */
 export interface ExportData {
-  version: 2;
+  version: 2 | 3;
   exportedAt: string;
   app: {
     studyPath: StudyPath;
@@ -28,6 +33,15 @@ export interface ExportData {
     done: CompletionMap;
     bookmarks?: BookmarksMap;
     summaries?: SummariesMap;
+  };
+  settings?: {
+    theme: ThemeId;
+    cardStyle: CardStyle;
+    contentWidth: ContentWidth;
+    activePaths: StudyPath[];
+    hideCompleted: HideCompletedMode;
+    daysAhead: number;
+    textRetentionDays: number;
   };
   location?: {
     coords: { latitude: number; longitude: number };
@@ -44,7 +58,7 @@ export function exportData(): ExportData {
   const locationState = useLocationStore.getState();
 
   const data: ExportData = {
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     app: {
       studyPath: appState.studyPath,
@@ -55,6 +69,15 @@ export function exportData(): ExportData {
       done: appState.done,
       bookmarks: appState.bookmarks,
       summaries: appState.summaries,
+    },
+    settings: {
+      theme: appState.theme,
+      cardStyle: appState.cardStyle,
+      contentWidth: appState.contentWidth,
+      activePaths: appState.activePaths,
+      hideCompleted: appState.hideCompleted,
+      daysAhead: appState.daysAhead,
+      textRetentionDays: appState.textRetentionDays,
     },
   };
 
@@ -103,8 +126,8 @@ export function validateImportData(data: unknown): data is ExportData {
 
   const obj = data as Record<string, unknown>;
 
-  // Check version (support v1 and v2)
-  if (obj.version !== 1 && obj.version !== 2) {
+  // Check version (support v1, v2, and v3)
+  if (obj.version !== 1 && obj.version !== 2 && obj.version !== 3) {
     return false;
   }
 
@@ -155,6 +178,7 @@ export function validateImportData(data: unknown): data is ExportData {
     }
   }
 
+  // Settings is optional (v3), no strict validation needed
   // Location is optional, but if present must be valid
   if (obj.location !== undefined) {
     if (typeof obj.location !== "object" || obj.location === null) {
@@ -216,7 +240,7 @@ export function importData(data: ExportData): void {
   // Merge completion data (imported takes precedence)
   appStore.importDone(data.app.done);
 
-  // Import bookmarks if present (v2 format)
+  // Import bookmarks if present (v2+ format)
   if (data.app.bookmarks) {
     for (const bookmark of Object.values(data.app.bookmarks)) {
       appStore.addBookmark(
@@ -226,6 +250,8 @@ export function importData(data: ExportData): void {
         bookmark.titleHe,
         bookmark.titleEn,
         bookmark.ref,
+        bookmark.textHe,
+        bookmark.textEn,
       );
       if (bookmark.note) {
         appStore.updateBookmarkNote(
@@ -238,11 +264,26 @@ export function importData(data: ExportData): void {
     }
   }
 
-  // Import summaries if present (v2 format)
+  // Import summaries if present (v2+ format)
   if (data.app.summaries) {
     for (const summary of Object.values(data.app.summaries)) {
       appStore.saveSummary(summary.path, summary.date, summary.text);
     }
+  }
+
+  // Apply settings if present (v3 format)
+  if (data.settings) {
+    if (data.settings.theme) appStore.setTheme(data.settings.theme);
+    if (data.settings.cardStyle) appStore.setCardStyle(data.settings.cardStyle);
+    if (data.settings.contentWidth)
+      appStore.setContentWidth(data.settings.contentWidth);
+    if (data.settings.activePaths?.length)
+      appStore.setActivePaths(data.settings.activePaths);
+    if (data.settings.hideCompleted)
+      appStore.setHideCompleted(data.settings.hideCompleted);
+    if (data.settings.daysAhead) appStore.setDaysAhead(data.settings.daysAhead);
+    if (data.settings.textRetentionDays !== undefined)
+      appStore.setTextRetentionDays(data.settings.textRetentionDays);
   }
 
   // Apply location if present

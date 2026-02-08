@@ -107,9 +107,9 @@ export function ExternalLinks({
             logo="/contributors/sefaria.png"
             name="Sefaria"
             description={t("viewOnSefaria")}
-            bgColor="bg-blue-50"
-            borderColor="border-blue-200"
-            textColor="text-blue-900"
+            bgColor="bg-[var(--color-primary)]/10"
+            borderColor="border-[var(--color-primary)]/20"
+            textColor="text-[var(--color-primary-dark)]"
           />
         </div>
         {onTranslate && translateLabel && (

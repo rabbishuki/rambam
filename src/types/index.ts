@@ -1,6 +1,21 @@
 // Study path options
 export type StudyPath = "rambam3" | "rambam1" | "mitzvot";
 
+// Theme options
+export type ThemeId =
+  | "teal"
+  | "sky"
+  | "lavender"
+  | "rose"
+  | "sage"
+  | "amber"
+  | "coral"
+  | "dark"
+  | "light"
+  | "oled";
+export type CardStyle = "list" | "cards";
+export type ContentWidth = "narrow" | "medium" | "full";
+
 // Hide completed mode options
 export type HideCompletedMode = "show" | "immediate" | "after1h" | "after24h";
 
@@ -67,6 +82,9 @@ export interface AppSettings {
   autoMarkPrevious: boolean;
   hideCompleted: HideCompletedMode; // NEW: Hide completed days/items setting
   daysAhead: number; // Days to prefetch ahead for offline (1-14, default 7)
+  theme: ThemeId;
+  cardStyle: CardStyle;
+  contentWidth: ContentWidth;
   // Per-path start dates (allows switching paths while preserving progress)
   startDates: {
     rambam3: string;
@@ -115,6 +133,8 @@ export interface Bookmark {
   titleHe: string; // Cached for list display
   titleEn?: string;
   ref: string; // Sefaria reference
+  textHe?: string; // Full Hebrew text of this halakha (for offline/export)
+  textEn?: string; // Full English text of this halakha (for offline/export)
 }
 
 // Map of bookmark ID to Bookmark
@@ -149,7 +169,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   textLanguage: "hebrew",
   autoMarkPrevious: false, // Default to manual marking
   hideCompleted: "after24h", // Default: hide completed after 24 hours
-  daysAhead: 7, // Prefetch 7 days ahead by default
+  daysAhead: 3, // Prefetch 3 days ahead by default
+  theme: "teal",
+  cardStyle: "list",
+  contentWidth: "full",
   startDates: {
     rambam3: CYCLE_46_START,
     rambam1: CYCLE_46_START,

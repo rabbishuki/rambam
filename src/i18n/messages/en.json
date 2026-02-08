@@ -48,7 +48,41 @@
     "tutorial": "Tutorial",
     "restartTutorial": "Restart tutorial",
     "showWhatsNew": "Show what's new",
-    "daysAheadLabel": "Days ahead for offline"
+    "daysAheadLabel": "Days to pre-download",
+    "daysAheadHint": "Number of days automatically downloaded for offline use",
+    "textRetention": "Text cache retention",
+    "textRetentionHint": "Older texts are re-downloaded when opened",
+    "textRetentionOptions": {
+      "7": "1 week",
+      "14": "2 weeks",
+      "30": "1 month",
+      "0": "Keep all"
+    },
+    "storage": {
+      "title": "Storage",
+      "completionRecords": "Completion records",
+      "bookmarks": "Bookmarks",
+      "summaries": "Notes",
+      "dayMetadata": "Day metadata",
+      "textCache": "Cached texts",
+      "calendarCache": "Study schedule cache",
+      "settingsProgress": "Settings & progress",
+      "total": "Estimated total",
+      "clearCache": "Clear text cache",
+      "clearCacheConfirm": "Clear all cached texts? They will be re-downloaded when needed.",
+      "cacheCleared": "Cache cleared"
+    },
+    "feedback": {
+      "title": "Feedback",
+      "sendFeedback": "Send Feedback",
+      "suggestions": "Suggestions & Ideas",
+      "placeholder": "Tell us what you think...",
+      "send": "Send",
+      "sending": "Sending...",
+      "success": "Thank you for your feedback!",
+      "error": "Failed to send. Please try again.",
+      "charCount": "{count}/1000"
+    }
   },
   "welcome": {
     "title": "Welcome!",
@@ -126,7 +160,7 @@
   },
   "autoMarkPrompt": {
     "title": "Mark previous halakhot",
-    "message": "There are {count} unread halakhot before this one. Mark them too?",
+    "message": "{count, plural, one {There is {count} unread halakha before this one. Mark it too?} other {There are {count} unread halakhot before this one. Mark them too?}}",
     "always": "Always",
     "justOnce": "Just this time",
     "onlyThis": "Only this one",
@@ -146,7 +180,14 @@
     "allCompleteHint": "Completed items are hidden. You can change this in Settings under \"Hide completed\".",
     "openSettings": "Open Settings",
     "hiddenEntries": "{count} {count, plural, one {entry} other {entries}} hidden",
-    "tapToShow": "Tap to show"
+    "shownEntries": "{count} {count, plural, one {entry} other {entries}} shown",
+    "tapToShow": "Tap to show",
+    "tapToHide": "Tap to hide",
+    "showMore": "Show {count} more",
+    "filterAll": "All",
+    "filterBookmarked": "Bookmarked",
+    "filterHasNote": "Has note",
+    "filterNoNote": "No note"
   },
   "dates": {
     "today": "Today",
@@ -167,7 +208,15 @@
     "downloadRetry": "Try again",
     "downloadSuccess": "7 days downloaded for offline use",
     "downloadFailed": "Failed {failed} of {total} days",
-    "downloadingDate": "Downloading data for {date}"
+    "downloadingDate": "Downloading data for {date}",
+    "downloadedStatus": "Downloaded dates",
+    "downloadNow": "Download now",
+    "autoDownloadHint": "Missing dates download automatically when the app opens",
+    "allDownloaded": "All dates downloaded for offline use",
+    "offlineContent": "Content not available offline",
+    "retryLoad": "Retry",
+    "downloadWhenOnline": "Download when online",
+    "pinnedForDownload": "Pinned for download when online"
   },
   "update": {
     "appAvailable": "Update available!",
@@ -209,6 +258,9 @@
     "showTranslation": "English",
     "showOriginal": "Hebrew",
     "noTranslation": "Translation not available",
+    "translationFetchError": "Translation couldn't be loaded. Try again when online.",
+    "englishUnavailable": "English text unavailable \u2014 showing Hebrew",
+    "hebrewUnavailable": "Hebrew text unavailable \u2014 showing English",
     "translationTitle": "English Translation",
     "originalTitle": "Hebrew Original"
   },
@@ -240,7 +292,7 @@
     "share": "Share",
     "empty": "Reflect on what you learned",
     "viewAll": "My Journal",
-    "entries": "{count} entries",
+    "entries": "{count, plural, one {{count} entry} other {{count} entries}}",
     "noSummaries": "No journal entries yet",
     "noSummariesHint": "Write what you learned at the bottom of any day",
     "delete": "Delete entry"
@@ -264,6 +316,7 @@
     },
     "hint": "Hint",
     "next": "Next",
+    "back": "Previous step",
     "start": "Start Learning!",
     "goToStep": "Go back to step {step}",
     "restartTutorial": "Restart tutorial",
@@ -318,11 +371,11 @@
     },
     "headerColors": {
       "title": "Header Colors",
-      "instruction": "The header color indicates your status: Blue = normal, Amber = offline mode, Red = viewing a different date.",
+      "instruction": "The accent bar under the header changes color to indicate your status. The color adapts to your chosen theme.",
       "hint": "Colors help you know your current state at a glance",
-      "blue": "Blue = Normal",
-      "amber": "Amber = Offline",
-      "red": "Red = Other date"
+      "blue": "Normal",
+      "amber": "Offline",
+      "red": "Other date"
     },
     "bookmarks": {
       "title": "Bookmarks",

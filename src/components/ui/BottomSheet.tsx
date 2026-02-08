@@ -100,7 +100,7 @@ export function BottomSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? "sheet-title" : undefined}
-        className="fixed bottom-0 left-0 right-0 z-[999] bg-white rounded-t-2xl shadow-xl max-h-[85vh] overflow-hidden animate-slide-up"
+        className="fixed bottom-0 left-0 right-0 z-[999] bg-[var(--color-surface)] rounded-t-2xl shadow-xl max-h-[85vh] overflow-hidden animate-slide-up"
         style={{
           transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
           transition: isDragging ? "none" : "transform 0.2s ease-out",
@@ -111,15 +111,15 @@ export function BottomSheet({
       >
         {/* Handle bar - visual drag indicator */}
         <div className="flex justify-center py-3 cursor-grab active:cursor-grabbing touch-none">
-          <div className="w-10 h-1 bg-gray-300 rounded-full" />
+          <div className="w-10 h-1 bg-[var(--color-text-muted)] rounded-full" />
         </div>
 
         {/* Title */}
         {title && (
-          <div className="px-4 pb-2 border-b border-gray-200">
+          <div className="px-4 pb-2 border-b border-[var(--color-surface-border)]">
             <h2
               id="sheet-title"
-              className="text-lg font-semibold text-gray-900"
+              className="text-lg font-semibold text-[var(--color-text-primary)]"
             >
               {title}
             </h2>

@@ -6,12 +6,19 @@
 
 import type { StudyPath } from "@/types";
 import { fetchCalendar, fetchHalakhot } from "./sefaria";
-import { fetchHebrewDate } from "./hebcal";
-import { getCalendarFromDB, getMeta, setMeta } from "./database";
+import {
+  getCalendarFromDB,
+  getTextFromDB,
+  getMeta,
+  setMeta,
+  cleanupCompletedDays,
+  clearStaleData,
+} from "./database";
 import { getJewishDate, formatDateString } from "@/lib/dates";
 import { useLocationStore } from "@/stores/locationStore";
 import { useAppStore } from "@/stores/appStore";
 import { useOfflineStore } from "@/stores/offlineStore";
+import { isReachable } from "./connectivity";
 
 // Sync interval: 30 minutes
 const SYNC_INTERVAL_MS = 30 * 60 * 1000;
@@ -24,14 +31,10 @@ let syncInProgress = false;
 let syncIntervalId: ReturnType<typeof setInterval> | null = null;
 
 /**
- * Check if conditions are right for background sync
+ * Check if conditions are right for background sync.
+ * Uses a real ping to Sefaria instead of navigator.onLine.
  */
-function canSync(): boolean {
-  // Must be online
-  if (typeof navigator !== "undefined" && !navigator.onLine) {
-    return false;
-  }
-
+async function canSync(): Promise<boolean> {
   // Tab must be visible (respect battery/data)
   if (
     typeof document !== "undefined" &&
@@ -40,7 +43,8 @@ function canSync(): boolean {
     return false;
   }
 
-  return true;
+  // Must be truly reachable (pings Sefaria, cached 30s)
+  return await isReachable();
 }
 
 /**
@@ -61,8 +65,13 @@ function getUpcomingDates(count = 3): string[] {
 }
 
 /**
- * Sync calendar data for a specific path
- * Returns true if any data was updated
+ * Sync calendar data for a specific path.
+ * Returns true if any data was updated.
+ *
+ * Decision: syncPath is kept even though Sefer HaMitzvot schedules are now local,
+ * because Rambam 1 & 3 still use Sefaria Calendar API. The calendar cache in IndexedDB
+ * has a 1-day staleness window — this function refreshes it so users see correct
+ * schedule data even if they haven't opened the day yet.
  */
 async function syncPath(path: StudyPath): Promise<boolean> {
   const dates = getUpcomingDates();
@@ -114,9 +123,11 @@ async function runDailyPrefetch(): Promise<{
   const todayStr = getJewishDate(sunset);
   const setSyncProgress = useOfflineStore.getState().setSyncProgress;
 
-  const totalItems = daysAhead * activePaths.length;
+  // today + daysAhead future days = daysAhead + 1 total (matches PrefetchButton UI)
+  const daysToFetch = daysAhead + 1;
+  const totalItems = daysToFetch * activePaths.length;
   console.log(
-    `[BackgroundSync] Running daily prefetch for ${activePaths.join(", ")} (${daysAhead} days)`,
+    `[BackgroundSync] Running daily prefetch for ${activePaths.join(", ")} (${daysToFetch} days)`,
   );
 
   // Report sync started
@@ -131,28 +142,28 @@ async function runDailyPrefetch(): Promise<{
 
   for (const path of activePaths) {
     const today = new Date(todayStr);
-    for (let i = 0; i < daysAhead; i++) {
+    for (let i = 0; i <= daysAhead; i++) {
       const date = formatDateString(today);
       today.setDate(today.getDate() + 1);
 
       try {
-        // Fetch calendar entry
+        // Fetch calendar entry — for mitzvot this is pure local computation,
+        // for Rambam it hits Sefaria Calendar API (with IndexedDB caching).
+        // Hebrew dates are always computed locally via @hebcal/core.
         const calData = await fetchCalendar(date, path);
 
         // Fetch full halakhot text (this saves to IndexedDB)
         const { halakhot, chapterBreaks } = await fetchHalakhot(calData.ref);
-
-        // Fetch Hebrew date
-        const dateResult = await fetchHebrewDate(date);
 
         // Update app store with metadata
         setDayData(path, date, {
           he: calData.he,
           en: calData.en,
           ref: calData.ref,
+          refs: "refs" in calData ? calData.refs : undefined,
           count: halakhot.length,
-          heDate: dateResult?.he,
-          enDate: dateResult?.en,
+          heDate: calData.heDate,
+          enDate: calData.enDate,
           texts: halakhot,
           chapterBreaks,
         });
@@ -179,7 +190,85 @@ async function runDailyPrefetch(): Promise<{
   const sunsetForMeta = useLocationStore.getState().sunset;
   await setMeta(PREFETCH_KEY, getJewishDate(sunsetForMeta));
 
+  // Clean up old IndexedDB cache (runs once per day alongside prefetch)
+  try {
+    const { done, bookmarks, textRetentionDays, pinnedDays } =
+      useAppStore.getState();
+    const staleCleared = await clearStaleData(30);
+    if (staleCleared > 0) {
+      console.log(`[BackgroundSync] Cleaned up ${staleCleared} stale entries`);
+    }
+    if (textRetentionDays > 0) {
+      const daysCleared = await cleanupCompletedDays(
+        done,
+        bookmarks,
+        activePaths,
+        textRetentionDays,
+        pinnedDays,
+      );
+      if (daysCleared > 0) {
+        console.log(
+          `[BackgroundSync] Cleaned up ${daysCleared} completed days`,
+        );
+      }
+    }
+  } catch (err) {
+    console.error("[BackgroundSync] Cleanup failed:", err);
+  }
+
   return { success: failed === 0, failed };
+}
+
+/**
+ * Download text content for any pinned days that aren't yet cached in IndexedDB
+ */
+async function syncPinnedDays(): Promise<void> {
+  const { pinnedDays, days, setDayData } = useAppStore.getState();
+  const pinnedKeys = Object.keys(pinnedDays);
+  if (pinnedKeys.length === 0) return;
+
+  for (const key of pinnedKeys) {
+    const [path, date] = key.split(":") as [StudyPath, string];
+
+    try {
+      // Check if text already exists in IndexedDB
+      const dayData = days[path]?.[date];
+      const ref = dayData?.ref;
+      if (!ref) {
+        // Need to fetch calendar data first
+        const calData = await fetchCalendar(date, path);
+        const { halakhot, chapterBreaks } = await fetchHalakhot(calData.ref);
+
+        setDayData(path, date, {
+          he: calData.he,
+          en: calData.en,
+          ref: calData.ref,
+          refs: "refs" in calData ? calData.refs : undefined,
+          count: halakhot.length,
+          heDate: calData.heDate,
+          enDate: calData.enDate,
+          texts: halakhot,
+          chapterBreaks,
+        });
+        console.log(`[BackgroundSync] Downloaded pinned day ${key}`);
+        continue;
+      }
+
+      // Check if text is cached
+      const cachedText = await getTextFromDB(ref);
+      if (!cachedText) {
+        const { halakhot, chapterBreaks } = await fetchHalakhot(ref);
+        setDayData(path, date, {
+          ...dayData,
+          texts: halakhot,
+          chapterBreaks,
+        });
+        console.log(`[BackgroundSync] Downloaded pinned text for ${key}`);
+      }
+    } catch (err) {
+      console.error(`[BackgroundSync] Failed to fetch pinned day ${key}:`, err);
+    }
+  }
 }
 
 // Auto-dismiss timeout for success/error banners
@@ -190,7 +279,7 @@ const BANNER_DISMISS_MS = 3000;
  * Reports progress through the offline store for UI feedback
  */
 async function runSync(): Promise<void> {
-  if (syncInProgress || !canSync()) {
+  if (syncInProgress || !(await canSync())) {
     return;
   }
 
@@ -226,6 +315,9 @@ async function runSync(): Promise<void> {
       // Content updates are applied silently - cache is already updated
       // Users will see fresh data on next view without interruption
     }
+
+    // Process pinned days: fetch text for any pinned day missing from IndexedDB
+    await syncPinnedDays();
   } catch (error) {
     console.error("Background sync failed:", error);
     setSyncProgress({ status: "error" });

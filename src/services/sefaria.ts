@@ -1,7 +1,16 @@
 /**
  * Sefaria API service with local-first data access
  * Data is stored in IndexedDB first, network is used only when needed
- * Uses HebCal for Sefer HaMitzvot schedule, Sefaria for text
+ *
+ * Schedule sources:
+ * - Rambam 1 & 3 chapters: Sefaria Calendar API (refs guaranteed to match text API)
+ * - Sefer HaMitzvot: computed locally via @hebcal/learning (no network)
+ * - Hebrew dates: computed locally via @hebcal/core (no network)
+ *
+ * Text fetching:
+ * - Hebrew and English fetched independently via Promise.allSettled
+ * - Neither language is individually fatal — only throws if BOTH fail
+ * - Returns languagesLoaded to indicate which languages were successfully fetched
  */
 
 import type { StudyPath, DayData, HalakhaText } from "@/types";
@@ -13,13 +22,89 @@ import {
   saveCalendarToDB,
   isStale,
 } from "./database";
+import { isReachable } from "./connectivity";
+import { resolveMitzvotSchedule, computeHebrewDate } from "./studySchedule";
 
 const SEFARIA_API = "https://www.sefaria.org";
-const HEBCAL_API = "https://www.hebcal.com";
 
 // Staleness threshold in days
 const TEXT_STALE_DAYS = 7; // Texts rarely change
 const CALENDAR_STALE_DAYS = 1; // Calendar data should be refreshed daily
+
+/**
+ * Sections where the study schedule truncates content that Sefaria actually has.
+ * Maps section name → the schedule's known wrong end number.
+ *
+ * When a ref's range ends at the truncated number, we fetch the full section and
+ * slice from the range start. This handles both rambam3 (full section in one day)
+ * and rambam1's last chunk (e.g., "246-365" gets extended to include 366-370).
+ *
+ * Add new entries here as users report missing content.
+ * See docs/flat-list-sections.md for full details.
+ */
+const TRUNCATED_SECTIONS: Record<string, number> = {
+  "Negative Mitzvot": 365, // Sefaria has 370 — afterword about rabbinic commandments
+};
+
+interface NormalizedRef {
+  /** The ref to use for fetching/caching (range stripped for truncated sections) */
+  fetchRef: string;
+  /** 0-based start index to slice results from (undefined = no slicing) */
+  sliceStart?: number;
+}
+
+/**
+ * Detect refs where the schedule truncates content and return fetch + slice info.
+ *
+ * "Negative Mitzvot 1-365"   → fetchRef: stripped, sliceStart: 0   (all 370)
+ * "Negative Mitzvot 246-365" → fetchRef: stripped, sliceStart: 245 (246-370)
+ * "Negative Mitzvot 1-122"   → fetchRef: unchanged                (end ≠ 365)
+ */
+function normalizeIntroRef(ref: string): NormalizedRef {
+  for (const [section, truncatedEnd] of Object.entries(TRUNCATED_SECTIONS)) {
+    if (!ref.includes(section)) continue;
+
+    const rangeMatch = ref.match(/\s+(\d+)(?:-(\d+))?$/);
+    if (!rangeMatch) continue;
+
+    const start = parseInt(rangeMatch[1], 10);
+    const end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : start;
+
+    if (end === truncatedEnd) {
+      return {
+        fetchRef: ref.replace(/\s+\d+(?:-\d+)?$/, ""),
+        sliceStart: start - 1,
+      };
+    }
+  }
+  return { fetchRef: ref };
+}
+
+/**
+ * Slice halakhot to a sub-range when we fetched a full section but only need
+ * part of it (e.g., rambam1 "Negative Mitzvot 246-365" from the full 370).
+ * No-op when sliceStart is undefined (non-truncated refs) or 0 (full section).
+ */
+function sliceHalakhot(
+  result: {
+    halakhot: HalakhaText[];
+    chapterBreaks: number[];
+    languagesLoaded: LanguagesLoaded;
+  },
+  sliceStart?: number,
+): {
+  halakhot: HalakhaText[];
+  chapterBreaks: number[];
+  languagesLoaded: LanguagesLoaded;
+} {
+  if (sliceStart === undefined || sliceStart === 0) return result;
+  return {
+    halakhot: result.halakhot.slice(sliceStart),
+    // chapterBreaks are irrelevant for flat-list sections (always empty)
+    chapterBreaks: [],
+    languagesLoaded: result.languagesLoaded,
+  };
+}
 
 interface SefariaCalendarItem {
   title: {
@@ -46,184 +131,25 @@ interface SefariaTextResponse {
   isSpanning?: boolean;
 }
 
-interface HebcalItem {
-  title: string;
-  date: string;
-  hdate: string;
-  category: string;
-  hebrew?: string;
-  link?: string;
+// Language loading status — indicates which languages were successfully fetched
+export interface LanguagesLoaded {
+  he: boolean;
+  en: boolean;
 }
 
-interface HebcalResponse {
-  items: HebcalItem[];
-}
+// Connectivity check is now handled by ./connectivity.ts (isReachable)
 
 /**
- * Check if the browser is online
- */
-function isOnline(): boolean {
-  return typeof navigator !== "undefined" ? navigator.onLine : true;
-}
-
-/**
- * Parse HebCal Sefer HaMitzvot title to extract Sefaria references
- * Examples:
- *   "Day 1: Maimonides' Introduction to Sefer Hamitzvot" → ["Sefer HaMitzvot, Introductions, The Rambam's Introduction"]
- *   "Day 2: Principle 1-3" → ["Sefer HaMitzvot, Shorashim 1-3"]
- *   "Day 13: N10, N47, P186" → ["Sefer HaMitzvot, Negative Commandments 10", ...]
- */
-function parseSeferHaMitzvotTitle(title: string): string[] {
-  // Remove "Day X: " prefix
-  const content = title.replace(/^Day \d+:\s*/, "");
-
-  // Handle "Maimonides' Introduction to Sefer Hamitzvot"
-  if (content.includes("Introduction to Sefer Hamitzvot")) {
-    return ["Sefer HaMitzvot, Introductions, The Rambam's Introduction"];
-  }
-
-  // Handle "Principle X-Y" format (Shorashim/Roots)
-  const principleMatch = content.match(/Principle (\d+)(?:-(\d+))?/);
-  if (principleMatch) {
-    const start = principleMatch[1];
-    const end = principleMatch[2];
-    if (end) {
-      return [`Sefer HaMitzvot, Shorashim ${start}-${end}`];
-    }
-    return [`Sefer HaMitzvot, Shorashim ${start}`];
-  }
-
-  // Handle comma-separated commandments: "N10, N47, P186"
-  const refs: string[] = [];
-  const codes = content.split(/,\s*/);
-
-  for (const code of codes) {
-    const trimmed = code.trim();
-
-    // N = Negative Commandment
-    const negMatch = trimmed.match(/^N(\d+)$/);
-    if (negMatch) {
-      refs.push(`Sefer HaMitzvot, Negative Commandments ${negMatch[1]}`);
-      continue;
-    }
-
-    // P = Positive Commandment
-    const posMatch = trimmed.match(/^P(\d+)$/);
-    if (posMatch) {
-      refs.push(`Sefer HaMitzvot, Positive Commandments ${posMatch[1]}`);
-      continue;
-    }
-  }
-
-  return refs;
-}
-
-/**
- * Fetch Sefer HaMitzvot calendar from HebCal (with local-first caching)
- */
-async function fetchSeferHaMitzvotCalendar(
-  dateStr: string,
-): Promise<
-  Pick<DayData, "he" | "en" | "ref" | "heDate" | "enDate"> & { refs: string[] }
-> {
-  // Check IndexedDB first
-  const cached = await getCalendarFromDB("mitzvot", dateStr);
-  if (cached && !isStale(cached.fetchedAt, CALENDAR_STALE_DAYS)) {
-    // Reconstruct refs from the ref field
-    const refs = cached.ref.includes(",")
-      ? cached.ref.split(",").map((r) => r.trim())
-      : [cached.ref];
-    return {
-      he: cached.he,
-      en: cached.en,
-      ref: cached.ref,
-      refs,
-      heDate: cached.heDate,
-      enDate: cached.enDate,
-    };
-  }
-
-  // If offline, return stale cache if available
-  if (!isOnline()) {
-    if (cached) {
-      const refs = cached.ref.includes(",")
-        ? cached.ref.split(",").map((r) => r.trim())
-        : [cached.ref];
-      return {
-        he: cached.he,
-        en: cached.en,
-        ref: cached.ref,
-        refs,
-        heDate: cached.heDate,
-        enDate: cached.enDate,
-      };
-    }
-    throw new Error("Offline and no cached data available");
-  }
-
-  const url = `${HEBCAL_API}/hebcal?cfg=json&v=1&dsm=on&start=${dateStr}&end=${dateStr}`;
-
-  const res = await fetch(url);
-  if (!res.ok) {
-    if (cached) {
-      const refs = cached.ref.includes(",")
-        ? cached.ref.split(",").map((r) => r.trim())
-        : [cached.ref];
-      return {
-        he: cached.he,
-        en: cached.en,
-        ref: cached.ref,
-        refs,
-        heDate: cached.heDate,
-        enDate: cached.enDate,
-      };
-    }
-    throw new Error(`HebCal API failed: ${res.status}`);
-  }
-
-  const data: HebcalResponse = await res.json();
-  const entry = data.items.find((item) => item.category === "seferHaMitzvot");
-
-  if (!entry) {
-    throw new Error(`No Sefer HaMitzvot entry found for ${dateStr}`);
-  }
-
-  const refs = parseSeferHaMitzvotTitle(entry.title);
-
-  // Create display text
-  const dayMatch = entry.title.match(/Day (\d+)/);
-  const dayNum = dayMatch ? dayMatch[1] : "?";
-
-  const heDisplay = `ספר המצוות - יום ${dayNum}`;
-  const enDisplay = entry.title;
-
-  const result = {
-    he: heDisplay,
-    en: enDisplay,
-    ref: refs[0] || entry.title,
-    refs,
-    heDate: undefined as string | undefined,
-    enDate: undefined as string | undefined,
-  };
-
-  // Save to IndexedDB (store refs as comma-separated in ref field)
-  saveCalendarToDB("mitzvot", dateStr, {
-    he: result.he,
-    en: result.en,
-    ref: refs.join(", "),
-    count: 0,
-  }).catch((err) => console.error("Failed to cache calendar:", err));
-
-  return result;
-}
-
-/**
- * Fetch Sefaria calendar (with local-first caching)
+ * Fetch Sefaria calendar for Rambam paths (with local-first caching)
+ * Hebrew dates are always computed locally (no HebCal API needed)
  */
 async function fetchSefariaCalendar(
   dateStr: string,
   path: StudyPath,
 ): Promise<Pick<DayData, "he" | "en" | "ref" | "heDate" | "enDate">> {
+  // Compute Hebrew dates locally (always available, no network)
+  const { heDate, enDate } = computeHebrewDate(dateStr);
+
   // Check IndexedDB first
   const cached = await getCalendarFromDB(path, dateStr);
   if (cached && !isStale(cached.fetchedAt, CALENDAR_STALE_DAYS)) {
@@ -231,20 +157,20 @@ async function fetchSefariaCalendar(
       he: cached.he,
       en: cached.en,
       ref: cached.ref,
-      heDate: cached.heDate,
-      enDate: cached.enDate,
+      heDate,
+      enDate,
     };
   }
 
   // If offline, return stale cache if available
-  if (!isOnline()) {
+  if (!(await isReachable())) {
     if (cached) {
       return {
         he: cached.he,
         en: cached.en,
         ref: cached.ref,
-        heDate: cached.heDate,
-        enDate: cached.enDate,
+        heDate,
+        enDate,
       };
     }
     throw new Error("Offline and no cached data available");
@@ -261,8 +187,8 @@ async function fetchSefariaCalendar(
         he: cached.he,
         en: cached.en,
         ref: cached.ref,
-        heDate: cached.heDate,
-        enDate: cached.enDate,
+        heDate,
+        enDate,
       };
     }
     throw new Error(`Calendar API failed: ${res.status}`);
@@ -283,8 +209,8 @@ async function fetchSefariaCalendar(
     he: entry.displayValue.he,
     en: entry.displayValue.en,
     ref: entry.ref,
-    heDate: undefined as string | undefined,
-    enDate: undefined as string | undefined,
+    heDate,
+    enDate,
   };
 
   // Save to IndexedDB
@@ -293,13 +219,20 @@ async function fetchSefariaCalendar(
     en: result.en,
     ref: result.ref,
     count: 0,
+    heDate,
+    enDate,
   }).catch((err) => console.error("Failed to cache calendar:", err));
 
   return result;
 }
 
 /**
- * Fetch the daily calendar entry from Sefaria or HebCal (local-first)
+ * Fetch the daily calendar entry (local-first)
+ *
+ * - Rambam 1 & 3: Sefaria Calendar API (refs match text API)
+ * - Sefer HaMitzvot: computed locally via @hebcal/learning
+ * - Hebrew dates: always computed locally via @hebcal/core
+ *
  * @param dateStr - Date string (YYYY-MM-DD)
  * @param path - Study path (rambam3, rambam1, or mitzvot)
  * @returns Day data with Hebrew/English display text and reference
@@ -308,44 +241,63 @@ export async function fetchCalendar(
   dateStr: string,
   path: StudyPath,
 ): Promise<
-  Pick<DayData, "he" | "en" | "ref" | "heDate" | "enDate"> & { refs?: string[] }
+  Pick<DayData, "he" | "en" | "ref" | "heDate" | "enDate"> & {
+    refs?: string[];
+  }
 > {
-  // Use HebCal for Sefer HaMitzvot
+  // Decision: Sefer HaMitzvot is computed locally via @hebcal/learning because
+  // HebCal's API was the only source and we can eliminate that network dependency.
+  // The local computation is deterministic and always available offline.
   if (path === "mitzvot") {
-    return fetchSeferHaMitzvotCalendar(dateStr);
+    return resolveMitzvotSchedule(dateStr);
   }
 
-  // Use Sefaria for Rambam
+  // Decision: Rambam 1 & 3 still use Sefaria Calendar API because the refs it
+  // returns are guaranteed to match the Sefaria Text API. Using @hebcal/learning
+  // for Rambam would require constructing refs manually, risking mismatches.
   return fetchSefariaCalendar(dateStr, path);
 }
 
 /**
- * Process raw Sefaria text response into halakhot array
+ * Process raw Sefaria text response into halakhot array.
+ * Either source (Hebrew or English) can be null — uses whichever is available.
+ *
+ * Decision: Accepts nullable params so we can decouple Hebrew/English failures.
+ * Sefaria v3 API returns different structures per language version, so we fetch
+ * them separately and merge here. The "structural basis" (array shape) comes from
+ * whichever response succeeded — both have identical structure, just different text.
  */
 function processTextResponse(
-  heData: SefariaTextResponse,
+  heData: SefariaTextResponse | null,
   enData: SefariaTextResponse | null,
 ): { halakhot: HalakhaText[]; chapterBreaks: number[] } {
   const halakhot: HalakhaText[] = [];
   const chapterBreaks: number[] = [];
 
-  const heText = heData.versions[0]?.text;
+  // Use whichever response is available as the structural basis
+  const structuralData = heData ?? enData;
+  if (!structuralData) {
+    return { halakhot, chapterBreaks };
+  }
+
+  const heText = heData?.versions[0]?.text;
   const enText = enData?.versions[0]?.text;
 
-  if (heData.isSpanning) {
+  if (structuralData.isSpanning) {
     // Multiple chapters - text is array of arrays
     let currentIndex = 0;
-    const heChapters = heText as string[][];
+    const structChapters = (heText ?? enText) as string[][];
+    const heChapters = heText as string[][] | undefined;
     const enChapters = enText as string[][] | undefined;
 
-    heChapters.forEach((chapter, chapterNum) => {
+    structChapters.forEach((chapter, chapterNum) => {
       if (chapterNum > 0) {
         chapterBreaks.push(currentIndex);
       }
 
-      chapter.forEach((heContent, idx) => {
+      chapter.forEach((_, idx) => {
         halakhot.push({
-          he: heContent,
+          he: heChapters?.[chapterNum]?.[idx] ?? "",
           en: enChapters?.[chapterNum]?.[idx],
           chapter: chapterNum + 1,
           isFirstInChapter: idx === 0,
@@ -353,14 +305,15 @@ function processTextResponse(
         currentIndex++;
       });
     });
-  } else if (Array.isArray(heText)) {
+  } else if (Array.isArray(structuralData.versions[0]?.text)) {
     // Single chapter - text is flat array
-    const heArray = heText as string[];
+    const structArray = (heText ?? enText) as string[];
+    const heArray = heText as string[] | undefined;
     const enArray = enText as string[] | undefined;
 
-    heArray.forEach((heContent, idx) => {
+    structArray.forEach((_, idx) => {
       halakhot.push({
-        he: heContent,
+        he: heArray?.[idx] ?? "",
         en: enArray?.[idx],
         chapter: 1,
         isFirstInChapter: idx === 0,
@@ -369,7 +322,7 @@ function processTextResponse(
   } else {
     // Single halakha - text is string
     halakhot.push({
-      he: heText as string,
+      he: (heText as string) ?? "",
       en: enText as string | undefined,
       chapter: 1,
       isFirstInChapter: true,
@@ -381,79 +334,135 @@ function processTextResponse(
 
 /**
  * Fetch halakha text directly from network (bypasses cache)
- * Used internally and for prefetch
+ * Hebrew and English are fetched independently via Promise.allSettled:
+ * - Neither is individually fatal — only throws if BOTH fail
+ * - Returns languagesLoaded to indicate which succeeded
  */
-async function fetchHalakhotFromNetwork(
-  ref: string,
-): Promise<{ halakhot: HalakhaText[]; chapterBreaks: number[] }> {
-  // Fetch Hebrew text
+async function fetchHalakhotFromNetwork(ref: string): Promise<{
+  halakhot: HalakhaText[];
+  chapterBreaks: number[];
+  languagesLoaded: LanguagesLoaded;
+}> {
   const heUrl = `${SEFARIA_API}/api/v3/texts/${encodeURIComponent(ref)}?version=hebrew`;
-  const heRes = await fetch(heUrl);
-  if (!heRes.ok) {
-    throw new Error(`Text API failed for Hebrew: ${heRes.status}`);
-  }
-  const heData: SefariaTextResponse = await heRes.json();
-
-  // Fetch English text
   const enUrl = `${SEFARIA_API}/api/v3/texts/${encodeURIComponent(ref)}?version=english`;
-  const enRes = await fetch(enUrl);
-  const enData: SefariaTextResponse | null = enRes.ok
-    ? await enRes.json()
-    : null;
 
-  return processTextResponse(heData, enData);
+  // Decision: Promise.allSettled (not Promise.all) because we want partial success.
+  // Many Sefaria texts lack English translations — that shouldn't block Hebrew display.
+  // Only if BOTH fail do we throw an error.
+  const [heResult, enResult] = await Promise.allSettled([
+    fetch(heUrl).then(async (res) => {
+      if (!res.ok) throw new Error(`Hebrew fetch failed: ${res.status}`);
+      return res.json() as Promise<SefariaTextResponse>;
+    }),
+    fetch(enUrl).then(async (res) => {
+      if (!res.ok) throw new Error(`English fetch failed: ${res.status}`);
+      return res.json() as Promise<SefariaTextResponse>;
+    }),
+  ]);
+
+  const heData = heResult.status === "fulfilled" ? heResult.value : null;
+  const enData = enResult.status === "fulfilled" ? enResult.value : null;
+
+  // Both failed — throw
+  if (!heData && !enData) {
+    const heErr = heResult.status === "rejected" ? heResult.reason : "no data";
+    const enErr = enResult.status === "rejected" ? enResult.reason : "no data";
+    throw new Error(
+      `Both language fetches failed: Hebrew: ${heErr}, English: ${enErr}`,
+    );
+  }
+
+  const { halakhot, chapterBreaks } = processTextResponse(heData, enData);
+
+  return {
+    halakhot,
+    chapterBreaks,
+    languagesLoaded: {
+      he: heData !== null,
+      en: enData !== null,
+    },
+  };
 }
 
 /**
  * Fetch halakha text content from Sefaria (local-first)
  * @param ref - Sefaria reference string
- * @returns Array of halakha texts with chapter information
+ * @returns Array of halakha texts with chapter information and language status
  */
-export async function fetchHalakhot(
-  ref: string,
-): Promise<{ halakhot: HalakhaText[]; chapterBreaks: number[] }> {
+export async function fetchHalakhot(ref: string): Promise<{
+  halakhot: HalakhaText[];
+  chapterBreaks: number[];
+  languagesLoaded: LanguagesLoaded;
+}> {
+  // Detect truncated sections — may need to fetch full content and slice
+  const { fetchRef, sliceStart } = normalizeIntroRef(ref);
+
   // 1. Check IndexedDB first (instant, ~5ms)
-  const cached = await getTextFromDB(ref);
+  const cached = await getTextFromDB(fetchRef);
   if (cached && !isStale(cached.fetchedAt, TEXT_STALE_DAYS)) {
-    return {
-      halakhot: cached.halakhot,
-      chapterBreaks: cached.chapterBreaks,
-    };
+    // Derive languagesLoaded from cached data when the stored field is missing
+    // (backward compat: entries saved before languagesLoaded was added)
+    const hasHe = cached.halakhot.some((h) => h.he && h.he.length > 0);
+    const hasEn = cached.halakhot.some((h) => h.en && h.en.length > 0);
+    return sliceHalakhot(
+      {
+        halakhot: cached.halakhot,
+        chapterBreaks: cached.chapterBreaks,
+        languagesLoaded: cached.languagesLoaded ?? { he: hasHe, en: hasEn },
+      },
+      sliceStart,
+    );
   }
 
   // 2. If offline, return stale cache if available
-  if (!isOnline()) {
+  if (!(await isReachable())) {
     if (cached) {
-      return {
-        halakhot: cached.halakhot,
-        chapterBreaks: cached.chapterBreaks,
-      };
+      const hasHe = cached.halakhot.some((h) => h.he && h.he.length > 0);
+      const hasEn = cached.halakhot.some((h) => h.en && h.en.length > 0);
+      return sliceHalakhot(
+        {
+          halakhot: cached.halakhot,
+          chapterBreaks: cached.chapterBreaks,
+          languagesLoaded: cached.languagesLoaded ?? { he: hasHe, en: hasEn },
+        },
+        sliceStart,
+      );
     }
     throw new Error("Offline and no cached text available");
   }
 
-  // 3. Fetch from network
-  const result = await fetchHalakhotFromNetwork(ref);
+  // 3. Fetch from network (using normalized ref for full content)
+  const result = await fetchHalakhotFromNetwork(fetchRef);
 
-  // 4. Save to IndexedDB (fire and forget)
-  saveTextToDB(ref, result.halakhot, result.chapterBreaks).catch((err) =>
-    console.error("Failed to cache text:", err),
-  );
+  // 4. Save full content to IndexedDB (before slicing — cache the complete section)
+  saveTextToDB(
+    fetchRef,
+    result.halakhot,
+    result.chapterBreaks,
+    result.languagesLoaded,
+  ).catch((err) => console.error("Failed to cache text:", err));
 
-  return result;
+  // 5. Slice to the requested range (e.g., items 246+ for rambam1's last chunk)
+  return sliceHalakhot(result, sliceStart);
 }
 
 /**
  * Fetch halakhot for multiple refs and combine them
  * Used for Sefer HaMitzvot which may have multiple commandments per day
  * @param refs - Array of Sefaria reference strings
- * @returns Combined halakhot with chapter breaks
+ * @returns Combined halakhot with chapter breaks and language status
  */
-export async function fetchMultipleHalakhot(
-  refs: string[],
-): Promise<{ halakhot: HalakhaText[]; chapterBreaks: number[] }> {
+export async function fetchMultipleHalakhot(refs: string[]): Promise<{
+  halakhot: HalakhaText[];
+  chapterBreaks: number[];
+  languagesLoaded: LanguagesLoaded;
+}> {
   if (refs.length === 0) {
-    return { halakhot: [], chapterBreaks: [] };
+    return {
+      halakhot: [],
+      chapterBreaks: [],
+      languagesLoaded: { he: true, en: true },
+    };
   }
 
   if (refs.length === 1) {
@@ -469,9 +478,20 @@ export async function fetchMultipleHalakhot(
   const allHalakhot: HalakhaText[] = [];
   const allChapterBreaks: number[] = [];
   let currentIndex = 0;
+  // AND logic: report a language as loaded only if ALL sub-refs have it.
+  // This prevents showing "English loaded" when 2 of 3 commandments lack translations.
+  let allHe = true;
+  let allEn = true;
 
   results.forEach((result, idx) => {
-    if (!result) return;
+    if (!result) {
+      allHe = false;
+      allEn = false;
+      return;
+    }
+
+    if (!result.languagesLoaded.he) allHe = false;
+    if (!result.languagesLoaded.en) allEn = false;
 
     // Add chapter break before each new ref (except first)
     if (idx > 0 && currentIndex > 0) {
@@ -488,7 +508,11 @@ export async function fetchMultipleHalakhot(
     });
   });
 
-  return { halakhot: allHalakhot, chapterBreaks: allChapterBreaks };
+  return {
+    halakhot: allHalakhot,
+    chapterBreaks: allChapterBreaks,
+    languagesLoaded: { he: allHe, en: allEn },
+  };
 }
 
 /**
@@ -496,16 +520,22 @@ export async function fetchMultipleHalakhot(
  * Returns true if successfully fetched and cached
  */
 export async function prefetchText(ref: string): Promise<boolean> {
+  const { fetchRef } = normalizeIntroRef(ref);
   try {
     // Check if already cached and fresh
-    const cached = await getTextFromDB(ref);
+    const cached = await getTextFromDB(fetchRef);
     if (cached && !isStale(cached.fetchedAt, TEXT_STALE_DAYS)) {
       return true; // Already have fresh data
     }
 
     // Fetch and cache
-    const result = await fetchHalakhotFromNetwork(ref);
-    await saveTextToDB(ref, result.halakhot, result.chapterBreaks);
+    const result = await fetchHalakhotFromNetwork(fetchRef);
+    await saveTextToDB(
+      fetchRef,
+      result.halakhot,
+      result.chapterBreaks,
+      result.languagesLoaded,
+    );
     return true;
   } catch (error) {
     console.error(`Failed to prefetch text ${ref}:`, error);
@@ -517,7 +547,7 @@ export async function prefetchText(ref: string): Promise<boolean> {
  * Check if text is available in cache (for UI indicators)
  */
 export async function isTextCached(ref: string): Promise<boolean> {
-  const cached = await getTextFromDB(ref);
+  const cached = await getTextFromDB(normalizeIntroRef(ref).fetchRef);
   return cached !== undefined;
 }
 
@@ -525,6 +555,6 @@ export async function isTextCached(ref: string): Promise<boolean> {
  * Check if text is cached and fresh
  */
 export async function isTextCachedAndFresh(ref: string): Promise<boolean> {
-  const cached = await getTextFromDB(ref);
+  const cached = await getTextFromDB(normalizeIntroRef(ref).fetchRef);
   return cached !== undefined && !isStale(cached.fetchedAt, TEXT_STALE_DAYS);
 }

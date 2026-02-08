@@ -56,14 +56,14 @@ export function SummaryItem({ summary }: SummaryItemProps) {
   );
 
   return (
-    <div className="bg-white border border-indigo-100 rounded-lg p-3 hover:bg-indigo-50/30 transition-colors">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-surface-border)] rounded-lg p-3 hover:bg-[var(--color-surface-hover)] transition-colors">
       <div className="flex items-start gap-3">
         <span className="text-xl flex-shrink-0 mt-0.5">💭</span>
 
         <div className="flex-1 min-w-0">
           {/* Path badge + date */}
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <span className="bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded font-medium">
+          <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+            <span className="bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-1.5 py-0.5 rounded font-medium">
               {pathLabel}
             </span>
             <span>•</span>
@@ -77,7 +77,7 @@ export function SummaryItem({ summary }: SummaryItemProps) {
           </div>
 
           {/* Summary text */}
-          <p className="mt-2 text-sm text-gray-700 leading-relaxed">
+          <p className="mt-2 text-sm text-[var(--color-text-secondary)] leading-relaxed">
             {summary.text}
           </p>
 
@@ -95,7 +95,7 @@ export function SummaryItem({ summary }: SummaryItemProps) {
         {/* Delete button */}
         <button
           onClick={handleDelete}
-          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors flex-shrink-0"
+          className="p-1.5 text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-50 rounded transition-colors flex-shrink-0"
           title={t("delete")}
         >
           <svg

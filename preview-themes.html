@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rambam UI Theme Preview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans Hebrew', sans-serif;
+    background: #f1f5f9;
+    padding: 20px;
+    direction: ltr;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    color: #1e293b;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #64748b;
+    margin-bottom: 30px;
+    font-size: 14px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 24px;
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+
+  .theme-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .theme-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  }
+
+  .theme-label {
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .theme-label h2 {
+    font-size: 16px;
+    color: #334155;
+  }
+  .theme-label .badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+  .badge-recommended { background: #dcfce7; color: #166534; }
+  .badge-option { background: #e0e7ff; color: #3730a3; }
+
+  /* ── Phone frame ── */
+  .phone-frame {
+    padding: 16px;
+    background: #f8fafc;
+  }
+  .phone {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    direction: rtl;
+  }
+
+  /* ── Header ── */
+  .mock-header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+  }
+  .mock-header .title-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mock-header .logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .mock-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .mock-header .btns {
+    display: flex;
+    gap: 6px;
+  }
+  .mock-header .btn-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    border: none;
+    color: white;
+    cursor: default;
+  }
+
+  /* ── Stats bar ── */
+  .mock-stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 12px;
+    font-size: 12px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .mock-stats .stat { text-align: center; }
+  .mock-stats .stat-val { font-size: 18px; font-weight: 700; }
+  .mock-stats .stat-label { color: #6b7280; font-size: 10px; }
+
+  /* ── Content area ── */
+  .mock-content {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 260px;
+  }
+
+  /* ── Day group ── */
+  .mock-day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .mock-day-header .path-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 8px;
+    color: white;
+  }
+
+  /* ── Halakha card ── */
+  .mock-card {
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    transition: all 0.2s;
+  }
+  .mock-card .num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .mock-card .text {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #374151;
+  }
+  .mock-card.completed {
+    opacity: 0.45;
+  }
+  .mock-card.completed .text {
+    text-decoration: line-through;
+  }
+
+  /* ── Settings preview ── */
+  .mock-settings {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .settings-group {
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .settings-group-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 12px 4px;
+    font-weight: 600;
+  }
+  .settings-item {
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+  }
+  .settings-item + .settings-item {
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+  .settings-toggle {
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    position: relative;
+  }
+  .settings-toggle::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .settings-toggle.off::after {
+    right: auto;
+    left: 2px;
+  }
+
+  /* ── Color swatches ── */
+  .swatches {
+    display: flex;
+    gap: 6px;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+  .swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 2px solid rgba(0,0,0,0.08);
+  }
+  .swatch-label {
+    font-size: 9px;
+    text-align: center;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+  .swatch-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  /* ── Section divider ── */
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+    max-width: 1500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* ── Header style variants ── */
+  .header-variants {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    max-width: 1500px;
+    margin: 0 auto 30px;
+  }
+  .variant-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  .variant-label {
+    padding: 10px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  /* H2: minimal header */
+  .header-minimal {
+    background: white;
+    color: #1e293b;
+    border-bottom: 3px solid;
+  }
+  .header-minimal .btn-circle {
+    background: rgba(0,0,0,0.06);
+    color: #475569;
+  }
+
+  /* H3: glassmorphism */
+  .header-glass {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+    color: #1e293b;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+  }
+  .header-glass .btn-circle {
+    background: rgba(0,0,0,0.06);
+    color: #475569;
+  }
+
+  /* comparison row */
+  .comparison-row {
+    display: flex;
+    gap: 20px;
+    max-width: 1500px;
+    margin: 0 auto 30px;
+    flex-wrap: wrap;
+  }
+  .comparison-item {
+    flex: 1;
+    min-width: 300px;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  .comparison-label {
+    padding: 10px 16px;
+    background: #fef2f2;
+    border-bottom: 1px solid #fecaca;
+    font-size: 13px;
+    font-weight: 600;
+    color: #991b1b;
+  }
+  .comparison-label.new {
+    background: #f0fdf4;
+    border-bottom: 1px solid #bbf7d0;
+    color: #166534;
+  }
+</style>
+</head>
+<body>
+
+<h1>Rambam App - Theme Preview</h1>
+<p class="subtitle">Compare 4 color themes, 3 header styles, and card variants side by side</p>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- CURRENT (LEGACY OVERLAP) vs NEW                -->
+<!-- ═══════════════════════════════════════════════ -->
+
+<div class="section-title">Current App (shares legacy blue identity)</div>
+
+<div class="comparison-row">
+  <div class="comparison-item">
+    <div class="comparison-label">Current / Legacy Blue (#2563eb)</div>
+    <div class="phone-frame">
+      <div class="phone" style="background:#fff;">
+        <div class="mock-header" style="background:#2563eb;">
+          <div class="title-area">
+            <div class="logo">&#x1F4D6;</div>
+            <h3>הרמב״ם היומי</h3>
+          </div>
+          <div class="btns">
+            <div class="btn-circle">&#x1F4D1;</div>
+            <div class="btn-circle">&#x1F4C5;</div>
+            <div class="btn-circle">&#x2699;</div>
+          </div>
+        </div>
+        <div class="mock-stats" style="background:white;">
+          <div class="stat"><div class="stat-val" style="color:#2563eb;">45</div><div class="stat-label">ימים</div></div>
+          <div class="stat"><div class="stat-val" style="color:#2563eb;">67%</div><div class="stat-label">היום</div></div>
+          <div class="stat"><div class="stat-val" style="color:#2563eb;">3</div><div class="stat-label">פיגורים</div></div>
+        </div>
+        <div class="mock-content" style="background:#f9fafb;">
+          <div class="mock-day-header" style="background:#eff6ff; color:#1e40af;">
+            <span>&#x25B6; יום שישי &bull; ט״ו שבט</span>
+            <span class="path-badge" style="background:#2563eb;">ג׳ פרקים</span>
+          </div>
+          <div class="mock-card" style="background:white; border:1px solid #e5e7eb;">
+            <div class="num" style="background:#eff6ff; color:#2563eb;">א</div>
+            <div class="text">הלכות יסודי התורה פרק א — יסוד היסודות ועמוד החכמות לידע שיש שם מצוי ראשון...</div>
+          </div>
+          <div class="mock-card completed" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+            <div class="num" style="background:#dcfce7; color:#16a34a;">&#x2713;</div>
+            <div class="text">הלכות יסודי התורה פרק ב — האל הנכבד והנורא הזה מצוה לאהבו וליראה אותו...</div>
+          </div>
+          <div class="mock-card" style="background:white; border:1px solid #e5e7eb;">
+            <div class="num" style="background:#eff6ff; color:#2563eb;">ג</div>
+            <div class="text">הלכות יסודי התורה פרק ג — והצורות שאין להם גולם אינן נראין לעין...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-group"><div class="swatch" style="background:#2563eb;"></div><div class="swatch-label">Primary</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#dc2626;"></div><div class="swatch-label">Alt Date</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#10b981;"></div><div class="swatch-label">Done</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#f59e0b;"></div><div class="swatch-label">Offline</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 4 COLOR THEME OPTIONS                          -->
+<!-- ═══════════════════════════════════════════════ -->
+
+<div class="section-title">Theme Options (pick one)</div>
+
+<div class="grid">
+
+  <!-- ── OPTION A: Teal ── -->
+  <div class="theme-card">
+    <div class="theme-label">
+      <h2>Option A: Warm Teal</h2>
+      <span class="badge badge-recommended">Recommended</span>
+    </div>
+    <div class="phone-frame">
+      <div class="phone" style="background:#fff;">
+        <div class="mock-header" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+          <div class="title-area">
+            <div class="logo">&#x1F4D6;</div>
+            <h3>הרמב״ם היומי</h3>
+          </div>
+          <div class="btns">
+            <div class="btn-circle">&#x1F4D1;</div>
+            <div class="btn-circle">&#x1F4C5;</div>
+            <div class="btn-circle">&#x2699;</div>
+          </div>
+        </div>
+        <div class="mock-stats" style="background:white;">
+          <div class="stat"><div class="stat-val" style="color:#0d9488;">45</div><div class="stat-label">ימים</div></div>
+          <div class="stat"><div class="stat-val" style="color:#0d9488;">67%</div><div class="stat-label">היום</div></div>
+          <div class="stat"><div class="stat-val" style="color:#0d9488;">3</div><div class="stat-label">פיגורים</div></div>
+        </div>
+        <div class="mock-content" style="background:#f0fdfa;">
+          <div class="mock-day-header" style="background:#ccfbf1; color:#115e59;">
+            <span>&#x25B6; יום שישי &bull; ט״ו שבט</span>
+            <span class="path-badge" style="background:#0d9488;">ג׳ פרקים</span>
+          </div>
+          <div class="mock-card" style="background:white; border:1px solid #99f6e4;">
+            <div class="num" style="background:#ccfbf1; color:#0d9488;">א</div>
+            <div class="text">הלכות יסודי התורה פרק א — יסוד היסודות ועמוד החכמות לידע שיש שם מצוי ראשון...</div>
+          </div>
+          <div class="mock-card completed" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+            <div class="num" style="background:#dcfce7; color:#16a34a;">&#x2713;</div>
+            <div class="text">הלכות יסודי התורה פרק ב — האל הנכבד והנורא הזה מצוה לאהבו וליראה אותו...</div>
+          </div>
+          <div class="mock-card" style="background:white; border:1px solid #99f6e4;">
+            <div class="num" style="background:#ccfbf1; color:#0d9488;">ג</div>
+            <div class="text">הלכות יסודי התורה פרק ג — והצורות שאין להם גולם אינן נראין לעין...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-group"><div class="swatch" style="background:#0d9488;"></div><div class="swatch-label">Primary</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#0f766e;"></div><div class="swatch-label">Dark</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#f59e0b;"></div><div class="swatch-label">Accent</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#9333ea;"></div><div class="swatch-label">Alt Date</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#10b981;"></div><div class="swatch-label">Done</div></div>
+    </div>
+  </div>
+
+  <!-- ── OPTION B: Indigo ── -->
+  <div class="theme-card">
+    <div class="theme-label">
+      <h2>Option B: Deep Indigo</h2>
+      <span class="badge badge-option">Option</span>
+    </div>
+    <div class="phone-frame">
+      <div class="phone" style="background:#fff;">
+        <div class="mock-header" style="background: linear-gradient(135deg, #3730a3, #6366f1);">
+          <div class="title-area">
+            <div class="logo">&#x1F4D6;</div>
+            <h3>הרמב״ם היומי</h3>
+          </div>
+          <div class="btns">
+            <div class="btn-circle">&#x1F4D1;</div>
+            <div class="btn-circle">&#x1F4C5;</div>
+            <div class="btn-circle">&#x2699;</div>
+          </div>
+        </div>
+        <div class="mock-stats" style="background:white;">
+          <div class="stat"><div class="stat-val" style="color:#4f46e5;">45</div><div class="stat-label">ימים</div></div>
+          <div class="stat"><div class="stat-val" style="color:#4f46e5;">67%</div><div class="stat-label">היום</div></div>
+          <div class="stat"><div class="stat-val" style="color:#4f46e5;">3</div><div class="stat-label">פיגורים</div></div>
+        </div>
+        <div class="mock-content" style="background:#eef2ff;">
+          <div class="mock-day-header" style="background:#e0e7ff; color:#312e81;">
+            <span>&#x25B6; יום שישי &bull; ט״ו שבט</span>
+            <span class="path-badge" style="background:#4f46e5;">ג׳ פרקים</span>
+          </div>
+          <div class="mock-card" style="background:white; border:1px solid #c7d2fe;">
+            <div class="num" style="background:#e0e7ff; color:#4f46e5;">א</div>
+            <div class="text">הלכות יסודי התורה פרק א — יסוד היסודות ועמוד החכמות לידע שיש שם מצוי ראשון...</div>
+          </div>
+          <div class="mock-card completed" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+            <div class="num" style="background:#dcfce7; color:#16a34a;">&#x2713;</div>
+            <div class="text">הלכות יסודי התורה פרק ב — האל הנכבד והנורא הזה מצוה לאהבו וליראה אותו...</div>
+          </div>
+          <div class="mock-card" style="background:white; border:1px solid #c7d2fe;">
+            <div class="num" style="background:#e0e7ff; color:#4f46e5;">ג</div>
+            <div class="text">הלכות יסודי התורה פרק ג — והצורות שאין להם גולם אינן נראין לעין...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-group"><div class="swatch" style="background:#4f46e5;"></div><div class="swatch-label">Primary</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#3730a3;"></div><div class="swatch-label">Dark</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#06b6d4;"></div><div class="swatch-label">Accent</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#e11d48;"></div><div class="swatch-label">Alt Date</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#10b981;"></div><div class="swatch-label">Done</div></div>
+    </div>
+  </div>
+
+  <!-- ── OPTION C: Forest Green ── -->
+  <div class="theme-card">
+    <div class="theme-label">
+      <h2>Option C: Forest Green</h2>
+      <span class="badge badge-option">Option</span>
+    </div>
+    <div class="phone-frame">
+      <div class="phone" style="background:#fff;">
+        <div class="mock-header" style="background: linear-gradient(135deg, #14532d, #16a34a);">
+          <div class="title-area">
+            <div class="logo">&#x1F4D6;</div>
+            <h3>הרמב״ם היומי</h3>
+          </div>
+          <div class="btns">
+            <div class="btn-circle">&#x1F4D1;</div>
+            <div class="btn-circle">&#x1F4C5;</div>
+            <div class="btn-circle">&#x2699;</div>
+          </div>
+        </div>
+        <div class="mock-stats" style="background:white;">
+          <div class="stat"><div class="stat-val" style="color:#15803d;">45</div><div class="stat-label">ימים</div></div>
+          <div class="stat"><div class="stat-val" style="color:#15803d;">67%</div><div class="stat-label">היום</div></div>
+          <div class="stat"><div class="stat-val" style="color:#15803d;">3</div><div class="stat-label">פיגורים</div></div>
+        </div>
+        <div class="mock-content" style="background:#f0fdf4;">
+          <div class="mock-day-header" style="background:#dcfce7; color:#14532d;">
+            <span>&#x25B6; יום שישי &bull; ט״ו שבט</span>
+            <span class="path-badge" style="background:#15803d;">ג׳ פרקים</span>
+          </div>
+          <div class="mock-card" style="background:white; border:1px solid #bbf7d0;">
+            <div class="num" style="background:#dcfce7; color:#15803d;">א</div>
+            <div class="text">הלכות יסודי התורה פרק א — יסוד היסודות ועמוד החכמות לידע שיש שם מצוי ראשון...</div>
+          </div>
+          <div class="mock-card completed" style="background:#eff6ff; border:1px solid #bfdbfe;">
+            <div class="num" style="background:#dbeafe; color:#2563eb;">&#x2713;</div>
+            <div class="text">הלכות יסודי התורה פרק ב — האל הנכבד והנורא הזה מצוה לאהבו וליראה אותו...</div>
+          </div>
+          <div class="mock-card" style="background:white; border:1px solid #bbf7d0;">
+            <div class="num" style="background:#dcfce7; color:#15803d;">ג</div>
+            <div class="text">הלכות יסודי התורה פרק ג — והצורות שאין להם גולם אינן נראין לעין...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-group"><div class="swatch" style="background:#15803d;"></div><div class="swatch-label">Primary</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#14532d;"></div><div class="swatch-label">Dark</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#eab308;"></div><div class="swatch-label">Accent</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#dc2626;"></div><div class="swatch-label">Alt Date</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#2563eb;"></div><div class="swatch-label">Done</div></div>
+    </div>
+  </div>
+
+  <!-- ── OPTION D: Dark Mode ── -->
+  <div class="theme-card">
+    <div class="theme-label">
+      <h2>Option D: Dark Mode</h2>
+      <span class="badge badge-recommended">Recommended</span>
+    </div>
+    <div class="phone-frame" style="background:#0f172a;">
+      <div class="phone" style="background:#1e293b;">
+        <div class="mock-header" style="background:#334155; border-bottom: 2px solid #38bdf8;">
+          <div class="title-area">
+            <div class="logo" style="background:rgba(56,189,248,0.2);">&#x1F4D6;</div>
+            <h3>הרמב״ם היומי</h3>
+          </div>
+          <div class="btns">
+            <div class="btn-circle" style="background:rgba(255,255,255,0.08);">&#x1F4D1;</div>
+            <div class="btn-circle" style="background:rgba(255,255,255,0.08);">&#x1F4C5;</div>
+            <div class="btn-circle" style="background:rgba(255,255,255,0.08);">&#x2699;</div>
+          </div>
+        </div>
+        <div class="mock-stats" style="background:#1e293b; border-bottom:1px solid #334155;">
+          <div class="stat"><div class="stat-val" style="color:#38bdf8;">45</div><div class="stat-label" style="color:#94a3b8;">ימים</div></div>
+          <div class="stat"><div class="stat-val" style="color:#38bdf8;">67%</div><div class="stat-label" style="color:#94a3b8;">היום</div></div>
+          <div class="stat"><div class="stat-val" style="color:#38bdf8;">3</div><div class="stat-label" style="color:#94a3b8;">פיגורים</div></div>
+        </div>
+        <div class="mock-content" style="background:#0f172a;">
+          <div class="mock-day-header" style="background:#1e293b; color:#cbd5e1; border:1px solid #334155; border-radius:10px;">
+            <span>&#x25B6; יום שישי &bull; ט״ו שבט</span>
+            <span class="path-badge" style="background:#38bdf8; color:#0c4a6e;">ג׳ פרקים</span>
+          </div>
+          <div class="mock-card" style="background:#1e293b; border:1px solid #334155;">
+            <div class="num" style="background:#0c4a6e; color:#38bdf8;">א</div>
+            <div class="text" style="color:#e2e8f0;">הלכות יסודי התורה פרק א — יסוד היסודות ועמוד החכמות לידע שיש שם מצוי ראשון...</div>
+          </div>
+          <div class="mock-card completed" style="background:#1e293b; border:1px solid #334155;">
+            <div class="num" style="background:#14532d; color:#22c55e;">&#x2713;</div>
+            <div class="text" style="color:#e2e8f0;">הלכות יסודי התורה פרק ב — האל הנכבד והנורא הזה מצוה לאהבו וליראה אותו...</div>
+          </div>
+          <div class="mock-card" style="background:#1e293b; border:1px solid #334155;">
+            <div class="num" style="background:#0c4a6e; color:#38bdf8;">ג</div>
+            <div class="text" style="color:#e2e8f0;">הלכות יסודי התורה פרק ג — והצורות שאין להם גולם אינן נראין לעין...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-group"><div class="swatch" style="background:#1e293b;"></div><div class="swatch-label">BG</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#334155;"></div><div class="swatch-label">Surface</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#38bdf8;"></div><div class="swatch-label">Accent</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#a78bfa;"></div><div class="swatch-label">Alt Accent</div></div>
+      <div class="swatch-group"><div class="swatch" style="background:#22c55e;"></div><div class="swatch-label">Done</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- HEADER STYLE VARIANTS (using Teal as example)  -->
+<!-- ═══════════════════════════════════════════════ -->
+
+<div class="section-title">Header Style Options (shown in Teal)</div>
+
+<div class="header-variants">
+  <!-- H1: Gradient -->
+  <div class="variant-card">
+    <div class="variant-label">H1: Gradient Header (current pattern, new color)</div>
+    <div class="mock-header" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+      <div class="title-area">
+        <div class="logo">&#x1F4D6;</div>
+        <h3>הרמב״ם היומי</h3>
+      </div>
+      <div class="btns">
+        <div class="btn-circle">&#x1F4D1;</div>
+        <div class="btn-circle">&#x1F4C5;</div>
+        <div class="btn-circle">&#x2699;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- H2: Minimal -->
+  <div class="variant-card">
+    <div class="variant-label">H2: Minimal + Accent Bar (modern, clean)</div>
+    <div class="mock-header header-minimal" style="border-color:#0d9488;">
+      <div class="title-area">
+        <div class="logo" style="background:#f0fdfa;">&#x1F4D6;</div>
+        <h3 style="color:#0f766e;">הרמב״ם היומי</h3>
+      </div>
+      <div class="btns">
+        <div class="btn-circle">&#x1F4D1;</div>
+        <div class="btn-circle">&#x1F4C5;</div>
+        <div class="btn-circle">&#x2699;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- H3: Glass -->
+  <div class="variant-card">
+    <div class="variant-label">H3: Glassmorphism (premium, modern)</div>
+    <div style="background: linear-gradient(135deg, #ccfbf1, #a7f3d0); padding:4px 0;">
+      <div class="mock-header header-glass">
+        <div class="title-area">
+          <div class="logo" style="background:rgba(13,148,136,0.1);">&#x1F4D6;</div>
+          <h3 style="color:#0f766e;">הרמב״ם היומי</h3>
+        </div>
+        <div class="btns">
+          <div class="btn-circle">&#x1F4D1;</div>
+          <div class="btn-circle">&#x1F4C5;</div>
+          <div class="btn-circle">&#x2699;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SETTINGS PREVIEW (iOS-style grouped)           -->
+<!-- ═══════════════════════════════════════════════ -->
+
+<div class="section-title">Settings Redesign: Grouped Card Layout</div>
+
+<div class="comparison-row">
+  <!-- Current flat list -->
+  <div class="comparison-item">
+    <div class="comparison-label">Current: Flat list (13 sections, hard to scan)</div>
+    <div class="mock-settings" style="background:#f9fafb;">
+      <div style="padding:10px 12px;background:white;border-bottom:1px solid #e5e7eb;font-size:13px;display:flex;justify-content:space-between;"><span>שפת הממשק</span><span style="color:#2563eb;">עברית</span></div>
+      <div style="padding:10px 12px;background:white;border-bottom:1px solid #e5e7eb;font-size:13px;">מסלולי לימוד</div>
+      <div style="padding:10px 12px;background:white;border-bottom:1px solid #e5e7eb;font-size:13px;display:flex;justify-content:space-between;"><span>שפת הטקסט</span><span style="color:#2563eb;">עברית</span></div>
+      <div style="padding:10px 12px;background:white;border-bottom:1px solid #e5e7eb;font-size:13px;">תאריך התחלה</div>
+      <div style="padding:10px 12px;background:white;border-bottom:1px solid #e5e7eb;font-size:13px;display:flex;justify-content:space-between;"><span>סמן קודמים</span><span>לא</span></div>
+      <div style="padding:10px 12px;background:white;border-bottom:1px solid #e5e7eb;font-size:13px;">הסתר הושלמו</div>
+      <div style="padding:10px 12px;background:white;border-bottom:1px solid #e5e7eb;font-size:13px;">מיקום ושקיעה</div>
+      <div style="padding:10px 12px;background:white;border-bottom:1px solid #e5e7eb;font-size:13px;">הורדה אופליין</div>
+      <div style="padding:10px 12px;background:white;border-bottom:1px solid #e5e7eb;font-size:13px;">ניהול מידע</div>
+      <div style="padding:10px 12px;background:white;border-bottom:1px solid #e5e7eb;font-size:13px;color:#dc2626;">איפוס</div>
+      <div style="padding:10px 12px;background:white;border-bottom:1px solid #e5e7eb;font-size:13px;">מדריך</div>
+      <div style="padding:10px 12px;background:white;border-bottom:1px solid #e5e7eb;font-size:13px;">יומן שינויים</div>
+      <div style="padding:10px 12px;background:white;font-size:13px;">קרדיטים</div>
+    </div>
+  </div>
+
+  <!-- New grouped settings -->
+  <div class="comparison-item">
+    <div class="comparison-label new">New: iOS-style grouped cards (scannable, logical)</div>
+    <div class="mock-settings" style="background:#f0fdfa;">
+      <!-- Group 1: Study -->
+      <div class="settings-group-label" style="color:#0d9488;">לימוד</div>
+      <div class="settings-group" style="background:white; border:1px solid #e5e7eb;">
+        <div class="settings-item"><span>מסלולי לימוד</span><span style="color:#6b7280;">ג׳ פרקים &#x276E;</span></div>
+        <div class="settings-item"><span>שפת הטקסט</span><span style="color:#0d9488;">עברית</span></div>
+        <div class="settings-item"><span>תאריך התחלה</span><span style="color:#6b7280;">ט״ו שבט</span></div>
+      </div>
+
+      <!-- Group 2: Behavior -->
+      <div class="settings-group-label" style="color:#0d9488; margin-top:8px;">התנהגות</div>
+      <div class="settings-group" style="background:white; border:1px solid #e5e7eb;">
+        <div class="settings-item"><span>סמן קודמים</span><div class="settings-toggle off" style="background:#d1d5db;"></div></div>
+        <div class="settings-item"><span>הסתר הושלמו</span><span style="color:#6b7280;">אחרי 24 שעות</span></div>
+        <div class="settings-item"><span>שפת הממשק</span><span style="color:#0d9488;">עברית</span></div>
+      </div>
+
+      <!-- Group 3: Device -->
+      <div class="settings-group-label" style="color:#0d9488; margin-top:8px;">מכשיר ומידע</div>
+      <div class="settings-group" style="background:white; border:1px solid #e5e7eb;">
+        <div class="settings-item"><span>מיקום ושקיעה</span><span style="color:#6b7280;">ירושלים &#x276E;</span></div>
+        <div class="settings-item"><span>הורדה אופליין</span><span style="color:#6b7280;">&#x276E;</span></div>
+        <div class="settings-item"><span>ייצוא / ייבוא</span><span style="color:#6b7280;">&#x276E;</span></div>
+      </div>
+
+      <!-- Group 4: About -->
+      <div class="settings-group-label" style="color:#0d9488; margin-top:8px;">אודות</div>
+      <div class="settings-group" style="background:white; border:1px solid #e5e7eb;">
+        <div class="settings-item"><span>מדריך</span><span style="color:#6b7280;">&#x276E;</span></div>
+        <div class="settings-item"><span>יומן שינויים</span><span style="color:#6b7280;">v7 &#x276E;</span></div>
+        <div class="settings-item"><span>קרדיטים</span><span style="color:#6b7280;">&#x276E;</span></div>
+      </div>
+
+      <!-- Group 5: Danger zone (collapsed) -->
+      <div class="settings-group-label" style="color:#dc2626; margin-top:8px;">אזור מסוכן</div>
+      <div class="settings-group" style="background:white; border:1px solid #fecaca;">
+        <div class="settings-item" style="color:#dc2626;"><span>&#x25B6; הצג אפשרויות איפוס</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- CARD STYLE VARIANTS                            -->
+<!-- ═══════════════════════════════════════════════ -->
+
+<div class="section-title">Card Style Options</div>
+
+<div class="header-variants">
+  <!-- K1: Softer -->
+  <div class="variant-card">
+    <div class="variant-label">K1: Softer Cards (larger radius, shadow-only, more padding)</div>
+    <div style="padding:16px; background:#f0fdfa;">
+      <div class="mock-card" style="background:white; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,0.06); padding:16px; border:none;">
+        <div class="num" style="background:#ccfbf1; color:#0d9488;">א</div>
+        <div class="text">הלכות יסודי התורה פרק א — יסוד היסודות ועמוד החכמות...</div>
+      </div>
+      <div style="height:10px;"></div>
+      <div class="mock-card completed" style="background:#f0fdf4; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,0.04); padding:16px; border:none;">
+        <div class="num" style="background:#dcfce7; color:#16a34a;">&#x2713;</div>
+        <div class="text">הלכות יסודי התורה פרק ב — האל הנכבד והנורא...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- K2: List-style -->
+  <div class="variant-card">
+    <div class="variant-label">K2: List-style (dividers, minimal, content-focused)</div>
+    <div style="padding:0; background:white;">
+      <div style="padding:14px 16px; border-bottom:1px solid #e5e7eb; display:flex; gap:10px; align-items:flex-start;">
+        <div class="num" style="background:#ccfbf1; color:#0d9488;">א</div>
+        <div class="text">הלכות יסודי התורה פרק א — יסוד היסודות ועמוד החכמות...</div>
+      </div>
+      <div style="padding:14px 16px; border-bottom:1px solid #e5e7eb; display:flex; gap:10px; align-items:flex-start; opacity:0.45;">
+        <div class="num" style="background:#dcfce7; color:#16a34a;">&#x2713;</div>
+        <div class="text" style="text-decoration:line-through;">הלכות יסודי התורה פרק ב — האל הנכבד והנורא...</div>
+      </div>
+      <div style="padding:14px 16px; display:flex; gap:10px; align-items:flex-start;">
+        <div class="num" style="background:#ccfbf1; color:#0d9488;">ג</div>
+        <div class="text">הלכות יסודי התורה פרק ג — והצורות שאין להם גולם...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- K3: Material with accent border -->
+  <div class="variant-card">
+    <div class="variant-label">K3: Material Cards (accent left border, elevation)</div>
+    <div style="padding:16px; background:#f0fdfa;">
+      <div class="mock-card" style="background:white; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,0.08); padding:14px; border:none; border-right:4px solid #0d9488;">
+        <div class="num" style="background:#ccfbf1; color:#0d9488;">א</div>
+        <div class="text">הלכות יסודי התורה פרק א — יסוד היסודות ועמוד החכמות...</div>
+      </div>
+      <div style="height:10px;"></div>
+      <div class="mock-card completed" style="background:white; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,0.05); padding:14px; border:none; border-right:4px solid #10b981;">
+        <div class="num" style="background:#dcfce7; color:#16a34a;">&#x2713;</div>
+        <div class="text">הלכות יסודי התורה פרק ב — האל הנכבד והנורא...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="height:60px;"></div>
+
+</body>
+</html>

@@ -47,9 +47,10 @@ export type HighlightTarget =
  * 4. mark-all - 3 cards (1 incomplete from stage 3), swipe LEFT to mark all previous
  * 5. double-tap - 1 card, double-tap to expand, then Continue
  * 6. info-icon - Learn about the info button and long-press to see links
- * 7. day-checkmark - Learn about the checkmark to mark entire day complete
- * 8-10. Info stages about FAB, calendar, settings
- * 11. complete - Start learning
+ * 7. bookmarks - Bookmarks (shares info-icon demo layer)
+ * 8. day-checkmark - Learn about the checkmark to mark entire day complete
+ * 9-11. Info stages about FAB, calendar, settings
+ * 12. complete - Start learning
  */
 export const TUTORIAL_STAGES: TutorialStage[] = [
   {
@@ -106,6 +107,14 @@ export const TUTORIAL_STAGES: TutorialStage[] = [
     highlightElement: "info-icon",
   },
   {
+    id: "bookmarks",
+    titleKey: "tutorial.bookmarks.title",
+    instructionKey: "tutorial.bookmarks.instruction",
+    hintKey: "tutorial.bookmarks.hint",
+    advanceOn: { type: "manual" },
+    highlightElement: "info-icon",
+  },
+  {
     id: "day-checkmark",
     titleKey: "tutorial.dayCheckmark.title",
     instructionKey: "tutorial.dayCheckmark.instruction",
@@ -139,14 +148,6 @@ export const TUTORIAL_STAGES: TutorialStage[] = [
     instructionKey: "tutorial.headerColors.instruction",
     hintKey: "tutorial.headerColors.hint",
     advanceOn: { type: "manual" },
-  },
-  {
-    id: "bookmarks",
-    titleKey: "tutorial.bookmarks.title",
-    instructionKey: "tutorial.bookmarks.instruction",
-    hintKey: "tutorial.bookmarks.hint",
-    advanceOn: { type: "manual" },
-    highlightElement: "bookmarks-button",
   },
   {
     id: "summaries",

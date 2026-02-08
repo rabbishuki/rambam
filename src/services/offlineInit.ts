@@ -36,19 +36,20 @@ export async function initializeOffline(): Promise<void> {
       console.log(`Cleaned up ${cleared} stale entries from IndexedDB`);
     }
 
-    // 2b. Clean up completed, non-bookmarked old days
-    const { done, bookmarks, activePaths, daysAhead, cleanupOldDays } =
+    // 2b. Clean up old text cache from IndexedDB (user data in Zustand is never deleted)
+    const { done, bookmarks, activePaths, textRetentionDays, pinnedDays } =
       useAppStore.getState();
-    const cleanedDays = await cleanupCompletedDays(
-      done,
-      bookmarks,
-      activePaths,
-      daysAhead,
-    );
-    if (cleanedDays > 0) {
-      // Also clean up the Zustand store
-      cleanupOldDays(daysAhead);
-      console.log(`Cleaned up ${cleanedDays} completed days from IndexedDB`);
+    if (textRetentionDays > 0) {
+      const cleanedDays = await cleanupCompletedDays(
+        done,
+        bookmarks,
+        activePaths,
+        textRetentionDays,
+        pinnedDays,
+      );
+      if (cleanedDays > 0) {
+        console.log(`Cleaned up ${cleanedDays} completed days from IndexedDB`);
+      }
     }
 
     // 3. Log database stats (for debugging)

@@ -20,7 +20,7 @@ export function Toggle<T extends string>({
 }: ToggleProps<T>) {
   return (
     <div
-      className={`flex gap-1 bg-gray-100 p-1 rounded-lg ${className}`}
+      className={`flex gap-1 bg-[var(--color-surface-border)]/30 p-1 rounded-lg ${className}`}
       role="radiogroup"
     >
       {options.map((option) => (
@@ -35,8 +35,8 @@ export function Toggle<T extends string>({
             transition-all duration-200 cursor-pointer
             ${
               value === option.value
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
+                ? "bg-[var(--color-surface)] text-[var(--color-primary)] shadow-sm"
+                : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             }
           `}
         >

@@ -122,11 +122,15 @@ export function ScrollToIncompleteFAB({
         });
 
         // Add a brief highlight effect
-        cardElement.classList.add("ring-4", "ring-blue-400", "ring-opacity-75");
+        cardElement.classList.add(
+          "ring-4",
+          "ring-[var(--color-primary)]",
+          "ring-opacity-75",
+        );
         setTimeout(() => {
           cardElement?.classList.remove(
             "ring-4",
-            "ring-blue-400",
+            "ring-[var(--color-primary)]",
             "ring-opacity-75",
           );
         }, 1500);
@@ -145,7 +149,7 @@ export function ScrollToIncompleteFAB({
     <button
       id="fab-button"
       onClick={handleClick}
-      className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 active:bg-blue-800 z-50 transition-all hover:scale-105 active:scale-95"
+      className="fixed bottom-6 right-6 w-14 h-14 bg-[var(--color-primary)] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[var(--color-primary-dark)] active:opacity-80 z-50 transition-all hover:scale-105 active:scale-95"
       title={t("jumpToNext")}
       aria-label={t("jumpToNext")}
     >

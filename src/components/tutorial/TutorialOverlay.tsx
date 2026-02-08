@@ -15,6 +15,8 @@ interface TutorialOverlayProps {
   onSkip: () => void;
   onNext?: () => void;
   onGoToStage?: (index: number) => void;
+  onGoBack?: () => void;
+  canGoBack?: boolean;
   canAdvance: boolean;
   currentStageIndex: number;
   totalStages: number;
@@ -36,6 +38,8 @@ export function TutorialOverlay({
   currentStageIndex,
   totalStages,
   onGoToStage,
+  onGoBack,
+  canGoBack = false,
   actionPerformed = false,
   actionsThisStage = 0,
   minActionsRequired = 0,
@@ -154,8 +158,31 @@ export function TutorialOverlay({
 
         {/* Footer with progress and action */}
         <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-          {/* Progress dots - clickable to go back to previous stages */}
+          {/* Back button + Progress dots */}
           <div className="flex items-center gap-1.5">
+            {/* Back arrow button */}
+            {canGoBack && onGoBack && (
+              <button
+                onClick={onGoBack}
+                tabIndex={-1}
+                className="w-6 h-6 flex items-center justify-center rounded-full text-blue-500 hover:bg-blue-100 transition-colors mr-0.5"
+                title={t("tutorial.back")}
+              >
+                <svg
+                  className="w-3.5 h-3.5 rtl:rotate-180"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+            )}
             {Array.from({ length: totalStages }, (_, i) => {
               const isCompleted = i < currentStageIndex;
               const isCurrent = i === currentStageIndex;
@@ -193,8 +220,8 @@ export function TutorialOverlay({
               className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 canAdvance
                   ? actionPerformed && requiresAction
-                    ? "bg-green-500 text-white hover:bg-green-600 shadow-sm"
-                    : "bg-blue-500 text-white hover:bg-blue-600 shadow-sm"
+                    ? "bg-green-500 text-white hover:bg-green-600 shadow-sm animate-[btn-pulse_2s_ease-in-out_infinite]"
+                    : "bg-blue-500 text-white hover:bg-blue-600 shadow-sm animate-[btn-pulse_2s_ease-in-out_infinite]"
                   : "bg-gray-200 text-gray-400 cursor-not-allowed"
               }`}
             >

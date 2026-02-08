@@ -21,240 +21,120 @@ export interface Contributor {
  * Add new versions here - they will be displayed in descending order
  */
 export const CHANGELOG: Record<string, ChangelogEntry[]> = {
-  "7": [
+  "3": [
     {
-      he: "סימניות עם הערות - שמור הלכות והוסף הערות אישיות",
-      en: "Bookmarks with notes - save halakhot and add personal annotations",
+      he: "10 ערכות נושא עם בוחר צבעים ויזואלי",
+      en: "10 color themes with visual theme picker",
     },
     {
-      he: 'סיכום יומי "מה למדתי" - כתוב מה למדת בסוף כל יום',
-      en: '"What I Learned" daily summary - write reflections at day\'s end',
+      he: "הגדרת רוחב תוכן - צר, בינוני או מלא",
+      en: "Content width setting - narrow, medium, or full",
     },
     {
-      he: "שיתוף התקדמות - שתף את הלימוד שלך עם hashtags",
-      en: "Share progress - share your learning with hashtags",
+      he: "תצוגת כרטיסים או רשימה",
+      en: "Card or list view toggle",
     },
     {
-      he: '"מה חדש" במדריך - משתמשים חוזרים רואים רק תכונות חדשות',
-      en: '"What\'s New" tutorial mode - returning users see only new features',
+      he: "פס מבטא צבעוני בכותרת לפי מצב - רגיל/אופליין/תאריך אחר",
+      en: "Colored header accent bar by status - normal/offline/other date",
     },
     {
-      he: "כפתור סימניות בכותרת עם מספרון",
-      en: "Bookmarks button in header with count badge",
+      he: "מדריך אינטראקטיבי עם נקודות התקדמות וניווט אחורה",
+      en: "Interactive tutorial with progress dots and back navigation",
     },
     {
-      he: "חיווי סימנייה על כרטיסי הלכות",
-      en: "Bookmark indicator on halakha cards",
-    },
-  ],
-  "6": [
-    {
-      he: "לימוד מרובה מסלולים - עקוב אחרי כמה מסלולים במקביל",
-      en: "Multi-path study - follow multiple study paths simultaneously",
+      he: "טופס משוב באפליקציה",
+      en: "In-app feedback form",
     },
     {
-      he: "לוח שנה עברי עם גלילה רציפה - תאריכים בגימטריא וניווט חודשי",
-      en: "Jewish calendar with continuous scroll - gematriya dates and month navigation",
-    },
-    {
-      he: "צבע רקע דינמי - משתנה בהתאם למצב (כחול/צהוב/אדום)",
-      en: "Dynamic background color - changes based on status (blue/amber/red)",
-    },
-    {
-      he: "כפתור קפיצה - כפתור צף לגלילה מהירה להלכה הבאה שלא הושלמה",
-      en: "Jump button - floating button to quickly scroll to next unread halakha",
-    },
-    {
-      he: "סרגל סטטיסטיקות משופר - ימי לימוד, התקדמות היום, והלכות להשלים",
-      en: "Enhanced stats bar - study days, today's progress, and backlog tracking",
+      he: "תצוגת נפח אחסון בהגדרות",
+      en: "Storage usage viewer in settings",
     },
   ],
-  "5": [
+  "2": [
     {
-      he: "ייצוא וייבוא נתונים - העבר התקדמות בין מכשירים",
-      en: "Export/import data - transfer progress between devices",
+      he: "סימניות עם הערות אישיות",
+      en: "Bookmarks with personal notes",
     },
     {
-      he: "גיבוי להורדה כקובץ JSON עם כל ההגדרות וההתקדמות",
-      en: "Download backup as JSON file with all settings and progress",
+      he: 'סיכום יומי "מה למדתי"',
+      en: '"What I Learned" daily summary',
     },
     {
-      he: "ייבוא מקובץ גיבוי - שחזר את הנתונים במכשיר חדש",
-      en: "Import from backup file - restore data on new device",
+      he: "שיתוף התקדמות",
+      en: "Share progress",
     },
     {
-      he: "מדריך אינטראקטיבי - הדרכה שלב-אחר-שלב עם כרטיסי דמו",
-      en: "Interactive tutorial - step-by-step guide with demo cards",
+      he: "ייצוא וייבוא נתונים בין מכשירים",
+      en: "Export and import data between devices",
     },
     {
-      he: "קישורים חיצוניים - צפה בהלכות בספריא ו-Chabad.org",
-      en: "External links - view halakhot on Sefaria and Chabad.org",
-    },
-    {
-      he: "לחיצה ארוכה על כרטיס לגישה מהירה לקישורים חיצוניים",
-      en: "Long-press any card for quick access to external links",
+      he: "קישורים חיצוניים לספריא ו-Chabad.org",
+      en: "External links to Sefaria and Chabad.org",
     },
     {
       he: "הסתרת פריטים שהושלמו - מיד, אחרי שעה, או אחרי 24 שעות",
-      en: "Hide completed items - immediately, after 1 hour, or after 24 hours",
+      en: "Hide completed items - immediately, after 1h, or after 24h",
+    },
+    {
+      he: "כפתור קפיצה להלכה הבאה שלא הושלמה",
+      en: "Jump button to next unread halakha",
+    },
+    {
+      he: "חיווי סימניות והערות בלוח השנה",
+      en: "Bookmark and note indicators in calendar",
     },
   ],
-  "4": [
+  "1": [
     {
-      he: "ארכיטקטורת אופליין-פירסט - האפליקציה עובדת ללא אינטרנט",
-      en: "Offline-first architecture - app works without internet",
-    },
-    {
-      he: "אחסון ב-IndexedDB - ללא מגבלת נפח",
-      en: "IndexedDB storage - unlimited capacity",
-    },
-    {
-      he: "הורדת תוכן מראש - הורד שבוע קדימה לשימוש אופליין",
-      en: "Content prefetch - download week ahead for offline use",
-    },
-    {
-      he: "סנכרון אוטומטי ברקע - תוכן מתעדכן בשקט",
-      en: "Automatic background sync - content updates silently",
-    },
-    {
-      he: "חיווי מצב אופליין - כותרת צהובה עם אייקון כשאין חיבור",
-      en: "Offline status indicator - amber header with icon when disconnected",
-    },
-    {
-      he: "תרגום מלא לאנגלית ועברית",
-      en: "Full Hebrew and English translations",
-    },
-    {
-      he: "לוח שנה עם חיווי התקדמות - וי ירוק להושלם, אחוז לחלקי",
-      en: "Calendar with progress indicators - checkmark for complete, percentage for partial",
-    },
-    {
-      he: "סינון לפי תאריך - לחיצה על תאריך בלוח מציגה רק אותו",
-      en: "Date filtering - clicking a calendar date shows only that day",
-    },
-  ],
-  "3": [
-    {
-      he: "מעבר ל-Next.js 16 ו-React 19",
-      en: "Migrated to Next.js 16 and React 19",
-    },
-    {
-      he: "תמיכה בספר המצוות - לימוד תרי״ג מצוות במחזור שנתי",
-      en: "Sefer HaMitzvot support - 613 commandments yearly cycle",
-    },
-    {
-      he: "שלושה מסלולי לימוד: 3 פרקים, פרק אחד, או ספר המצוות",
-      en: "Three study paths: 3 chapters, 1 chapter, or Sefer HaMitzvot",
+      he: "שלושה מסלולי לימוד: 3 פרקים, פרק אחד, וספר המצוות",
+      en: "Three study paths: 3 chapters, 1 chapter, and Sefer HaMitzvot",
     },
     {
       he: "תצוגה דו-לשונית: עברית, אנגלית, או שניהם",
       en: "Bilingual display: Hebrew, English, or both",
     },
     {
-      he: "אשף הגדרה ראשונית: שפה, מסלול, שפת טקסט, והעדפות",
-      en: "Setup wizard: language, path, text language, and preferences",
+      he: "החלקה שמאלה לסימון כל הקודמות, לחיצה כפולה לסימון",
+      en: "Swipe left to mark all previous, double-tap to mark",
     },
     {
-      he: "פריסה אוטומטית ל-Cloudflare Workers",
-      en: "Automated deployment to Cloudflare Workers",
-    },
-  ],
-  "2": [
-    {
-      he: "כפתור להתקנת האפליקציה למסך הבית",
-      en: "Install button to add app to home screen",
+      he: "לוח שנה עברי עם תאריכי גימטריא וחיווי התקדמות",
+      en: "Hebrew calendar with gematriya dates and progress indicators",
     },
     {
-      he: "אפשרות לבחור אם לסמן הלכות קודמות אוטומטית או ידנית",
-      en: "Option to auto-mark or manually mark previous halakhot",
+      he: "אופליין-פירסט - הורדת תוכן מראש וסנכרון ברקע",
+      en: "Offline-first - content prefetch and background sync",
     },
     {
-      he: "גלילה אוטומטית להלכה הבאה לאחר סימון",
-      en: "Auto-scroll to next halakha after marking",
-    },
-    {
-      he: "חיווי ויזואלי בהחלקה - משוב מיידי לפעולות סימון",
-      en: "Swipe visual feedback - immediate response to marking actions",
-    },
-    {
-      he: "שאלת סימון אוטומטי - האם לסמן גם הלכות קודמות",
-      en: "Auto-mark prompt - option to mark previous halakhot too",
-    },
-    {
-      he: "עדכון ממשק אוטומטי בשקיעה - היום מתחלף בלי רענון",
-      en: "Auto-update UI at sunset - day changes without refresh",
-    },
-  ],
-  "1": [
-    {
-      he: "בחירה בין פרק אחד ל-3 פרקים ליום",
-      en: "Choose between 1 or 3 chapters per day",
-    },
-    {
-      he: "לימוד עם המסלול הנוכחי או מהיום והלאה",
-      en: "Study with current cycle or start from today",
-    },
-    {
-      he: "תאריכי הלימוד מוצגים בעברית (לדוגמה: י״ז שבט)",
-      en: "Hebrew dates displayed (e.g., 17 Shevat)",
-    },
-    {
-      he: "זיהוי שקיעה מדויק על בסיס מיקום",
-      en: "Accurate sunset detection based on location",
-    },
-    {
-      he: "אייקון לוח השנה מאפשרת לצפות בכל תאריך ספציפי",
-      en: "Calendar icon to view any specific date",
-    },
-    {
-      he: "החלקה ימינה לסימון הלכה, שמאלה לביטול סימון או לחיצה כפולה",
-      en: "Swipe right to mark, left to unmark, or double-tap",
-    },
-    {
-      he: "סימון הלכה מתייחס גם לכל ההלכות הקודמות",
-      en: "Marking a halakha also marks all previous ones",
-    },
-    {
-      he: "מחיצות בין פרקים - מפריד ויזואלי בין פרק לפרק",
-      en: "Visual chapter dividers between sections",
-    },
-    {
-      he: "עדכון אוטומטי של כותרות - ההתקדמות מתעדכנת מיד",
-      en: "Auto-updating headers with progress",
+      he: "אשף הגדרה ראשונית",
+      en: "First-time setup wizard",
     },
   ],
   "0": [
     {
-      he: 'אפליקציה לניהול לימוד רמב"ם יומי (3 פרקים)',
-      en: "App for managing daily Rambam study (3 chapters)",
+      he: "הפרויקט המקורי של הרב שוקי - ההשראה לאפליקציה זו",
+      en: "Rabbi Shuki's original project - the inspiration for this app",
     },
     {
-      he: "תמיכה בעברית מלאה מימין לשמאל",
-      en: "Full Hebrew RTL support",
+      he: 'ניהול לימוד רמב"ם יומי עם תמיכה בעברית',
+      en: "Daily Rambam study tracking with Hebrew support",
     },
     {
-      he: "החלק הלכה ימינה כדי לסמן כהושלם",
-      en: "Swipe halakha right to mark as complete",
+      he: "החלקה לסימון הלכות כהושלמו",
+      en: "Swipe to mark halakhot as complete",
     },
     {
-      he: "כל המידע נשמר מקומית במכשיר",
-      en: "All data saved locally on device",
+      he: "זיהוי שקיעה לפי מיקום - היום העברי מתחלף אוטומטית",
+      en: "Location-based sunset detection - Jewish day updates automatically",
     },
     {
-      he: "התחלת יום עברי בשעה 18:00 שעון ישראל (שקיעה משוערת)",
-      en: "Jewish day starts at 18:00 Israel time (estimated sunset)",
+      he: "התקנה למסך הבית כאפליקציה",
+      en: "Install to home screen as an app",
     },
     {
-      he: "סטטיסטיקות - ימים שלמדתי, אחוז ההתקדמות של היום, הלכות להשלים",
-      en: "Statistics - days studied, today's progress, halakhot remaining",
-    },
-    {
-      he: "הגדרות - בחירת תאריך התחלה ואפשרות איפוס",
-      en: "Settings - start date selection and reset option",
-    },
-    {
-      he: "חיבור ל-API של ספריא לטעינת התוכן",
-      en: "Connected to Sefaria API for content loading",
+      he: "סרגל סטטיסטיקות",
+      en: "Statistics bar",
     },
   ],
 };
@@ -264,40 +144,21 @@ export const CHANGELOG: Record<string, ChangelogEntry[]> = {
  * Maps version number to contributor info
  */
 export const CONTRIBUTORS: Record<string, Contributor> = {
-  "7": {
-    name: { he: "מאיר", en: "Meir" },
-    avatar: "/contributors/meir.webp",
-  },
-  "6": {
-    name: { he: "מאיר", en: "Meir" },
-    avatar: "/contributors/meir.webp",
-  },
-  "5": {
-    name: { he: "מאיר", en: "Meir" },
-    avatar: "/contributors/meir.webp",
-  },
-  "4": {
-    name: { he: "מאיר", en: "Meir" },
-    avatar: "https://github.com/meirpro.png",
-  },
   "3": {
     name: { he: "מאיר", en: "Meir" },
-    avatar: "https://github.com/meirpro.png",
+    avatar: "/contributors/meir.webp",
   },
   "2": {
-    name: { he: "הרב שוקי", en: "Rabbi Shuki" },
-    avatar: "/contributors/rabbi.jpeg",
-    link: "https://wa.me/972586030770?text=אהבתי%20את%20האפליקציה%20של%20הרמבם",
+    name: { he: "מאיר", en: "Meir" },
+    avatar: "/contributors/meir.webp",
   },
   "1": {
-    name: { he: "הרב שוקי", en: "Rabbi Shuki" },
-    avatar: "/contributors/rabbi.jpeg",
-    link: "https://wa.me/972586030770?text=אהבתי%20את%20האפליקציה%20של%20הרמבם",
+    name: { he: "מאיר", en: "Meir" },
+    avatar: "/contributors/meir.webp",
   },
   "0": {
-    name: { he: "הרב שוקי", en: "Rabbi Shuki" },
+    name: { he: "הרב שוקי (השראה)", en: "Rabbi Shuki (Inspiration)" },
     avatar: "/contributors/rabbi.jpeg",
-    link: "https://wa.me/972586030770?text=אהבתי%20את%20האפליקציה%20של%20הרמבם",
   },
 };
 

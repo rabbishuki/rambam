@@ -148,13 +148,13 @@ export function InstallPrompt() {
     <div
       className={`
         fixed bottom-4 left-4 right-4 max-w-[500px] mx-auto
-        bg-white border-2 border-blue-600 rounded-xl p-4
+        bg-[var(--color-surface)] border-2 border-[var(--color-primary)] rounded-xl p-4
         shadow-xl z-[1000]
         animate-slide-up
       `}
     >
       <div className="flex flex-col gap-3">
-        <p className="text-gray-800 font-medium">
+        <p className="text-[var(--color-text-primary)] font-medium">
           💡 {t("messages.installPrompt")}
         </p>
         <div className="flex gap-2">

@@ -20,6 +20,7 @@ export interface StoredText {
   halakhot: HalakhaText[];
   chapterBreaks: number[];
   fetchedAt: string; // ISO timestamp
+  languagesLoaded?: { he: boolean; en: boolean }; // Which languages were fetched
 }
 
 export interface StoredCalendar {
@@ -106,6 +107,7 @@ export async function saveTextToDB(
   ref: string,
   halakhot: HalakhaText[],
   chapterBreaks: number[],
+  languagesLoaded?: { he: boolean; en: boolean },
 ): Promise<void> {
   const db = await openDatabase();
   const stored: StoredText = {
@@ -113,6 +115,7 @@ export async function saveTextToDB(
     halakhot,
     chapterBreaks,
     fetchedAt: new Date().toISOString(),
+    languagesLoaded,
   };
   await db.put(TEXTS_STORE, stored);
 }
@@ -311,19 +314,21 @@ export async function clearStaleData(maxAgeDays = 30): Promise<number> {
 }
 
 /**
- * Clean up completed, non-bookmarked days from IndexedDB
- * Removes calendar and text entries for old days that are fully completed
- * and have no bookmarks.
+ * Clean up old text cache from IndexedDB.
+ * Removes calendar and text entries for old days that are fully completed,
+ * have no bookmarks, and are not pinned for offline access.
+ * User data (completion records, day metadata) is NEVER deleted — only cached text.
  */
 export async function cleanupCompletedDays(
   done: Record<string, string>,
   bookmarks: Record<string, unknown>,
   activePaths: StudyPath[],
-  daysToKeep: number,
+  retentionDays: number,
+  pinnedDays?: Record<string, boolean>,
 ): Promise<number> {
   const db = await openDatabase();
   const threshold = new Date();
-  threshold.setDate(threshold.getDate() - daysToKeep);
+  threshold.setDate(threshold.getDate() - retentionDays);
   const thresholdStr = threshold.toISOString().slice(0, 10);
   let cleaned = 0;
 
@@ -338,6 +343,13 @@ export async function cleanupCompletedDays(
     // Only process active paths and old dates
     if (activePaths.includes(entry.path) && entry.date < thresholdStr) {
       const prefix = `${entry.path}:${entry.date}:`;
+      const pinKey = `${entry.path}:${entry.date}`;
+
+      // Skip pinned days
+      if (pinnedDays?.[pinKey]) {
+        cursor = await cursor.continue();
+        continue;
+      }
 
       // Check if fully completed
       const doneKeys = Object.keys(done).filter((k) => k.startsWith(prefix));
@@ -381,6 +393,18 @@ export async function getDatabaseStats(): Promise<{
   const textsCount = await db.count(TEXTS_STORE);
   const calendarCount = await db.count(CALENDAR_STORE);
   return { textsCount, calendarCount };
+}
+
+/**
+ * Clear all cached text and calendar data from IndexedDB.
+ * User data (completion records, bookmarks, settings) is not affected.
+ */
+export async function clearTextCache(): Promise<void> {
+  const db = await openDatabase();
+  const tx = db.transaction([TEXTS_STORE, CALENDAR_STORE], "readwrite");
+  await tx.objectStore(TEXTS_STORE).clear();
+  await tx.objectStore(CALENDAR_STORE).clear();
+  await tx.done;
 }
 
 /**

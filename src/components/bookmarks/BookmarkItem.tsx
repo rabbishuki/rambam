@@ -47,14 +47,16 @@ export function BookmarkItem({ bookmark }: BookmarkItemProps) {
     : pathLabels[bookmark.path]?.en;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-surface-border)] rounded-lg p-3 hover:bg-[var(--color-surface-hover)] transition-colors">
       <div className="flex items-start gap-3">
         <BookmarkIcon filled className="text-amber-500 flex-shrink-0 mt-1" />
 
         <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-gray-900 truncate">{displayTitle}</h4>
-          <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-            <span className="bg-gray-100 px-1.5 py-0.5 rounded">
+          <h4 className="font-medium text-[var(--color-text-primary)] truncate">
+            {displayTitle}
+          </h4>
+          <div className="flex items-center gap-2 mt-1 text-xs text-[var(--color-text-muted)]">
+            <span className="bg-[var(--color-surface-hover)] px-1.5 py-0.5 rounded">
               {pathLabel}
             </span>
             <span>•</span>
@@ -64,7 +66,7 @@ export function BookmarkItem({ bookmark }: BookmarkItemProps) {
           </div>
 
           {bookmark.note && (
-            <p className="mt-2 text-sm text-gray-600 bg-amber-50 p-2 rounded border-l-2 border-amber-300">
+            <p className="mt-2 text-sm text-[var(--color-text-secondary)] bg-amber-50 p-2 rounded border-l-2 border-amber-300">
               {bookmark.note}
             </p>
           )}
@@ -72,7 +74,7 @@ export function BookmarkItem({ bookmark }: BookmarkItemProps) {
 
         <button
           onClick={handleRemove}
-          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+          className="p-1.5 text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-50 rounded transition-colors"
           title={t("removeBookmark")}
         >
           <svg

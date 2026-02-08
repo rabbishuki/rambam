@@ -4,7 +4,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAppStore } from "@/stores/appStore";
-import { fetchHalakhot, fetchMultipleHalakhot } from "@/services/sefaria";
+import {
+  fetchHalakhot,
+  fetchMultipleHalakhot,
+  type LanguagesLoaded,
+} from "@/services/sefaria";
 import type { HalakhaText, StudyPath } from "@/types";
 
 interface UseHalakhaDataReturn {
@@ -13,6 +17,7 @@ interface UseHalakhaDataReturn {
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  languagesLoaded: LanguagesLoaded | null;
 }
 
 /**
@@ -37,6 +42,8 @@ export function useHalakhaData(
   const [chapterBreaks, setChapterBreaks] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [languagesLoaded, setLanguagesLoaded] =
+    useState<LanguagesLoaded | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!ref && (!refs || refs.length === 0)) return;
@@ -45,6 +52,13 @@ export function useHalakhaData(
     if (dayData?.texts && dayData.texts.length > 0) {
       setHalakhot(dayData.texts);
       setChapterBreaks(dayData.chapterBreaks || []);
+      // Derive languagesLoaded from cached Zustand data by inspecting actual content.
+      // Decision: We don't persist languagesLoaded in Zustand because it's only
+      // relevant for the UI warning banner — deriving it from data is cheap and
+      // avoids adding another field to the persisted store.
+      const hasHe = dayData.texts.some((h) => h.he && h.he.length > 0);
+      const hasEn = dayData.texts.some((h) => h.en && h.en.length > 0);
+      setLanguagesLoaded({ he: hasHe, en: hasEn });
       return;
     }
 
@@ -52,7 +66,11 @@ export function useHalakhaData(
     setError(null);
 
     try {
-      let result: { halakhot: HalakhaText[]; chapterBreaks: number[] };
+      let result: {
+        halakhot: HalakhaText[];
+        chapterBreaks: number[];
+        languagesLoaded: LanguagesLoaded;
+      };
 
       // Use multiple refs if provided (Sefer HaMitzvot), otherwise use single ref
       if (refs && refs.length > 0) {
@@ -63,6 +81,7 @@ export function useHalakhaData(
 
       setHalakhot(result.halakhot);
       setChapterBreaks(result.chapterBreaks);
+      setLanguagesLoaded(result.languagesLoaded);
 
       // Cache in store
       if (dayData) {
@@ -90,6 +109,7 @@ export function useHalakhaData(
     isLoading,
     error,
     refetch: fetchData,
+    languagesLoaded,
   };
 }
 

@@ -1,79 +1,118 @@
 /**
  * Hook for getting the current Jewish date
  * Accounts for sunset-based day boundaries
- * Automatically updates when sunset passes
+ *
+ * Auto-updates on:
+ *  - Sunset crossing (timer re-arms each day)
+ *  - Tab becoming visible after being hidden
+ *  - Civil midnight (triggers sunset data refresh for new day)
+ *  - Stale sunset data (date mismatch → refetch from Hebcal)
  */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useLocationStore } from "@/stores/locationStore";
-import { getJewishDate } from "@/lib/dates";
-import type { SunsetData } from "@/types";
+import { getJewishDate, getLocalDate } from "@/lib/dates";
+import { fetchSunset } from "@/services/hebcal";
 
 /**
- * Calculate milliseconds until sunset today
- * Returns null if sunset has already passed
+ * Calculate milliseconds until a given hour:minute today (local time).
+ * Returns null if that time has already passed.
  */
-function getMsUntilSunset(sunset: SunsetData): number | null {
+function getMsUntil(hour: number, minute: number): number | null {
   const now = new Date();
-  const israelTimeStr = now.toLocaleString("en-US", {
-    timeZone: "Asia/Jerusalem",
-  });
-  const israelTime = new Date(israelTimeStr);
+  const target = new Date(now);
+  target.setHours(hour, minute, 0, 0);
 
-  const currentHour = israelTime.getHours();
-  const currentMinute = israelTime.getMinutes();
-
-  // If already past sunset, return null
-  if (
-    currentHour > sunset.hour ||
-    (currentHour === sunset.hour && currentMinute >= sunset.minute)
-  ) {
-    return null;
-  }
-
-  // Calculate ms until sunset
-  const sunsetTime = new Date(israelTime);
-  sunsetTime.setHours(sunset.hour, sunset.minute, 0, 0);
-
-  return sunsetTime.getTime() - israelTime.getTime();
+  const diff = target.getTime() - now.getTime();
+  return diff > 0 ? diff : null;
 }
 
 /**
- * Returns the current Jewish date, accounting for sunset
- * The Jewish day starts at sunset, so after sunset we're in the "next" day
- * Automatically updates when sunset passes
+ * Calculate milliseconds until local midnight (00:00 of next civil day).
+ */
+function getMsUntilMidnight(): number {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setDate(midnight.getDate() + 1);
+  midnight.setHours(0, 0, 0, 0);
+  return midnight.getTime() - now.getTime();
+}
+
+/**
+ * Returns the current Jewish date, accounting for sunset.
+ * Automatically updates when sunset passes, tab becomes visible,
+ * or a new civil day starts (midnight).
  */
 export function useJewishDate(): string {
   const sunset = useLocationStore((state) => state.sunset);
+  const coords = useLocationStore((state) => state.coords);
+  const setSunset = useLocationStore((state) => state.setSunset);
 
-  // Track if we've passed sunset (triggers re-render)
-  const [sunsetPassed, setSunsetPassed] = useState(false);
+  // Tick counter: bumping this forces getJewishDate() to re-evaluate
+  const [tick, setTick] = useState(0);
+  const bump = useCallback(() => setTick((t) => t + 1), []);
 
-  // Set up timer to trigger update at sunset
+  // 1. Visibility listener — re-evaluate when tab becomes visible
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        bump();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [bump]);
+
+  // 2. Sunset timer — fires at sunset + 1s, then re-arms via tick dep
   useEffect(() => {
     if (!sunset) return;
 
-    const msUntilSunset = getMsUntilSunset(sunset);
+    const ms = getMsUntil(sunset.hour, sunset.minute);
+    if (ms === null) return; // Already past sunset
 
-    if (msUntilSunset === null) {
-      // Already past sunset, no timer needed today
-      return;
-    }
-
-    // Add a small buffer (1 second) to ensure we're past sunset
-    const timerId = setTimeout(() => {
-      setSunsetPassed(true);
-    }, msUntilSunset + 1000);
-
+    const timerId = setTimeout(bump, ms + 1000);
     return () => clearTimeout(timerId);
-  }, [sunset]);
+  }, [sunset, tick, bump]);
 
-  // Recalculate date when sunsetPassed changes
+  // 3. Midnight timer — fires at 00:00 + 1s, triggers tick for new civil day
+  useEffect(() => {
+    const ms = getMsUntilMidnight();
+    const timerId = setTimeout(bump, ms + 1000);
+    return () => clearTimeout(timerId);
+  }, [tick, bump]);
+
+  // 4. Stale sunset refresh — if sunset.date doesn't match today's civil date,
+  //    fetch fresh sunset data for the current day
+  useEffect(() => {
+    if (!sunset || !coords) return;
+
+    const today = getLocalDate();
+    if (sunset.date === today) return; // Still current
+
+    let cancelled = false;
+    fetchSunset(today, coords)
+      .then((fresh) => {
+        if (!cancelled) {
+          setSunset(fresh);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to refresh sunset data:", err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sunset, coords, setSunset, tick]);
+
+  // Recalculate date whenever tick or sunset changes
   const jewishDate = useMemo(() => {
-    // sunsetPassed is used to trigger recalculation
-    void sunsetPassed;
+    void tick; // used to trigger recalculation
     return getJewishDate(sunset);
-  }, [sunset, sunsetPassed]);
+  }, [sunset, tick]);
 
   return jewishDate;
 }

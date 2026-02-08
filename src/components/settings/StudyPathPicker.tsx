@@ -18,7 +18,7 @@ export function StudyPathPicker() {
     <div className="flex flex-col gap-3">
       {/* Compact toggle for Rambam chapter options */}
       <div>
-        <label className="text-xs text-gray-500 mb-1 block">
+        <label className="text-xs text-[var(--color-text-secondary)] mb-1 block">
           {t("chaptersPerDay")}
         </label>
         <Toggle
@@ -40,30 +40,34 @@ export function StudyPathPicker() {
           flex items-center justify-between p-3 rounded-lg border-2 transition-all text-sm
           ${
             studyPath === "mitzvot"
-              ? "border-blue-600 bg-blue-50"
-              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+              ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10"
+              : "border-[var(--color-surface-border)] hover:border-gray-300 hover:bg-gray-50"
           }
         `}
       >
         <div className="flex items-center gap-2">
           <div
             className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-              studyPath === "mitzvot" ? "border-blue-600" : "border-gray-300"
+              studyPath === "mitzvot"
+                ? "border-[var(--color-primary)]"
+                : "border-gray-300"
             }`}
           >
             {studyPath === "mitzvot" && (
-              <div className="w-2 h-2 rounded-full bg-blue-600" />
+              <div className="w-2 h-2 rounded-full bg-[var(--color-primary)]" />
             )}
           </div>
           <span
             className={
-              studyPath === "mitzvot" ? "text-blue-600 font-medium" : ""
+              studyPath === "mitzvot"
+                ? "text-[var(--color-primary)] font-medium"
+                : ""
             }
           >
             {t("mitzvot.label")}
           </span>
         </div>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-[var(--color-text-secondary)]">
           {t("mitzvot.description")}
         </span>
       </button>

@@ -1,6 +1,6 @@
 /**
  * Hook to track and manage offline status
- * Listens to browser online/offline events and updates the store
+ * Listens to browser online/offline events and verifies with a real ping
  */
 
 "use client";
@@ -11,6 +11,7 @@ import {
   isOffline as checkIsOffline,
   getOfflineReason,
 } from "@/stores/offlineStore";
+import { isReachable, invalidateCache } from "@/services/connectivity";
 
 export interface OfflineStatus {
   /** Whether the app is currently offline */
@@ -26,8 +27,9 @@ export interface OfflineStatus {
 }
 
 /**
- * Hook to monitor and respond to network connectivity changes
- * Automatically updates the offline store based on browser events
+ * Hook to monitor and respond to network connectivity changes.
+ * When the browser fires "online", we verify with a real ping to Sefaria
+ * before telling the rest of the app we're online.
  */
 export function useOfflineStatus(): OfflineStatus {
   const state = useOfflineStore((s) => s.state);
@@ -37,20 +39,29 @@ export function useOfflineStatus(): OfflineStatus {
   const setSystemOffline = useOfflineStore((s) => s.setSystemOffline);
 
   useEffect(() => {
-    // Set initial state based on navigator.onLine
-    if (typeof navigator !== "undefined") {
-      if (navigator.onLine) {
+    // Verify initial connectivity with a real ping
+    isReachable().then((reachable) => {
+      if (reachable) {
         setOnline();
       } else {
         setSystemOffline();
       }
-    }
+    });
 
     const handleOnline = () => {
-      setOnline();
+      // Browser says online — verify with a real ping before trusting it
+      invalidateCache();
+      isReachable().then((reachable) => {
+        if (reachable) {
+          setOnline();
+        }
+        // If ping fails, stay in current state (don't flip to online)
+      });
     };
 
     const handleOffline = () => {
+      // Browser says offline — this is a reliable signal, trust it
+      invalidateCache();
       setSystemOffline();
     };
 

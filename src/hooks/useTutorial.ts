@@ -102,6 +102,10 @@ export interface UseTutorialReturn {
   isWhatsNewMode: boolean; // True if showing only new stages to returning user
   hasNewStages: boolean; // True if there are stages user hasn't seen
 
+  // Navigation
+  canGoBack: boolean; // True when currentStageIndex > 0
+  goBack: () => void; // Navigate to previous stage
+
   // Actions
   reportAction: (action: TutorialAction) => void;
   advanceStage: () => void;
@@ -158,22 +162,27 @@ export function useTutorial(): UseTutorialReturn {
   }, [knownStageIds]);
 
   // Determine tutorial mode
-  const hasAnyProgress = knownStageIds.size > 0;
   const hasNewStages = uncompletedStages.length > 0;
 
   // Fresh user: no progress → show full tutorial
   // Returning user with new stages → show "What's New"
   // All stages known → no tutorial needed
   const showTutorial = hasNewStages;
-  const isWhatsNewMode = hasAnyProgress && hasNewStages;
 
-  // Get the stages to show (all for new users, only new for returning users)
+  // "What's New" only when user previously SKIPPED the tutorial and new stages exist.
+  // During normal first-run, stages get completed (not skipped), so this stays false.
+  // This prevents stagesToShow from shrinking mid-tutorial.
+  const isWhatsNewMode = progress.skippedStageIds.length > 0 && hasNewStages;
+
+  // Get the stages to show
+  // "What's New" mode (returning user with new stages): only show new stages
+  // Active tutorial (fresh user or restarted): always show ALL stages
   const stagesToShow = useMemo(() => {
-    if (!hasAnyProgress) {
-      return TUTORIAL_STAGES; // Fresh user - show all
+    if (isWhatsNewMode) {
+      return uncompletedStages; // Returning user - show only new stages
     }
-    return uncompletedStages; // Returning user - show only new stages
-  }, [hasAnyProgress, uncompletedStages]);
+    return TUTORIAL_STAGES; // Fresh/restarted user - always show all
+  }, [isWhatsNewMode, uncompletedStages]);
 
   // Current stage index within the stages being shown
   const currentStageIndex = useMemo(() => {
@@ -308,34 +317,38 @@ export function useTutorial(): UseTutorialReturn {
     (index: number) => {
       if (index < 0 || index >= stagesToShow.length) return;
 
-      // Mark all stages before this index as completed
-      const stagesToComplete = stagesToShow.slice(0, index).map((s) => s.id);
+      // Stages before this index should be completed; target + after should not
+      const stageIdsToKeep = new Set(
+        stagesToShow.slice(0, index).map((s) => s.id),
+      );
+      const stageIdsToRemove = new Set(
+        stagesToShow.slice(index).map((s) => s.id),
+      );
 
-      // Remove the target stage from completed (so it shows as current)
-      const targetStageId = stagesToShow[index]?.id;
-
-      setProgress((prev) => ({
-        ...prev,
-        completedStageIds: prev.completedStageIds.filter(
-          (id) =>
-            id !== targetStageId ||
-            !stagesToShow.slice(index).some((s) => s.id === id),
-        ),
-        actionsThisStage: 0,
-      }));
-
-      // Add the stages to complete
-      if (stagesToComplete.length > 0) {
-        setProgress((prev) => ({
+      setProgress((prev) => {
+        // Keep completions that aren't in the current stagesToShow (from other runs),
+        // plus explicitly keep stages before the target
+        const filtered = prev.completedStageIds.filter(
+          (id) => !stageIdsToRemove.has(id),
+        );
+        return {
           ...prev,
-          completedStageIds: [
-            ...new Set([...prev.completedStageIds, ...stagesToComplete]),
-          ],
-        }));
-      }
+          completedStageIds: [...new Set([...filtered, ...stageIdsToKeep])],
+          actionsThisStage: 0,
+        };
+      });
     },
     [stagesToShow, setProgress],
   );
+
+  // Navigation: can go back if not on the first stage
+  const canGoBack = currentStageIndex > 0;
+
+  const goBack = useCallback(() => {
+    if (canGoBack) {
+      goToStage(currentStageIndex - 1);
+    }
+  }, [canGoBack, goToStage, currentStageIndex]);
 
   // Check if user has skipped any stages (for settings button visibility)
   const hasSkipped = progress.skippedStageIds.length > 0;
@@ -353,6 +366,10 @@ export function useTutorial(): UseTutorialReturn {
     // "What's New" mode
     isWhatsNewMode,
     hasNewStages,
+
+    // Navigation
+    canGoBack,
+    goBack,
 
     // Actions
     reportAction,

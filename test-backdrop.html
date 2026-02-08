@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backdrop Filter Playground</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #f5f5f4; }
+
+  /* Scrollable colored content behind the sticky bars */
+  .scroll-content {
+    padding: 16px;
+    padding-top: 200px; /* space for sticky bars */
+  }
+  .content-block {
+    padding: 20px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #1c1917;
+  }
+
+  /* Sticky glass bar */
+  .glass-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 16px 20px;
+    border-bottom: 3px solid #0d9488;
+    transition: all 0.3s ease;
+    /* default: opaque */
+    background: rgba(255, 255, 255, 0.75);
+  }
+  .glass-bar h1 { font-size: 20px; font-weight: 700; color: #1c1917; }
+
+  .glass-bar-2 {
+    position: sticky;
+    top: 58px;
+    z-index: 99;
+    padding: 12px 20px;
+    border-bottom: 2px solid #e7e5e4;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.75);
+    font-size: 14px;
+    color: #44403c;
+  }
+
+  /* Controls panel */
+  .controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: #1e293b;
+    color: #f1f5f9;
+    padding: 16px 20px;
+    max-height: 55vh;
+    overflow-y: auto;
+    border-top: 2px solid #334155;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+  }
+  .controls h2 { font-size: 14px; font-weight: 600; color: #94a3b8; margin: 12px 0 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .controls h2:first-child { margin-top: 0; }
+
+  .control-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+  }
+  .control-row label {
+    min-width: 130px;
+    font-size: 13px;
+    color: #cbd5e1;
+  }
+  .control-row input[type="range"] {
+    flex: 1;
+    accent-color: #38bdf8;
+  }
+  .control-row .value {
+    min-width: 60px;
+    text-align: right;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    color: #38bdf8;
+  }
+
+  .presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0;
+  }
+  .preset-btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid #475569;
+    background: #334155;
+    color: #e2e8f0;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .preset-btn:hover { background: #475569; }
+  .preset-btn.active { background: #0d9488; border-color: #0d9488; color: white; }
+
+  .css-output {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: #0f172a;
+    border-radius: 8px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    color: #7dd3fc;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .toggle-controls {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 300;
+    background: #1e293b;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    display: none;
+  }
+
+  .section-divider {
+    border-top: 1px solid #334155;
+    margin: 8px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- Sticky header bar -->
+<div class="glass-bar" id="glassBar">
+  <h1>Daily Rambam — Header</h1>
+</div>
+
+<!-- Sticky stats bar -->
+<div class="glass-bar-2" id="glassBar2">
+  Completed: 12/45 &nbsp;&bull;&nbsp; Today: 67% &nbsp;&bull;&nbsp; Backlog: 3
+</div>
+
+<!-- Scrollable content with colorful blocks -->
+<div class="scroll-content" id="scrollContent">
+</div>
+
+<!-- Controls -->
+<div class="controls" id="controlsPanel">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+    <span style="font-size:16px; font-weight:700;">Backdrop Playground</span>
+    <button onclick="document.getElementById('controlsPanel').style.display='none'; document.getElementById('showBtn').style.display='block'" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:18px">✕</button>
+  </div>
+
+  <h2>Background Opacity</h2>
+  <div class="control-row">
+    <label>BG Alpha</label>
+    <input type="range" min="0" max="100" value="75" id="bgAlpha" oninput="update()">
+    <span class="value" id="bgAlphaVal">0.75</span>
+  </div>
+
+  <h2>Blur</h2>
+  <div class="control-row">
+    <label>backdrop-blur</label>
+    <input type="range" min="0" max="64" value="0" id="blur" oninput="update()">
+    <span class="value" id="blurVal">0px</span>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0 142px;">
+    <button class="preset-btn" onclick="setSlider('blur',0)">none</button>
+    <button class="preset-btn" onclick="setSlider('blur',4)">sm (4)</button>
+    <button class="preset-btn" onclick="setSlider('blur',8)">base (8)</button>
+    <button class="preset-btn" onclick="setSlider('blur',12)">md (12)</button>
+    <button class="preset-btn" onclick="setSlider('blur',16)">lg (16)</button>
+    <button class="preset-btn" onclick="setSlider('blur',24)">xl (24)</button>
+    <button class="preset-btn" onclick="setSlider('blur',40)">2xl (40)</button>
+    <button class="preset-btn" onclick="setSlider('blur',64)">3xl (64)</button>
+  </div>
+
+  <h2>Saturate</h2>
+  <div class="control-row">
+    <label>backdrop-saturate</label>
+    <input type="range" min="0" max="300" value="100" id="saturate" oninput="update()">
+    <span class="value" id="saturateVal">100%</span>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0 142px;">
+    <button class="preset-btn" onclick="setSlider('saturate',50)">50%</button>
+    <button class="preset-btn" onclick="setSlider('saturate',100)">100%</button>
+    <button class="preset-btn" onclick="setSlider('saturate',150)">150%</button>
+    <button class="preset-btn" onclick="setSlider('saturate',180)">180%</button>
+    <button class="preset-btn" onclick="setSlider('saturate',200)">200%</button>
+  </div>
+
+  <h2>Brightness</h2>
+  <div class="control-row">
+    <label>backdrop-brightness</label>
+    <input type="range" min="50" max="200" value="100" id="brightness" oninput="update()">
+    <span class="value" id="brightnessVal">100%</span>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 0 142px;">
+    <button class="preset-btn" onclick="setSlider('brightness',90)">90%</button>
+    <button class="preset-btn" onclick="setSlider('brightness',100)">100%</button>
+    <button class="preset-btn" onclick="setSlider('brightness',105)">105%</button>
+    <button class="preset-btn" onclick="setSlider('brightness',110)">110%</button>
+    <button class="preset-btn" onclick="setSlider('brightness',125)">125%</button>
+  </div>
+
+  <h2>Contrast</h2>
+  <div class="control-row">
+    <label>backdrop-contrast</label>
+    <input type="range" min="50" max="200" value="100" id="contrast" oninput="update()">
+    <span class="value" id="contrastVal">100%</span>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <h2>Recommended Presets</h2>
+  <div class="presets" id="presetBtns">
+    <button class="preset-btn" onclick="applyPreset('subtle')">Subtle Frost</button>
+    <button class="preset-btn" onclick="applyPreset('medium')">Medium Glass</button>
+    <button class="preset-btn" onclick="applyPreset('strong')">Strong Glass</button>
+    <button class="preset-btn" onclick="applyPreset('vibrancy')">macOS Vibrancy</button>
+    <button class="preset-btn" onclick="applyPreset('frosted')">Frosted Panel</button>
+    <button class="preset-btn" onclick="applyPreset('clean')">Clean Minimal</button>
+    <button class="preset-btn" onclick="applyPreset('none')">Off (opaque)</button>
+  </div>
+
+  <h2>Generated CSS</h2>
+  <div class="css-output" id="cssOutput"></div>
+
+  <h2>Tailwind Classes</h2>
+  <div class="css-output" id="twOutput"></div>
+</div>
+
+<button class="toggle-controls" id="showBtn" onclick="document.getElementById('controlsPanel').style.display='';this.style.display='none'">Show Controls</button>
+
+<script>
+// Generate colorful scroll content
+const colors = [
+  { bg: '#fef3c7', text: 'Hilkhot De\'ot — Laws of Personality Development. The Rambam teaches that a person should always strive for the middle path in all character traits.' },
+  { bg: '#dbeafe', text: 'Hilkhot Talmud Torah — Laws of Torah Study. One is obligated to set fixed times for Torah study, both day and night.' },
+  { bg: '#fce7f3', text: 'Hilkhot Avodah Zarah — Laws Concerning Idolatry. These laws detail the prohibitions against idol worship and related practices.' },
+  { bg: '#d1fae5', text: 'Hilkhot Teshuvah — Laws of Repentance. The Rambam outlines the process of repentance: recognition, regret, and resolve.' },
+  { bg: '#ede9fe', text: 'Hilkhot Shabbat — Laws of Shabbat. Thirty-nine categories of work are prohibited on the Sabbath day.' },
+  { bg: '#fed7aa', text: 'Hilkhot Berakhot — Laws of Blessings. Before enjoying anything in this world, one must recite the appropriate blessing.' },
+  { bg: '#e0f2fe', text: 'Hilkhot Tefillah — Laws of Prayer. It is a positive commandment to pray every day.' },
+  { bg: '#fecdd3', text: 'Hilkhot Tzedakah — Laws of Charity. We are commanded to give charity according to our means.' },
+  { bg: '#ccfbf1', text: 'Hilkhot Mezuzah — Laws of Mezuzah. One affixes a mezuzah to every doorway of one\'s house.' },
+  { bg: '#e8d5b7', text: 'Hilkhot Yesodei HaTorah — Foundations of the Torah. The foundation of all foundations is to know that there is a First Being.' },
+  { bg: '#c7d2fe', text: 'Hilkhot Ma\'akhalot Asurot — Laws of Forbidden Foods. These laws enumerate the dietary restrictions incumbent upon every Jew.' },
+  { bg: '#fbcfe8', text: 'Hilkhot Ishut — Laws of Marriage. Marriage is effected through kiddushin, consecration of the woman to the man.' },
+  { bg: '#bbf7d0', text: 'Hilkhot Rotze\'ach — Laws Concerning Murder. The preservation of life is of paramount importance in Jewish law.' },
+  { bg: '#fef08a', text: 'Hilkhot Sanhedrin — Laws of the Courts. Courts of three, twenty-three, and seventy-one judges were established.' },
+  { bg: '#bae6fd', text: 'Hilkhot Melakhim — Laws of Kings. In the messianic era, the king will restore the Davidic dynasty and rebuild the Temple.' },
+];
+
+const scrollEl = document.getElementById('scrollContent');
+for (let i = 0; i < 30; i++) {
+  const c = colors[i % colors.length];
+  const div = document.createElement('div');
+  div.className = 'content-block';
+  div.style.background = c.bg;
+  div.textContent = c.text;
+  scrollEl.appendChild(div);
+}
+
+const presets = {
+  none:     { blur: 0,  saturate: 100, brightness: 100, contrast: 100, bgAlpha: 100 },
+  subtle:   { blur: 8,  saturate: 120, brightness: 105, contrast: 100, bgAlpha: 70 },
+  medium:   { blur: 16, saturate: 130, brightness: 105, contrast: 100, bgAlpha: 60 },
+  strong:   { blur: 24, saturate: 140, brightness: 108, contrast: 100, bgAlpha: 50 },
+  vibrancy: { blur: 20, saturate: 180, brightness: 110, contrast: 100, bgAlpha: 55 },
+  frosted:  { blur: 12, saturate: 100, brightness: 100, contrast: 100, bgAlpha: 80 },
+  clean:    { blur: 4,  saturate: 110, brightness: 102, contrast: 100, bgAlpha: 85 },
+};
+
+function setSlider(id, val) {
+  document.getElementById(id).value = val;
+  update();
+}
+
+function applyPreset(name) {
+  const p = presets[name];
+  document.getElementById('blur').value = p.blur;
+  document.getElementById('saturate').value = p.saturate;
+  document.getElementById('brightness').value = p.brightness;
+  document.getElementById('contrast').value = p.contrast;
+  document.getElementById('bgAlpha').value = p.bgAlpha;
+  update();
+
+  // Highlight active preset
+  document.querySelectorAll('#presetBtns .preset-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(name) ||
+      (name === 'none' && btn.textContent.includes('Off')));
+  });
+}
+
+function update() {
+  const blur = parseInt(document.getElementById('blur').value);
+  const saturate = parseInt(document.getElementById('saturate').value);
+  const brightness = parseInt(document.getElementById('brightness').value);
+  const contrast = parseInt(document.getElementById('contrast').value);
+  const bgAlpha = parseInt(document.getElementById('bgAlpha').value);
+
+  document.getElementById('blurVal').textContent = blur + 'px';
+  document.getElementById('saturateVal').textContent = saturate + '%';
+  document.getElementById('brightnessVal').textContent = brightness + '%';
+  document.getElementById('contrastVal').textContent = contrast + '%';
+  document.getElementById('bgAlphaVal').textContent = (bgAlpha / 100).toFixed(2);
+
+  // Build filter string
+  const filters = [];
+  if (blur > 0) filters.push(`blur(${blur}px)`);
+  if (saturate !== 100) filters.push(`saturate(${saturate}%)`);
+  if (brightness !== 100) filters.push(`brightness(${brightness}%)`);
+  if (contrast !== 100) filters.push(`contrast(${contrast}%)`);
+
+  const filterStr = filters.length > 0 ? filters.join(' ') : 'none';
+  const bgColor = `rgba(255, 255, 255, ${bgAlpha / 100})`;
+
+  // Apply to both bars
+  [document.getElementById('glassBar'), document.getElementById('glassBar2')].forEach(el => {
+    el.style.backdropFilter = filterStr;
+    el.style.webkitBackdropFilter = filterStr;
+    el.style.background = bgColor;
+  });
+
+  // Generate CSS output
+  let css = `background: ${bgColor};`;
+  if (filters.length > 0) {
+    css += `\nbackdrop-filter: ${filterStr};`;
+    css += `\n-webkit-backdrop-filter: ${filterStr};`;
+  }
+  document.getElementById('cssOutput').textContent = css;
+
+  // Generate Tailwind classes
+  const twClasses = [];
+  twClasses.push(`bg-[rgba(255,255,255,${(bgAlpha/100).toFixed(2)})]`);
+  // Map blur to closest Tailwind class
+  const blurMap = { 0:'none', 4:'sm', 8:'', 12:'md', 16:'lg', 24:'xl', 40:'2xl', 64:'3xl' };
+  if (blur > 0) {
+    const closest = Object.keys(blurMap).map(Number).reduce((a,b) => Math.abs(b-blur) < Math.abs(a-blur) ? b : a);
+    const suffix = blurMap[closest];
+    twClasses.push(suffix === '' ? 'backdrop-blur' : suffix === 'none' ? '' : `backdrop-blur-${suffix}`);
+  }
+  if (saturate !== 100) {
+    twClasses.push(`backdrop-saturate-[${saturate}%]`);
+  }
+  if (brightness !== 100) {
+    twClasses.push(`backdrop-brightness-[${brightness}%]`);
+  }
+  if (contrast !== 100) {
+    twClasses.push(`backdrop-contrast-[${contrast}%]`);
+  }
+  document.getElementById('twOutput').textContent = twClasses.filter(Boolean).join(' ');
+
+  // Clear active preset highlight
+  document.querySelectorAll('#presetBtns .preset-btn').forEach(btn => btn.classList.remove('active'));
+}
+
+// Start with "Subtle Frost" preset
+applyPreset('subtle');
+</script>
+</body>
+</html>
