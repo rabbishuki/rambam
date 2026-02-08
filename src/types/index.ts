@@ -8,6 +8,8 @@ export type ThemeId =
   | "lavender"
   | "rose"
   | "sage"
+  | "amber"
+  | "coral"
   | "dark"
   | "light"
   | "oled";

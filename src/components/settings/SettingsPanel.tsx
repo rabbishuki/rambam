@@ -501,48 +501,23 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     after24h: t("hideCompletedOptions.after24h"),
   };
 
-  // Theme picker data
-  const themeOptions: { id: ThemeId; label: string; color: string }[] = [
-    {
-      id: "teal",
-      label: isHebrew ? "טורקיז" : "Teal",
-      color: THEMES.teal.colors["--color-primary"],
-    },
-    {
-      id: "sky",
-      label: isHebrew ? "שמיים" : "Sky",
-      color: THEMES.sky.colors["--color-primary"],
-    },
+  // Theme picker data — swatch is the representative color for the circle
+  // Row 1: warm→cool, Row 2: greens + neutrals
+  const themeOptions: { id: ThemeId; label: string; swatch: string }[] = [
+    { id: "coral", label: isHebrew ? "אלמוג" : "Coral", swatch: "#ea580c" },
+    { id: "amber", label: isHebrew ? "ענבר" : "Amber", swatch: "#d97706" },
+    { id: "rose", label: isHebrew ? "ורוד" : "Rose", swatch: "#e11d48" },
     {
       id: "lavender",
       label: isHebrew ? "לבנדר" : "Lavender",
-      color: THEMES.lavender.colors["--color-primary"],
+      swatch: "#7c3aed",
     },
-    {
-      id: "rose",
-      label: isHebrew ? "ורוד" : "Rose",
-      color: THEMES.rose.colors["--color-primary"],
-    },
-    {
-      id: "sage",
-      label: isHebrew ? "מרווה" : "Sage",
-      color: THEMES.sage.colors["--color-primary"],
-    },
-    {
-      id: "dark",
-      label: isHebrew ? "כהה" : "Dark",
-      color: THEMES.dark.colors["--color-primary"],
-    },
-    {
-      id: "light",
-      label: isHebrew ? "בהיר" : "Light",
-      color: THEMES.light.colors["--color-primary"],
-    },
-    {
-      id: "oled",
-      label: "OLED",
-      color: THEMES.oled.colors["--color-primary"],
-    },
+    { id: "sky", label: isHebrew ? "שמיים" : "Sky", swatch: "#0284c7" },
+    { id: "teal", label: isHebrew ? "טורקיז" : "Teal", swatch: "#0d9488" },
+    { id: "sage", label: isHebrew ? "מרווה" : "Sage", swatch: "#16a34a" },
+    { id: "light", label: isHebrew ? "בהיר" : "Light", swatch: "#ffffff" },
+    { id: "dark", label: isHebrew ? "כהה" : "Dark", swatch: "#1e3a5f" },
+    { id: "oled", label: "OLED", swatch: "#000000" },
   ];
 
   // Latest changelog version
@@ -591,31 +566,36 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               onClick={() => toggleExpand("theme")}
             >
               {expanded === "theme" && (
-                <div className="flex flex-wrap gap-3 justify-center pt-1">
-                  {themeOptions.map((opt) => (
-                    <button
-                      key={opt.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTheme(opt.id);
-                      }}
-                      className="flex flex-col items-center gap-1"
-                    >
-                      <div
-                        className={`w-8 h-8 rounded-full border-2 transition-all ${
-                          theme === opt.id
-                            ? "ring-2 ring-offset-2 ring-[var(--color-primary)] border-[var(--color-primary)]"
-                            : "border-[var(--color-surface-border)]"
-                        }`}
-                        style={{ backgroundColor: opt.color }}
-                      />
-                      <span
-                        className={`text-[10px] ${theme === opt.id ? "text-[var(--color-primary)] font-semibold" : "text-[var(--color-text-muted)]"}`}
+                <div className="grid grid-cols-5 gap-3 pt-1">
+                  {themeOptions.map((opt) => {
+                    const isSelected = theme === opt.id;
+                    const needsBorder =
+                      opt.swatch === "#ffffff" || opt.swatch === "#000000";
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTheme(opt.id);
+                        }}
+                        className="flex flex-col items-center gap-1.5"
                       >
-                        {opt.label}
-                      </span>
-                    </button>
-                  ))}
+                        <div
+                          className={`w-9 h-9 rounded-full transition-all ${
+                            isSelected
+                              ? "ring-2 ring-offset-2 ring-[var(--color-primary)] scale-110"
+                              : ""
+                          } ${needsBorder ? "border border-[var(--color-surface-border)]" : ""}`}
+                          style={{ backgroundColor: opt.swatch }}
+                        />
+                        <span
+                          className={`text-[10px] leading-none ${isSelected ? "text-[var(--color-primary)] font-semibold" : "text-[var(--color-text-muted)]"}`}
+                        >
+                          {opt.label}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </SettingRow>
