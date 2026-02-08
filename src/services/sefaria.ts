@@ -31,6 +31,81 @@ const SEFARIA_API = "https://www.sefaria.org";
 const TEXT_STALE_DAYS = 7; // Texts rarely change
 const CALENDAR_STALE_DAYS = 1; // Calendar data should be refreshed daily
 
+/**
+ * Sections where the study schedule truncates content that Sefaria actually has.
+ * Maps section name → the schedule's known wrong end number.
+ *
+ * When a ref's range ends at the truncated number, we fetch the full section and
+ * slice from the range start. This handles both rambam3 (full section in one day)
+ * and rambam1's last chunk (e.g., "246-365" gets extended to include 366-370).
+ *
+ * Add new entries here as users report missing content.
+ * See docs/flat-list-sections.md for full details.
+ */
+const TRUNCATED_SECTIONS: Record<string, number> = {
+  "Negative Mitzvot": 365, // Sefaria has 370 — afterword about rabbinic commandments
+};
+
+interface NormalizedRef {
+  /** The ref to use for fetching/caching (range stripped for truncated sections) */
+  fetchRef: string;
+  /** 0-based start index to slice results from (undefined = no slicing) */
+  sliceStart?: number;
+}
+
+/**
+ * Detect refs where the schedule truncates content and return fetch + slice info.
+ *
+ * "Negative Mitzvot 1-365"   → fetchRef: stripped, sliceStart: 0   (all 370)
+ * "Negative Mitzvot 246-365" → fetchRef: stripped, sliceStart: 245 (246-370)
+ * "Negative Mitzvot 1-122"   → fetchRef: unchanged                (end ≠ 365)
+ */
+function normalizeIntroRef(ref: string): NormalizedRef {
+  for (const [section, truncatedEnd] of Object.entries(TRUNCATED_SECTIONS)) {
+    if (!ref.includes(section)) continue;
+
+    const rangeMatch = ref.match(/\s+(\d+)(?:-(\d+))?$/);
+    if (!rangeMatch) continue;
+
+    const start = parseInt(rangeMatch[1], 10);
+    const end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : start;
+
+    if (end === truncatedEnd) {
+      return {
+        fetchRef: ref.replace(/\s+\d+(?:-\d+)?$/, ""),
+        sliceStart: start - 1,
+      };
+    }
+  }
+  return { fetchRef: ref };
+}
+
+/**
+ * Slice halakhot to a sub-range when we fetched a full section but only need
+ * part of it (e.g., rambam1 "Negative Mitzvot 246-365" from the full 370).
+ * No-op when sliceStart is undefined (non-truncated refs) or 0 (full section).
+ */
+function sliceHalakhot(
+  result: {
+    halakhot: HalakhaText[];
+    chapterBreaks: number[];
+    languagesLoaded: LanguagesLoaded;
+  },
+  sliceStart?: number,
+): {
+  halakhot: HalakhaText[];
+  chapterBreaks: number[];
+  languagesLoaded: LanguagesLoaded;
+} {
+  if (sliceStart === undefined || sliceStart === 0) return result;
+  return {
+    halakhot: result.halakhot.slice(sliceStart),
+    // chapterBreaks are irrelevant for flat-list sections (always empty)
+    chapterBreaks: [],
+    languagesLoaded: result.languagesLoaded,
+  };
+}
+
 interface SefariaCalendarItem {
   title: {
     en: string;
@@ -319,18 +394,24 @@ export async function fetchHalakhot(ref: string): Promise<{
   chapterBreaks: number[];
   languagesLoaded: LanguagesLoaded;
 }> {
+  // Detect truncated sections — may need to fetch full content and slice
+  const { fetchRef, sliceStart } = normalizeIntroRef(ref);
+
   // 1. Check IndexedDB first (instant, ~5ms)
-  const cached = await getTextFromDB(ref);
+  const cached = await getTextFromDB(fetchRef);
   if (cached && !isStale(cached.fetchedAt, TEXT_STALE_DAYS)) {
     // Derive languagesLoaded from cached data when the stored field is missing
     // (backward compat: entries saved before languagesLoaded was added)
     const hasHe = cached.halakhot.some((h) => h.he && h.he.length > 0);
     const hasEn = cached.halakhot.some((h) => h.en && h.en.length > 0);
-    return {
-      halakhot: cached.halakhot,
-      chapterBreaks: cached.chapterBreaks,
-      languagesLoaded: cached.languagesLoaded ?? { he: hasHe, en: hasEn },
-    };
+    return sliceHalakhot(
+      {
+        halakhot: cached.halakhot,
+        chapterBreaks: cached.chapterBreaks,
+        languagesLoaded: cached.languagesLoaded ?? { he: hasHe, en: hasEn },
+      },
+      sliceStart,
+    );
   }
 
   // 2. If offline, return stale cache if available
@@ -338,27 +419,31 @@ export async function fetchHalakhot(ref: string): Promise<{
     if (cached) {
       const hasHe = cached.halakhot.some((h) => h.he && h.he.length > 0);
       const hasEn = cached.halakhot.some((h) => h.en && h.en.length > 0);
-      return {
-        halakhot: cached.halakhot,
-        chapterBreaks: cached.chapterBreaks,
-        languagesLoaded: cached.languagesLoaded ?? { he: hasHe, en: hasEn },
-      };
+      return sliceHalakhot(
+        {
+          halakhot: cached.halakhot,
+          chapterBreaks: cached.chapterBreaks,
+          languagesLoaded: cached.languagesLoaded ?? { he: hasHe, en: hasEn },
+        },
+        sliceStart,
+      );
     }
     throw new Error("Offline and no cached text available");
   }
 
-  // 3. Fetch from network
-  const result = await fetchHalakhotFromNetwork(ref);
+  // 3. Fetch from network (using normalized ref for full content)
+  const result = await fetchHalakhotFromNetwork(fetchRef);
 
-  // 4. Save to IndexedDB (fire and forget)
+  // 4. Save full content to IndexedDB (before slicing — cache the complete section)
   saveTextToDB(
-    ref,
+    fetchRef,
     result.halakhot,
     result.chapterBreaks,
     result.languagesLoaded,
   ).catch((err) => console.error("Failed to cache text:", err));
 
-  return result;
+  // 5. Slice to the requested range (e.g., items 246+ for rambam1's last chunk)
+  return sliceHalakhot(result, sliceStart);
 }
 
 /**
@@ -435,17 +520,18 @@ export async function fetchMultipleHalakhot(refs: string[]): Promise<{
  * Returns true if successfully fetched and cached
  */
 export async function prefetchText(ref: string): Promise<boolean> {
+  const { fetchRef } = normalizeIntroRef(ref);
   try {
     // Check if already cached and fresh
-    const cached = await getTextFromDB(ref);
+    const cached = await getTextFromDB(fetchRef);
     if (cached && !isStale(cached.fetchedAt, TEXT_STALE_DAYS)) {
       return true; // Already have fresh data
     }
 
     // Fetch and cache
-    const result = await fetchHalakhotFromNetwork(ref);
+    const result = await fetchHalakhotFromNetwork(fetchRef);
     await saveTextToDB(
-      ref,
+      fetchRef,
       result.halakhot,
       result.chapterBreaks,
       result.languagesLoaded,
@@ -461,7 +547,7 @@ export async function prefetchText(ref: string): Promise<boolean> {
  * Check if text is available in cache (for UI indicators)
  */
 export async function isTextCached(ref: string): Promise<boolean> {
-  const cached = await getTextFromDB(ref);
+  const cached = await getTextFromDB(normalizeIntroRef(ref).fetchRef);
   return cached !== undefined;
 }
 
@@ -469,6 +555,6 @@ export async function isTextCached(ref: string): Promise<boolean> {
  * Check if text is cached and fresh
  */
 export async function isTextCachedAndFresh(ref: string): Promise<boolean> {
-  const cached = await getTextFromDB(ref);
+  const cached = await getTextFromDB(normalizeIntroRef(ref).fetchRef);
   return cached !== undefined && !isStale(cached.fetchedAt, TEXT_STALE_DAYS);
 }
