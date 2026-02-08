@@ -56,10 +56,14 @@ export function PrefetchButton() {
       d.setDate(d.getDate() + i);
       const dateStr = formatDateString(d);
 
-      // A date is "downloaded" if ALL active paths have data for it
-      const downloaded = activePaths.every(
-        (path) => days[path]?.[dateStr] != null,
-      );
+      // A date is "downloaded" if ALL active paths have text content for it.
+      // Checking texts (not just metadata) ensures pills turn gray after cache clear,
+      // since partialize strips texts from localStorage and clearTextsFromDays strips
+      // them from memory.
+      const downloaded = activePaths.every((path) => {
+        const dayData = days[path]?.[dateStr];
+        return dayData?.texts != null && dayData.texts.length > 0;
+      });
 
       // Day of week
       const dow = isHebrew ? HE_DOW[d.getDay()] : EN_DOW[d.getDay()];

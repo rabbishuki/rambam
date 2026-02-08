@@ -109,6 +109,7 @@ interface AppStore extends AppSettings {
 
   // Cleanup actions
   cleanupOldDays: (daysToKeep: number) => void;
+  clearTextsFromDays: () => void;
 
   // Helper to get current path's start date
   getCurrentStartDate: () => string;
@@ -423,6 +424,32 @@ export const useAppStore = create<AppStore>()(
       // Only IndexedDB text cache is cleaned — see cleanupCompletedDays() in database.ts.
       // Deleting days/done entries caused completed days to reappear as uncompleted.
       cleanupOldDays: () => {},
+
+      // Strip texts/chapterBreaks from all days in memory.
+      // Called after clearTextCache() so PrefetchButton reflects actual availability.
+      // Metadata (he, en, ref, count, dates) is preserved — only text content is cleared.
+      clearTextsFromDays: () =>
+        set((state) => {
+          const cleaned: typeof state.days = {
+            rambam3: {},
+            rambam1: {},
+            mitzvot: {},
+          };
+          for (const path of Object.keys(state.days) as StudyPath[]) {
+            for (const [date, dayData] of Object.entries(
+              state.days[path] || {},
+            )) {
+              if (dayData) {
+                cleaned[path][date] = {
+                  ...dayData,
+                  texts: undefined,
+                  chapterBreaks: undefined,
+                };
+              }
+            }
+          }
+          return { days: cleaned };
+        }),
 
       // Helpers
       getCurrentStartDate: () => {

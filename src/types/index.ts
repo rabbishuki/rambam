@@ -171,7 +171,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   hideCompleted: "after24h", // Default: hide completed after 24 hours
   daysAhead: 3, // Prefetch 3 days ahead by default
   theme: "teal",
-  headerStyle: "minimal",
+  headerStyle: "glass",
   cardStyle: "list",
   contentWidth: "full",
   startDates: {

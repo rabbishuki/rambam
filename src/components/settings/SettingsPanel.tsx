@@ -421,6 +421,8 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     if (confirmed) {
       try {
         await clearTextCache();
+        // Also strip texts from Zustand so PrefetchButton reflects cache state
+        useAppStore.getState().clearTextsFromDays();
         await loadStorageStats();
       } catch {
         // Silent failure

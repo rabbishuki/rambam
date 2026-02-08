@@ -148,7 +148,7 @@ export function HalakhaInfoSheet({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/30 z-[998]"
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[998]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -160,7 +160,7 @@ export function HalakhaInfoSheet({
         aria-modal="true"
       >
         <div
-          className="bg-[var(--color-surface)] rounded-xl shadow-2xl border-2 border-[var(--color-primary)]/30 overflow-hidden w-full max-w-md pointer-events-auto"
+          className="bg-[var(--color-surface-glass)] backdrop-blur-xl rounded-xl shadow-2xl border-2 border-[var(--color-primary)]/30 overflow-hidden w-full max-w-md pointer-events-auto"
           dir={isHebrew ? "rtl" : "ltr"}
         >
           {/* Header */}
@@ -310,7 +310,7 @@ export function HalakhaInfoSheet({
     <>
       {/* Translation backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 z-[1000]"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1000]"
         onClick={() => setShowTranslation(false)}
         aria-hidden="true"
       />
@@ -322,7 +322,7 @@ export function HalakhaInfoSheet({
         aria-modal="true"
       >
         <div
-          className="bg-[var(--color-surface)] rounded-xl shadow-2xl border-2 border-indigo-200 overflow-hidden w-full max-w-md pointer-events-auto"
+          className="bg-[var(--color-surface-glass)] backdrop-blur-xl rounded-xl shadow-2xl border-2 border-indigo-200 overflow-hidden w-full max-w-md pointer-events-auto"
           dir={textLanguage === "hebrew" ? "ltr" : "rtl"}
         >
           {/* Header */}

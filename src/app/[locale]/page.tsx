@@ -637,8 +637,29 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Show welcome when location not set up yet */}
-        {!hasCompletedSetup && (
+        {/* Pre-hydration: show neutral loading so returning users don't see "Welcome" flash */}
+        {!hasHydrated && (
+          <div className="text-center py-16">
+            <div className="text-6xl mb-6 animate-pulse">📚</div>
+            <div className="flex justify-center gap-1.5">
+              <div
+                className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-bounce"
+                style={{ animationDelay: "0ms" }}
+              />
+              <div
+                className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-bounce"
+                style={{ animationDelay: "150ms" }}
+              />
+              <div
+                className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-bounce"
+                style={{ animationDelay: "300ms" }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Show welcome when location not set up yet (only after hydration confirms it) */}
+        {hasHydrated && !hasCompletedSetup && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📚</div>
             <div className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
@@ -670,8 +691,22 @@ export default function HomePage() {
             <div className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
               {t("messages.loading")}
             </div>
-            <div className="text-[var(--color-text-muted)]">
+            <div className="text-[var(--color-text-muted)] mb-4">
               {t("welcome.loading")}
+            </div>
+            <div className="flex justify-center gap-1.5">
+              <div
+                className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-bounce"
+                style={{ animationDelay: "0ms" }}
+              />
+              <div
+                className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-bounce"
+                style={{ animationDelay: "150ms" }}
+              />
+              <div
+                className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-bounce"
+                style={{ animationDelay: "300ms" }}
+              />
             </div>
           </div>
         )}
@@ -742,7 +777,7 @@ export default function HomePage() {
           <div
             className={`mt-4 ${
               showHidden
-                ? "sticky z-20 mb-4 bg-[var(--color-surface)] shadow-md border border-[var(--color-surface-border)] rounded-xl"
+                ? "sticky z-20 mb-4 bg-[var(--color-surface-glass)] backdrop-blur-xl shadow-md border border-[var(--color-surface-border)] rounded-xl"
                 : ""
             }`}
             style={
