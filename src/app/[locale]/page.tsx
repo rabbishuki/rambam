@@ -424,20 +424,14 @@ export default function HomePage() {
     return { displayData: result, hiddenCount: hidden };
   }, [viewingDate, sortedDates, activePaths, days, shouldHideDay]);
 
-  // Handle calendar button click
+  // Handle calendar button click — always opens the calendar
   const handleCalendarClick = useCallback(() => {
     // Block calendar during entire tutorial (nothing to show - would be empty)
-    if (isTutorialActive && !viewingDate) {
+    if (isTutorialActive) {
       return;
     }
-    if (viewingDate) {
-      // Return to normal view (today)
-      setViewingDate(null);
-    } else {
-      // Open calendar modal
-      setCalendarOpen(true);
-    }
-  }, [viewingDate, isTutorialActive]);
+    setCalendarOpen(true);
+  }, [isTutorialActive]);
 
   // Handle settings button click
   const handleSettingsClick = useCallback(() => {

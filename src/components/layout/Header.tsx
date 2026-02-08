@@ -76,9 +76,8 @@ export function Header({
       className="bg-[var(--color-surface)] border-b-[3px] sticky top-0 z-[101] transition-colors duration-300"
       style={{
         borderBottomColor: "var(--header-accent)",
-        borderTopWidth:
-          isViewingOtherDate && !forceDefaultColor ? "3px" : "0px",
-        borderTopColor: "var(--color-status-other-date)",
+        borderTopWidth: "3px",
+        borderTopColor: "var(--header-accent)",
       }}
     >
       <div className="px-4 py-3 flex items-center justify-between">
