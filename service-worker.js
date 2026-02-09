@@ -1,49 +1,22 @@
-const SEFARIA_API = 'https://www.sefaria.org';
-let CACHE_NAME = 'rambam-v2'; // Will be updated dynamically
+importScripts('./changelog.js');
 
-// Get the latest version from changelog.js
-async function getLatestVersion() {
-  try {
-    const response = await fetch('./changelog.js');
-    const text = await response.text();
-    // Extract version keys from CHANGELOG object
-    const matches = text.match(/const CHANGELOG = \{([^}]+)}/s);
-    if (matches) {
-      const content = matches[1];
-      // Match quoted strings and numbers as keys (e.g., "2.1", 1, 0)
-      const versionMatches = content.match(/["']?(\d+(?:\.\d+)?)["']?\s*:/g);
-      if (versionMatches) {
-        const versions = versionMatches.map(m => {
-          const v = m.match(/(\d+(?:\.\d+)?)/)[1];
-          return parseFloat(v);
-        });
-        const latestVersion = Math.max(...versions);
-        // Convert back to string to preserve decimal format
-        return latestVersion.toString().replace('.', '_');
-      }
-    }
-  } catch (error) {
-    console.error('Failed to get version from changelog:', error);
-  }
-  return '2_1'; // fallback version
-}
+const SEFARIA_API = 'https://www.sefaria.org';
+const LATEST_VERSION = Math.max(...Object.keys(CHANGELOG).map(Number));
+let CACHE_NAME = `rambam-v${LATEST_VERSION}`;
 
 // Install: cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    getLatestVersion().then((version) => {
-      CACHE_NAME = `rambam-v${version}`;
-      return caches.open(CACHE_NAME).then((cache) => {
-        return cache.addAll([
-          './',
-          './index.html',
-          './changelog.js',
-          './logo.png',
-          './icon-192.png',
-          './icon-512.png',
-          './manifest.json'
-        ]);
-      });
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll([
+        './',
+        './index.html',
+        './changelog.js',
+        './logo.png',
+        './icon-192.png',
+        './icon-512.png',
+        './manifest.json'
+      ]);
     })
   );
   self.skipWaiting();
