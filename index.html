@@ -249,7 +249,15 @@
       padding: 1rem;
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0;
+    }
+
+    .cards-container > * {
+      margin-bottom: 0.75rem;
+    }
+
+    .cards-container > *:last-child {
+      margin-bottom: 0;
     }
 
     .loading {
@@ -291,8 +299,53 @@
     }
 
     .halakha-card.completed .halakha-text {
-      text-decoration: line-through;
       color: #6b7280;
+    }
+
+    /* Hide completed items when setting is enabled */
+    .hide-completed .halakha-card.completed {
+      max-height: 0;
+      opacity: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+    }
+
+    .hide-completed .day-group.completed {
+      max-height: 0;
+      opacity: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+    }
+
+    .completed-counter {
+      text-align: center;
+      background: #f3f4f6;
+      color: #6b7280;
+      font-size: 0.875rem;
+      border-radius: 8px;
+      font-weight: 500;
+      display: none;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .hide-completed .completed-counter {
+      display: block;
+    }
+
+    .hide-completed .completed-counter:empty,
+    .hide-completed .completed-counter[data-count="0"] {
+      display: none;
+    }
+
+    .completed-days-counter {
+      margin-bottom: 1rem;
     }
 
     .halakha-text {
@@ -544,6 +597,20 @@
 
     .btn-primary:active {
       background: #bfdbfe;
+    }
+
+    .btn-warning {
+      background: #fffbeb;
+      border-color: #d97706;
+      color: #d97706;
+    }
+
+    .btn-warning:hover {
+      background: #fef3c7;
+    }
+
+    .btn-warning:active {
+      background: #fde68a;
     }
 
     .btn-danger {
@@ -932,6 +999,14 @@
         </div>
 
         <div class="settings-section">
+          <label class="settings-label">הלכות וימים שהושלמו</label>
+          <div class="toggle-container">
+            <button class="toggle-btn hide-completed active" data-value="true">הסתר</button>
+            <button class="toggle-btn hide-completed" data-value="false">הצג</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
           <label class="settings-label">מיקום ושקיעה</label>
           <div style="display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 8px; font-size: 0.875rem; color: #374151;">
             <div id="locationText">מיקום: תל אביב (ברירת מחדל)</div>
@@ -941,8 +1016,11 @@
         </div>
 
         <div class="settings-section">
-          <p class="settings-warning">⚠️ פעולה זו תמחק את כל ההתקדמות שלך</p>
-          <button class="btn btn-danger" id="resetBtn">איפוס מלא</button>
+          <label class="settings-label">מחק נתונים</label>
+          <div class="date-row">
+            <button class="btn btn-warning" id="refreshDataBtn">שמור התקדמות</button>
+            <button class="btn btn-danger" id="resetBtn">מחק התקדמות</button>
+          </div>
         </div>
 
         <div class="settings-section">
@@ -1050,6 +1128,15 @@
 
     function setAutoMark(enabled) {
       localStorage.setItem('rambam_auto_mark', enabled.toString());
+    }
+
+    function getHideCompleted() {
+      const stored = localStorage.getItem('rambam_hide_completed');
+      return stored === null ? true : stored === 'true'; // Default to true (hide completed)
+    }
+
+    function setHideCompleted(enabled) {
+      localStorage.setItem('rambam_hide_completed', enabled.toString());
     }
 
     function isFirstVisit() {
@@ -1189,15 +1276,20 @@
       const chapterCount = getChapterCount();
       const searchTitle = chapterCount === 3 ? 'Daily Rambam (3 Chapters)' : 'Daily Rambam';
 
-      const rambam = data.calendar_items.find(item =>
+      // Filter ALL matching Rambam entries (there can be multiple)
+      const rambamEntries = data.calendar_items.filter(item =>
         item.title.en === searchTitle
       );
 
-      if (!rambam) throw new Error('No Rambam entry found');
+      if (rambamEntries.length === 0) throw new Error('No Rambam entry found');
+
+      // Combine all entries
+      const combinedHe = rambamEntries.map(entry => entry.displayValue.he).join(', ');
+      const combinedRef = rambamEntries.map(entry => entry.ref).join(';');
 
       return {
-        he: rambam.displayValue.he,
-        ref: rambam.ref
+        he: combinedHe,
+        ref: combinedRef
       };
     }
 
@@ -1206,32 +1298,54 @@
         return textCache.get(ref);
       }
 
-      const url = `${SEFARIA_API}/api/v3/texts/${ref}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Text API failed: ${res.status}`);
-      const data = await res.json();
+      // Handle multiple references separated by semicolons
+      const refs = ref.split(';');
+      let chapters = []; // Array of arrays: [[halakha1, halakha2...], [halakha1, halakha2...]]
+      let chapterNumbers = []; // [10, 1, 2]
 
-      let halakhot = [];
-      let chapterBoundaries = []; // Array of indices where new chapters start
-      const text = data.versions[0].text;
+      // Fetch all references in parallel
+      const results = await Promise.all(
+        refs.map(async (singleRef) => {
+          const url = `${SEFARIA_API}/api/v3/texts/${singleRef.trim()}`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`Text API failed: ${res.status}`);
+          return res.json();
+        })
+      );
 
-      if (data.isSpanning) {
-        // Track chapter boundaries while flattening
-        let currentIndex = 0;
-        text.forEach((chapter, chapterNum) => {
-          if (chapterNum > 0) {
-            chapterBoundaries.push(currentIndex);
-          }
-          halakhot.push(...chapter);
-          currentIndex += chapter.length;
-        });
-      } else if (Array.isArray(text)) {
-        halakhot = text;
-      } else {
-        halakhot = [text];
+      // Helper to extract chapter number from reference
+      function extractChapterNumber(singleRef) {
+        // Examples:
+        // "Mishneh Torah, Foundations of the Torah 10" -> 10
+        // "Mishneh Torah, Human Dispositions 1-2" -> 1
+        const match = singleRef.match(/[.\s](\d+)(?:-\d+)?$/);
+        return match ? parseInt(match[1]) : 1;
       }
 
-      const result = { halakhot, chapterBoundaries };
+      // Combine all results
+      results.forEach((data, resultIndex) => {
+        const text = data.versions[0].text;
+        const singleRef = refs[resultIndex].trim();
+        const startChapterNum = extractChapterNumber(singleRef);
+
+        if (data.isSpanning) {
+          // Multiple chapters in this reference (e.g., "1-2")
+          text.forEach((chapter, chapterIndex) => {
+            chapters.push(chapter);
+            chapterNumbers.push(startChapterNum + chapterIndex);
+          });
+        } else if (Array.isArray(text)) {
+          // Single chapter
+          chapters.push(text);
+          chapterNumbers.push(startChapterNum);
+        } else {
+          // Single halakha
+          chapters.push([text]);
+          chapterNumbers.push(startChapterNum);
+        }
+      });
+
+      const result = { chapters, chapterNumbers };
       textCache.set(ref, result);
       return result;
     }
@@ -1343,9 +1457,11 @@
         const results = await Promise.allSettled(
           missing.map(async (date) => {
             const { he, ref } = await fetchCalendar(date);
-            const { halakhot } = await fetchText(ref);
+            const { chapters } = await fetchText(ref);
             const heDate = await fetchHebrewDate(date);
-            return { date, he, ref, count: halakhot.length, heDate };
+            // Count total halakhot across all chapters
+            const count = chapters.reduce((sum, chapter) => sum + chapter.length, 0);
+            return { date, he, ref, count, heDate };
           })
         );
 
@@ -1517,7 +1633,9 @@
 
       mainContent.innerHTML = '';
 
-      allDates.forEach(date => {
+      let consecutiveCompletedCount = 0;
+
+      allDates.forEach((date) => {
         const dayData = days[date];
         if (!dayData) return;
 
@@ -1526,7 +1644,18 @@
         ).length;
         const isComplete = doneCount >= dayData.count;
 
-        // Don't skip any days - show all days (complete or incomplete)
+        if (isComplete) {
+          consecutiveCompletedCount++;
+        } else {
+          // If we have accumulated completed days, show the counter
+          if (consecutiveCompletedCount > 0) {
+            const daysCounter = document.createElement('div');
+            daysCounter.className = 'completed-counter completed-days-counter';
+            daysCounter.textContent = `✓ ${consecutiveCompletedCount} ימים הושלמו`;
+            mainContent.appendChild(daysCounter);
+            consecutiveCompletedCount = 0;
+          }
+        }
 
         const details = document.createElement('details');
         details.className = `day-group ${isComplete ? 'completed' : ''}`;
@@ -1559,6 +1688,14 @@
 
         mainContent.appendChild(details);
       });
+
+      // Add final counter if we ended with completed days
+      if (consecutiveCompletedCount > 0) {
+        const daysCounter = document.createElement('div');
+        daysCounter.className = 'completed-counter completed-days-counter';
+        daysCounter.textContent = `✓ ${consecutiveCompletedCount} ימים הושלמו`;
+        mainContent.appendChild(daysCounter);
+      }
 
       // Attach listeners to details elements
       document.querySelectorAll('details').forEach(details => {
@@ -1625,51 +1762,113 @@
       container.innerHTML = '<div class="loading">טוען הלכות...</div>';
 
       try {
-        const { halakhot, chapterBoundaries } = await fetchText(ref);
+        const { chapters, chapterNumbers } = await fetchText(ref);
         const done = getDone();
 
         container.innerHTML = '';
 
-        // Add first chapter label if there are multiple chapters
-        if (chapterBoundaries.length > 0) {
-          const firstDivider = document.createElement('div');
-          firstDivider.className = 'chapter-divider';
-          firstDivider.innerHTML = `<span>פרק א</span>`;
-          container.appendChild(firstDivider);
-        }
+        let globalIndex = 0; // For tracking completion across all chapters
+        const showChapterDividers = chapters.length > 1; // Only show dividers if multiple chapters
 
-        let currentChapter = 1;
-        halakhot.forEach((text, index) => {
-          // Add chapter divider if this is a chapter boundary
-          if (chapterBoundaries.includes(index)) {
-            currentChapter++;
+        chapters.forEach((chapter, chapterIdx) => {
+          // Add chapter divider only if there are multiple chapters
+          if (showChapterDividers) {
             const divider = document.createElement('div');
             divider.className = 'chapter-divider';
-            divider.innerHTML = `<span>פרק ${toHebrewLetter(currentChapter)}</span>`;
+            divider.innerHTML = `<span>פרק ${toHebrewLetter(chapterNumbers[chapterIdx])}</span>`;
             container.appendChild(divider);
           }
 
-          const isDone = done[`${date}:${index}`];
+          // Count completed in this chapter
+          let chapterCompletedCount = 0;
+          chapter.forEach((text, halakhaIdx) => {
+            if (done[`${date}:${globalIndex + halakhaIdx}`]) {
+              chapterCompletedCount++;
+            }
+          });
 
-          const card = document.createElement('div');
-          card.className = 'halakha-card';
-          if (isDone) {
-            card.classList.add('completed');
+          // Always add completed counter placeholder for this chapter (even if 0)
+          const counter = document.createElement('div');
+          counter.className = 'completed-counter';
+          counter.dataset.chapterIndex = chapterIdx;
+          if (chapterCompletedCount > 0) {
+            counter.textContent = `✓ ${chapterCompletedCount} הלכות הושלמו`;
+            counter.dataset.count = chapterCompletedCount;
+          } else {
+            counter.textContent = '';
+            counter.dataset.count = 0;
           }
-          card.dataset.date = date;
-          card.dataset.index = index;
+          container.appendChild(counter);
 
-          const hebrewNum = toHebrewLetter(index + 1);
-          card.innerHTML = `
-            <div class="halakha-text"><b>${hebrewNum}.</b> ${text}</div>
-          `;
+          // Add halakhot for this chapter
+          chapter.forEach((text, halakhaIdx) => {
+            const isDone = done[`${date}:${globalIndex}`];
 
-          attachSwipeHandler(card);
-          container.appendChild(card);
+            const card = document.createElement('div');
+            card.className = 'halakha-card';
+            if (isDone) {
+              card.classList.add('completed');
+            }
+            card.dataset.date = date;
+            card.dataset.index = globalIndex;
+
+            // Number within chapter (1, 2, 3...)
+            const hebrewNum = toHebrewLetter(halakhaIdx + 1);
+            card.innerHTML = `
+              <div class="halakha-text"><b>${hebrewNum}.</b> ${text}</div>
+            `;
+
+            attachSwipeHandler(card);
+            container.appendChild(card);
+
+            globalIndex++;
+          });
         });
       } catch (error) {
         console.error('Failed to load halakhot:', error);
         container.innerHTML = '<div class="loading">❌ שגיאה בטעינה</div>';
+      }
+    }
+
+    // ============================================================================
+    // Completed Counter Helper
+    // ============================================================================
+    function updateCompletedCounter(card) {
+      // Find the counter for this chapter (search backwards to chapter divider or start)
+      let counter = null;
+      let element = card.previousElementSibling;
+
+      // Search backwards for the counter
+      while (element) {
+        if (element.classList.contains('completed-counter')) {
+          counter = element;
+          break;
+        }
+        element = element.previousElementSibling;
+      }
+
+      if (!counter) return;
+
+      // Count completed halakhot from counter to next chapter divider/counter
+      let count = 0;
+      element = counter.nextElementSibling;
+      while (element) {
+        if (element.classList.contains('chapter-divider')) {
+          break;
+        }
+        if (element.classList.contains('halakha-card') && element.classList.contains('completed')) {
+          count++;
+        }
+        element = element.nextElementSibling;
+      }
+
+      // Update counter text
+      if (count > 0) {
+        counter.textContent = `✓ ${count} הלכות הושלמו`;
+        counter.dataset.count = count;
+      } else {
+        counter.textContent = '';
+        counter.dataset.count = 0;
       }
     }
 
@@ -1735,6 +1934,19 @@
         markDone(date, index);
         renderStats();
         updateDayHeader(date);
+        updateCompletedCounter(card);
+
+        // Check if day is now complete and re-render if needed
+        const days = getDays();
+        const dayData = days[date];
+        if (dayData) {
+          const done = getDone();
+          const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
+          if (doneCount >= dayData.count) {
+            // Day just became complete, re-render to update completed days grouping
+            renderDays();
+          }
+        }
 
         // Scroll to next card
         let nextCard = card.nextElementSibling;
@@ -1755,6 +1967,18 @@
         saveDone(done);
         renderStats();
         updateDayHeader(date);
+        updateCompletedCounter(card);
+
+        // Check if day is no longer complete and re-render if needed
+        const days = getDays();
+        const dayData = days[date];
+        if (dayData) {
+          const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
+          if (doneCount < dayData.count) {
+            // Day is no longer complete, re-render to update completed days grouping
+            renderDays();
+          }
+        }
 
         // Scroll to current card
         scrollToCard(card);
@@ -1911,7 +2135,8 @@
     document.getElementById('overlay').addEventListener('click', closeSettings);
 
     // Chapter count toggle
-    document.querySelectorAll('.toggle-btn:not(.auto-mark)').forEach(btn => {
+    const chapterToggleBtns = document.querySelectorAll('.settings-section:nth-child(2) .toggle-btn');
+    chapterToggleBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const value = parseInt(btn.dataset.value);
         if (value !== getChapterCount()) {
@@ -1926,7 +2151,7 @@
 
     // Set initial active toggle button
     const currentChapterCount = getChapterCount();
-    document.querySelectorAll('.toggle-btn:not(.auto-mark)').forEach(btn => {
+    chapterToggleBtns.forEach(btn => {
       const value = parseInt(btn.dataset.value);
       if (value === currentChapterCount) {
         btn.classList.add('active');
@@ -1952,6 +2177,46 @@
           b.classList.toggle('active', b.dataset.value === btn.dataset.value);
         });
       });
+    });
+
+    // Hide completed toggle
+    const currentHideCompleted = getHideCompleted();
+    const container = document.querySelector('.container');
+
+    // Apply initial state
+    if (currentHideCompleted) {
+      container.classList.add('hide-completed');
+    }
+
+    document.querySelectorAll('.toggle-btn.hide-completed').forEach(btn => {
+      const value = btn.dataset.value === 'true';
+      if (value === currentHideCompleted) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+
+      btn.addEventListener('click', () => {
+        const newValue = btn.dataset.value === 'true';
+        setHideCompleted(newValue);
+        document.querySelectorAll('.toggle-btn.hide-completed').forEach(b => {
+          b.classList.toggle('active', b.dataset.value === btn.dataset.value);
+        });
+
+        // Toggle the class on container
+        if (newValue) {
+          container.classList.add('hide-completed');
+        } else {
+          container.classList.remove('hide-completed');
+        }
+      });
+    });
+
+    document.getElementById('refreshDataBtn').addEventListener('click', () => {
+      if (confirm('האם לרענן את הנתונים? ההתקדמות שלך תישמר.')) {
+        localStorage.removeItem('rambam_days');
+        location.reload();
+      }
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
@@ -2083,9 +2348,11 @@
 
         try {
           const { he, ref } = await fetchCalendar(date);
-          const { halakhot } = await fetchText(ref);
+          const { chapters } = await fetchText(ref);
           const heDate = await fetchHebrewDate(date);
-          dayData = { he, ref, count: halakhot.length, heDate };
+          // Count total halakhot across all chapters
+          const count = chapters.reduce((sum, chapter) => sum + chapter.length, 0);
+          dayData = { he, ref, count, heDate };
 
           // Cache it
           days[date] = dayData;
