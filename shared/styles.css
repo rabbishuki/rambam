@@ -131,8 +131,7 @@
     .scroll-banner {
       position: fixed;
       top: 72px;
-      left: 0;
-      right: 0;
+      width: clamp(200px, 100vw, 640px);
       background: #667eea;
       color: white;
       padding: 1rem;
