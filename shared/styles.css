@@ -124,7 +124,7 @@
     /* Main Content */
     main {
       padding: 1rem;
-      padding-bottom: 2rem;
+      padding-bottom: 8rem; /* Extra padding for fixed dedications at bottom */
     }
 
     .day-group {
@@ -821,10 +821,21 @@
       font-weight: 500;
     }
 
+    /* Fixed dedications on main page */
+    .dedication {
+      position: fixed;
+      bottom: 2rem;
+      width: 640px;
+      z-index: 900;
+      margin: 0 auto;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    }
+
     .yechi {
       background: #667eea;
       color: white;
       padding: 0.5rem;
+      bottom: 0;
     }
 
     .changelog-version {

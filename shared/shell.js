@@ -53,6 +53,14 @@ function initShell() {
     </div>
 
     <main id="mainContent"></main>
+
+    <div class="dedication">
+      הלימוד לעילוי נשמת <b>ישראל שאול</b> בן <b>משה אהרון</b> ו<b>מלכה</b> בת <b>נתן</b>
+    </div>
+
+    <div class="dedication yechi">
+      יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד
+    </div>
   `;
 
   // Add overlay
@@ -136,10 +144,6 @@ function initShell() {
         </div>
       </div>
 
-      <div class="settings-dedication">
-        לעילוי נשמת <b>ישראל שאול</b> בן <b>משה אהרון</b> ו<b>מלכה</b> בת <b>נתן</b>
-      </div>
-
       <footer class="footer">
         <div class="footer-content">
           <div class="footer-badge">
@@ -159,10 +163,6 @@ function initShell() {
           <span>הגה והכווין.</span>
         </div>
       </footer>
-
-      <div class="settings-dedication yechi">
-        יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד
-      </div>
     </div>
   `;
   document.body.appendChild(settingsPanel);
