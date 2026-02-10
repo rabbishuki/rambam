@@ -13,22 +13,39 @@ function setStart(dateStr) {
   localStorage.setItem('rambam_start', dateStr);
 }
 
+// Generic setting utilities
+function getSetting(key, defaultValue = true) {
+  const stored = localStorage.getItem(key);
+  return stored === null ? defaultValue : stored === 'true';
+}
+
+function setSetting(key, value) {
+  localStorage.setItem(key, value.toString());
+}
+
+// Specific setting functions (backward compatibility wrappers)
 function getAutoMark() {
-  const stored = localStorage.getItem('rambam_auto_mark');
-  return stored === null ? true : stored === 'true';
+  return getSetting('rambam_auto_mark', true);
 }
 
 function setAutoMark(enabled) {
-  localStorage.setItem('rambam_auto_mark', enabled.toString());
+  setSetting('rambam_auto_mark', enabled);
 }
 
 function getHideCompleted() {
-  const stored = localStorage.getItem('rambam_hide_completed');
-  return stored === null ? true : stored === 'true'; // Default to true (hide completed)
+  return getSetting('rambam_hide_completed', true);
 }
 
 function setHideCompleted(enabled) {
-  localStorage.setItem('rambam_hide_completed', enabled.toString());
+  setSetting('rambam_hide_completed', enabled);
+}
+
+function getHideCompletedDays() {
+  return getSetting('rambam_hide_completed_days', true);
+}
+
+function setHideCompletedDays(enabled) {
+  setSetting('rambam_hide_completed_days', enabled);
 }
 
 function isFirstVisit() {

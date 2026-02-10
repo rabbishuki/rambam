@@ -1,6 +1,115 @@
 // ============================================================================
 // Shell - Injects shared HTML structure
 // ============================================================================
+
+// ============================================================================
+// Toggle Settings Configuration
+// ============================================================================
+const TOGGLE_SETTINGS = [
+  {
+    id: 'auto-mark',
+    label: 'סימון הלכות קודמות כנקראו',
+    trueLabel: 'כן',
+    falseLabel: 'לא',
+    getter: getAutoMark,
+    setter: setAutoMark
+  },
+  {
+    id: 'hide-completed-items',
+    label: 'הלכות שהושלמו',
+    trueLabel: 'הסתר',
+    falseLabel: 'הצג',
+    getter: getHideCompleted,
+    setter: setHideCompleted,
+    sideEffect: (newValue) => {
+      const container = document.querySelector('.container');
+      if (container) {
+        if (newValue) {
+          container.classList.add('hide-completed');
+        } else {
+          container.classList.remove('hide-completed');
+        }
+      }
+    }
+  },
+  {
+    id: 'hide-completed-days',
+    label: 'ימים שהושלמו',
+    trueLabel: 'הסתר',
+    falseLabel: 'הצג',
+    getter: getHideCompletedDays,
+    setter: setHideCompletedDays,
+    sideEffect: (newValue) => {
+      const container = document.querySelector('.container');
+      if (container) {
+        if (newValue) {
+          container.classList.add('hide-completed-days');
+        } else {
+          container.classList.remove('hide-completed-days');
+        }
+      }
+    }
+  }
+];
+
+// Generate toggle settings HTML
+function generateToggleSettings() {
+  return TOGGLE_SETTINGS.map(setting => `
+    <div class="settings-section toggle">
+      <label class="settings-label">${setting.label}</label>
+      <div class="toggle-container">
+        <button class="toggle-btn" data-setting-id="${setting.id}" data-value="true">${setting.trueLabel}</button>
+        <button class="toggle-btn" data-setting-id="${setting.id}" data-value="false">${setting.falseLabel}</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Generic toggle settings event listeners
+function attachToggleListeners() {
+  TOGGLE_SETTINGS.forEach(setting => {
+    const currentValue = setting.getter();
+    const buttons = document.querySelectorAll(`[data-setting-id="${setting.id}"]`);
+
+    // Set initial active state
+    buttons.forEach(btn => {
+      const btnValue = btn.dataset.value === 'true';
+      if (btnValue === currentValue) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // Attach click listeners
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const newValue = btn.dataset.value === 'true';
+
+        // Update storage
+        setting.setter(newValue);
+
+        // Update UI state
+        buttons.forEach(b => {
+          b.classList.toggle('active', b.dataset.value === btn.dataset.value);
+        });
+
+        // Execute side effect if defined
+        if (setting.sideEffect) {
+          setting.sideEffect(newValue);
+        }
+      });
+    });
+  });
+
+  // Apply initial side effects
+  TOGGLE_SETTINGS.forEach(setting => {
+    if (setting.sideEffect) {
+      setting.sideEffect(setting.getter());
+    }
+  });
+}
+
 function initShell() {
   const app = document.getElementById('app');
   if (!app) {
@@ -100,26 +209,12 @@ function initShell() {
         <div class="settings-section">
           <label class="settings-label">תאריך התחלת לימוד</label>
           <div class="date-row">
-            <button class="btn btn-primary btn-compact" id="setCycleBtn">מחזור 46</button>
+            <button class="btn btn-primary" id="setCycleBtn">מחזור 46</button>
             <input type="date" class="date-input" id="startDateInput">
           </div>
         </div>
 
-        <div class="settings-section">
-          <label class="settings-label">סימון הלכות קודמות כנקראו</label>
-          <div class="toggle-container">
-            <button class="toggle-btn auto-mark active" data-value="true">כן</button>
-            <button class="toggle-btn auto-mark" data-value="false">לא</button>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <label class="settings-label">הלכות וימים שהושלמו</label>
-          <div class="toggle-container">
-            <button class="toggle-btn hide-completed active" data-value="true">הסתר</button>
-            <button class="toggle-btn hide-completed" data-value="false">הצג</button>
-          </div>
-        </div>
+        ${generateToggleSettings()}
 
         <div class="settings-section">
           <label class="settings-label">מיקום ושקיעה</label>
@@ -192,57 +287,8 @@ function attachSettingsListeners() {
   document.getElementById('closeBtn').addEventListener('click', closeSettings);
   document.getElementById('overlay').addEventListener('click', closeSettings);
 
-  // Auto-mark toggle
-  const currentAutoMark = getAutoMark();
-  document.querySelectorAll('.toggle-btn.auto-mark').forEach(btn => {
-    const value = btn.dataset.value === 'true';
-    if (value === currentAutoMark) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-
-    btn.addEventListener('click', () => {
-      const newValue = btn.dataset.value === 'true';
-      setAutoMark(newValue);
-      document.querySelectorAll('.toggle-btn.auto-mark').forEach(b => {
-        b.classList.toggle('active', b.dataset.value === btn.dataset.value);
-      });
-    });
-  });
-
-  // Hide completed toggle
-  const currentHideCompleted = getHideCompleted();
-  const container = document.querySelector('.container');
-
-  // Apply initial state
-  if (currentHideCompleted) {
-    container.classList.add('hide-completed');
-  }
-
-  document.querySelectorAll('.toggle-btn.hide-completed').forEach(btn => {
-    const value = btn.dataset.value === 'true';
-    if (value === currentHideCompleted) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-
-    btn.addEventListener('click', () => {
-      const newValue = btn.dataset.value === 'true';
-      setHideCompleted(newValue);
-      document.querySelectorAll('.toggle-btn.hide-completed').forEach(b => {
-        b.classList.toggle('active', b.dataset.value === btn.dataset.value);
-      });
-
-      // Toggle the class on container
-      if (newValue) {
-        container.classList.add('hide-completed');
-      } else {
-        container.classList.remove('hide-completed');
-      }
-    });
-  });
+  // Toggle settings
+  attachToggleListeners();
 
   // Refresh data button
   document.getElementById('refreshDataBtn').addEventListener('click', () => {
