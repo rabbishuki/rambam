@@ -1,8 +1,8 @@
-importScripts('./changelog.js');
+importScripts('./shared/changelog.js');
 
 const SEFARIA_API = 'https://www.sefaria.org';
 const LATEST_VERSION = Math.max(...Object.keys(CHANGELOG).map(Number));
-let CACHE_NAME = `rambam-v${LATEST_VERSION}`;
+let CACHE_NAME = `rambam3-v${LATEST_VERSION}`;
 
 // Install: cache static assets
 self.addEventListener('install', (event) => {
@@ -11,11 +11,16 @@ self.addEventListener('install', (event) => {
       return cache.addAll([
         './',
         './index.html',
-        './changelog.js',
+        './plan.js',
+        './manifest.json',
+        './shared/styles.css',
+        './shared/api.js',
+        './shared/core.js',
+        './shared/shell.js',
+        './shared/changelog.js',
         './assets/logo.png',
         './assets/icon-192.png',
-        './assets/icon-512.png',
-        './manifest.json'
+        './assets/icon-512.png'
       ]);
     })
   );

@@ -1,6 +1,6 @@
 # רמב"ם יומי - Daily Rambam Tracker
 
-A Progressive Web App (PWA) for tracking your daily Rambam (3 chapters) study with swipeable halakha cards.
+A modular Progressive Web App (PWA) platform for tracking daily Jewish study with swipeable cards. Supports multiple learning plans (3-chapter Rambam, 1-chapter Rambam, and more).
 
 ## ✨ Features
 
@@ -10,32 +10,44 @@ A Progressive Web App (PWA) for tracking your daily Rambam (3 chapters) study wi
 - 💾 **Works offline** - Full offline support with service worker caching
 - 🇮🇱 **RTL Hebrew** - Native right-to-left support with Noto Sans Hebrew font
 - 🕐 **Jewish day logic** - Automatically advances to next day at sunset (6 PM Israel time)
-- 🎯 **Lightweight** - Single HTML file, no build process required
+- 🎯 **Modular** - Shared code across multiple apps, easy to add new plans
+- 🚀 **Zero build locally** - Symlinks for dev, one-line build for deployment
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - A web browser (Chrome, Safari, Firefox, Edge)
-- For local development with PWA features: a local web server
+- Node.js (for setup script only, optional)
 
 ### Running Locally
 
-#### Option 1: Simple File Open
+#### Option 1: With Symlinks (Recommended)
 ```bash
-open index.html
+# One-time setup - creates symlinks for shared code and assets
+npm run setup:rambam3
+
+# Then open directly in browser
+open rambam3/index.html
 ```
-Note: Limited PWA features (no service worker in `file://` protocol)
 
-#### Option 2: Local Server (Recommended)
+#### Option 2: Local Server
 ```bash
-# Python 3
-python3 -m http.server 8000
+# Setup symlinks first
+npm run setup:rambam3
 
-# Node.js
-npx serve .
+# Serve with any static server
+npx serve rambam3
+# Then open: http://localhost:3000
+```
 
-# Then open: http://localhost:8000
+#### Option 3: Build and Serve
+```bash
+# Copy files instead of symlinks (mimics Cloudflare deployment)
+npm run build:rambam3
+
+# Serve the built folder
+npx serve rambam3
 ```
 
 ### Installing as PWA
@@ -81,6 +93,17 @@ Days change at sunset (~6 PM Israel time):
 
 ## 🏗️ Technical Details
 
+### Architecture
+
+This project uses a **modular multi-app architecture**:
+- `/shared/` - Common code (CSS, JS) shared by all apps
+- `/assets/` - Shared images (logos, icons)
+- `/rambam3/`, `/rambam1/`, etc. - Individual apps, each with its own `plan.js`
+- Symlinks for local dev, build script for deployment
+- Each app deploys independently to its own Cloudflare Pages URL
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for full details.
+
 ### Tech Stack
 
 - **Pure Vanilla JavaScript** - No frameworks, no dependencies
@@ -89,25 +112,38 @@ Days change at sunset (~6 PM Israel time):
 - **Sefaria API** - Jewish text database
 - **Noto Sans Hebrew** - Google Fonts for beautiful Hebrew typography
 
+### Adding a New Plan
+
+1. Create a new directory (e.g., `/chumash/`)
+2. Copy `rambam3/index.html`, `manifest.json`, `service-worker.js`
+3. Create `plan.js` with your data loading logic
+4. Update `package.json` with `build:chumash` and `setup:chumash` scripts
+5. Run `npm run setup:chumash` to create symlinks
+6. Deploy to Cloudflare Pages with `npm run build:chumash`
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed instructions.
+
 ### Data Storage
 
-All data stored in browser `localStorage`:
+All data stored in browser `localStorage` with plan-specific prefixes:
 
 ```javascript
-// Start date
+// Shared settings (no prefix)
 rambam_start: "2026-02-03"
+rambam_auto_mark: "true"
+rambam_hide_completed: "true"
 
-// Daily metadata
-rambam_days: {
+// Plan-specific data (prefixed with plan ID)
+rambam3_days: {
   "2026-02-03": {
     he: "מסירת תורה שבעל פה א׳-מ״ה",
     ref: "Mishneh_Torah,_Transmission_of_the_Oral_Law.1-45",
-    count: 45
+    count: 45,
+    heDate: "ט״ו שבט"
   }
 }
 
-// Completed halakhot
-rambam_done: {
+rambam3_done: {
   "2026-02-03:0": "2026-02-03T09:15:00Z",
   "2026-02-03:1": "2026-02-03T09:16:00Z"
 }
@@ -117,17 +153,28 @@ rambam_done: {
 
 ```
 rambam/
-├── index.html           # Main app (HTML + CSS + JS)
-├── manifest.json        # PWA manifest
-├── service-worker.js    # Offline caching
-├── logo.png            # App logo (scroll icon)
-├── icon-192.png        # PWA icon 192×192
-├── icon-512.png        # PWA icon 512×512
-├── favicon.ico         # Browser favicon
-├── claude.jpeg         # Claude AI icon
-├── rabbi.jpeg          # Rabbi Shuki avatar
-├── PLAN.md             # Implementation plan
-├── QUICK_REFERENCE.md  # API reference
+├── shared/              # Shared code
+│   ├── styles.css      # All CSS
+│   ├── shell.js        # HTML injection
+│   ├── core.js         # Rendering & logic
+│   ├── api.js          # Sefaria/Hebcal APIs
+│   └── changelog.js    # Version history
+├── assets/              # Shared images
+│   ├── logo.png        # App logo
+│   ├── icon-*.png      # PWA icons
+│   ├── favicon.ico     # Browser icon
+│   ├── claude.jpeg     # Footer badge
+│   └── rabbi.jpeg      # Footer avatar
+├── rambam3/             # 3-chapter app
+│   ├── index.html      # Minimal shell
+│   ├── plan.js         # Plan config
+│   ├── manifest.json   # PWA manifest
+│   ├── service-worker.js
+│   ├── shared/         # → ../shared (symlink)
+│   └── assets/         # → ../assets (symlink)
+├── package.json         # Build scripts
+├── .gitignore          # Ignore symlinks
+├── ARCHITECTURE.md     # Architecture guide
 └── README.md           # This file
 ```
 

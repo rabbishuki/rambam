@@ -1,0 +1,10 @@
+{
+  "name": "rambam-daily",
+  "version": "1.0.0",
+  "description": "Modular daily Rambam study tracker",
+  "scripts": {
+    "build:rambam3": "mkdir -p rambam3/shared rambam3/assets && cp -r shared/* rambam3/shared/ && cp -r assets/* rambam3/assets/",
+    "link:rambam3": "cd rambam3 && ln -sf ../shared shared && ln -sf ../assets assets",
+    "unlink:rambam3": "rm -rf rambam3/shared rambam3/assets"
+  }
+}

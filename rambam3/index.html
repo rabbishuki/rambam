@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Track your daily Rambam (3 chapters) study">
+  <meta name="theme-color" content="#2563eb">
+  <title>רמב"ם יומי</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="./assets/favicon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./shared/styles.css">
+</head>
+<body>
+  <div class="container" id="app"></div>
+  <script src="./shared/changelog.js"></script>
+  <script src="./shared/api.js"></script>
+  <script src="./shared/core.js"></script>
+  <script src="./shared/shell.js"></script>
+  <script src="plan.js"></script>
+  <script>
+    initShell();
+    init();
+  </script>
+</body>
+</html>
