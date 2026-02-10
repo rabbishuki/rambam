@@ -6,10 +6,10 @@
 
     body {
       font-family: 'Noto Sans Hebrew', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
       min-height: 100vh;
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      color: #1f2937;
+      color: #374151;
       -webkit-font-smoothing: antialiased;
       touch-action: pan-y;
     }
@@ -18,19 +18,19 @@
       max-width: 640px;
       margin: 0 auto;
       min-height: 100vh;
-      background: #ffffff;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      background: #f8fafc;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     }
 
     /* Header */
     header {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
       color: white;
       padding: 1.25rem 1rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       position: sticky;
       top: 0;
       z-index: 101;
@@ -132,14 +132,14 @@
       position: fixed;
       top: 72px;
       width: clamp(200px, 100vw, 640px);
-      background: #667eea;
+      background: #2563eb;
       color: white;
       padding: 1rem;
       z-index: 99;
       transform: translateY(-100%);
       opacity: 0;
       transition: transform 0.3s, opacity 0.3s;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       overflow: hidden;
       pointer-events: none;
     }
@@ -220,7 +220,7 @@
       bottom: 0;
       right: 0;
       height: 6px;
-      background: #fb923c;
+      background: #b45309;
       transition: width 0.3s ease;
       min-width: 4px;
       width: 0;
@@ -549,7 +549,7 @@
     }
 
     .settings-header {
-      background: #2563eb;
+      background: #1e3a8a;
       color: white;
       padding: 1.25rem 1rem;
       display: flex;
@@ -926,11 +926,11 @@
     }
 
     .dedication {
-      background: #fef3c7;
+      background: #fef3e3;
       padding: 1rem;
       text-align: center;
       font-size: 0.875rem;
-      color: #92400e;
+      color: #78350f;
       font-weight: 500;
     }
 
@@ -939,7 +939,8 @@
     }
 
     .footer {
-      background: #f9fafb;
+      background: #fffbeb;
+      border-top: 1px solid #d87858;
       padding: 0.5rem 1.5rem;
       text-align: center;
       font-size: 0.75rem;
@@ -998,11 +999,11 @@
     }
 
     .settings-dedication {
-      background: #fef3c7;
+      background: #fef3e3;
       padding: 1rem;
       text-align: center;
       font-size: 0.875rem;
-      color: #92400e;
+      color: #78350f;
       font-weight: 500;
     }
 
@@ -1017,7 +1018,7 @@
     }
 
     .yechi {
-      background: #667eea;
+      background: #1e3a8a;
       color: white;
       padding: 0.5rem;
       bottom: 0;

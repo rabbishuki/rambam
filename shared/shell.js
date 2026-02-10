@@ -149,7 +149,7 @@ function initShell() {
   app.innerHTML = `
     <header id="mainHeader">
       <div class="header-content">
-        <img src="./assets/logo.png" alt="Logo" class="logo">
+        <img src="./assets/logo.svg" alt="Logo" class="logo">
         <h1>${planName}</h1>
       </div>
       <input type="date" id="headerDatePicker" class="header-date-picker">
