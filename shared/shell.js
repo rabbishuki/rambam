@@ -218,10 +218,8 @@ function initShell() {
           </div>
         </div>
 
-        ${generateToggleSettings()}
-
         <div class="settings-section toggle">
-          <label class="settings-label">עבור ליום הבא ב</label>
+          <label class="settings-label">עבור ליום הבא</label>
           <div class="toggle-container">
             <button class="toggle-btn" id="dayTransitionTimeBtn">
               <input type="time" id="dayTransitionTime" class="time-input-inline">
@@ -229,9 +227,11 @@ function initShell() {
             <button class="toggle-btn" id="dayTransitionSunsetBtn">שקיעה</button>
           </div>
         </div>
+        
+        ${generateToggleSettings()}
 
-        <div class="settings-section">
-          <label class="settings-label">מחק נתונים</label>
+        <div class="settings-section toggle">
+          <label class="settings-label">איפוס</label>
           <div class="date-row">
             <button class="btn btn-warning" id="refreshDataBtn">שמור התקדמות</button>
             <button class="btn btn-danger" id="resetBtn">מחק התקדמות</button>
