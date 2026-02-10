@@ -495,7 +495,7 @@
 
     .toggle-btn {
       flex: 1;
-      padding: 0.4rem 0.75rem;
+      padding: 0.4rem 0.5rem;
       border: none;
       background: transparent;
       color: #6b7280;
@@ -504,6 +504,7 @@
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s;
+      white-space: nowrap;
     }
 
     .toggle-btn:hover {
@@ -516,21 +517,38 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
-    /* Day transition time input inside toggle button */
-    .time-input-inline {
+    /* Time and date inputs inside toggle buttons */
+    .time-input-inline,
+    .date-input-inline {
       border: none;
       background: transparent;
       font-size: 0.875rem;
       font-family: inherit;
       color: inherit;
       padding: 0;
-      width: 100%;
+      margin: 0 -0.25rem;
+      width: calc(100% + 0.5rem);
       text-align: center;
       cursor: pointer;
     }
 
-    .time-input-inline:focus {
+    .date-input-inline {
+        margin: 0 -0.75rem;
+    }
+
+    .time-input-inline:focus,
+    .date-input-inline:focus {
       outline: none;
+    }
+
+    /* Calendar icon for date input */
+    .date-input-inline::-webkit-calendar-picker-indicator {
+      filter: invert(0.5);
+      cursor: pointer;
+    }
+
+    .toggle-btn.active .date-input-inline::-webkit-calendar-picker-indicator {
+      filter: invert(0) brightness(0.2);
     }
 
     .date-row {

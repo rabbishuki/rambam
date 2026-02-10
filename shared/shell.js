@@ -118,6 +118,8 @@ function initShell() {
   }
 
   const planName = window.PLAN?.name || 'רמב"ם יומי';
+  const cycleNumber = window.PLAN?.cycleNumber;
+  const cycleText = cycleNumber ? `מחזור ${cycleNumber}` : 'תחילת המחזור';
 
   app.innerHTML = `
     <header id="mainHeader">
@@ -206,11 +208,13 @@ function initShell() {
     </div>
     <div class="settings-content">
       <div class="settings-scrollable">
-        <div class="settings-section">
-          <label class="settings-label">תאריך התחלת לימוד</label>
-          <div class="date-row">
-            <button class="btn btn-primary" id="setCycleBtn">מחזור 46</button>
-            <input type="date" class="date-input" id="startDateInput">
+        <div class="settings-section toggle">
+          <label class="settings-label">תאריך התחלה</label>
+          <div class="toggle-container">
+            <button class="toggle-btn" id="setCycleBtn">${cycleText}</button>
+            <button class="toggle-btn" id="startDateCustomBtn">
+              <input type="date" id="startDateInput" class="date-input-inline">
+            </button>
           </div>
         </div>
 
@@ -311,28 +315,35 @@ function attachSettingsListeners() {
     }
   });
 
-  // Set start date input value
+  // Start date settings
   const startDateInput = document.getElementById('startDateInput');
+  const startDateCustomBtn = document.getElementById('startDateCustomBtn');
   const setCycleBtn = document.getElementById('setCycleBtn');
 
-  function updateDateButtons() {
+  function updateStartDateUI() {
     const currentStart = getStart();
     const isCycleDate = currentStart === CYCLE_START;
 
+    startDateInput.value = currentStart;
+
     if (isCycleDate) {
-      setCycleBtn.classList.remove('btn-secondary');
-      setCycleBtn.classList.add('btn-primary');
-      startDateInput.classList.add('date-input-inactive');
+      startDateCustomBtn.classList.remove('active');
+      setCycleBtn.classList.add('active');
     } else {
-      setCycleBtn.classList.remove('btn-primary');
-      setCycleBtn.classList.add('btn-secondary');
-      startDateInput.classList.remove('date-input-inactive');
+      startDateCustomBtn.classList.add('active');
+      setCycleBtn.classList.remove('active');
     }
   }
 
-  startDateInput.value = getStart();
-  updateDateButtons();
+  updateStartDateUI();
 
+  // Custom date button click - activate custom mode
+  startDateCustomBtn.addEventListener('click', () => {
+    // Just focus the date input when clicking the button
+    startDateInput.focus();
+  });
+
+  // Date input change
   startDateInput.addEventListener('change', (e) => {
     const newStart = e.target.value;
     if (confirm(`האם לשנות את תאריך ההתחלה ל-${newStart}? זה עלול לאפס את ההתקדמות.`)) {
@@ -343,6 +354,7 @@ function attachSettingsListeners() {
     }
   });
 
+  // Cycle button click
   setCycleBtn.addEventListener('click', () => {
     if (confirm('האם לקבוע את תאריך ההתחלה לט״ו שבט ה׳תשפ״ו (3 בפברואר 2026)?')) {
       setStart(CYCLE_START);
