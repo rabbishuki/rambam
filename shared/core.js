@@ -699,15 +699,17 @@ function attachSwipeHandler(card) {
     updateDayHeader(date);
     updateCompletedCounter(card);
 
-    // Check if day is now complete and re-render if needed
+    // Add completed class to day if all items are now complete
     const days = getDays();
     const dayData = days[date];
     if (dayData) {
       const done = getDone();
       const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
       if (doneCount >= dayData.count) {
-        // Day just became complete, re-render to update completed days grouping
-        renderDays();
+        const dayGroup = card.closest('.day-group');
+        if (dayGroup) {
+          dayGroup.classList.add('completed');
+        }
       }
     }
 
@@ -732,14 +734,16 @@ function attachSwipeHandler(card) {
     updateDayHeader(date);
     updateCompletedCounter(card);
 
-    // Check if day is no longer complete and re-render if needed
+    // Remove completed class from day if it's no longer complete
     const days = getDays();
     const dayData = days[date];
     if (dayData) {
       const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
       if (doneCount < dayData.count) {
-        // Day is no longer complete, re-render to update completed days grouping
-        renderDays();
+        const dayGroup = card.closest('.day-group');
+        if (dayGroup) {
+          dayGroup.classList.remove('completed');
+        }
       }
     }
 
