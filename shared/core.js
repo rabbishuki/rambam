@@ -642,10 +642,12 @@ function scrollToCard(card) {
   if (!card) return;
 
   setTimeout(() => {
-    card.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center',
-      inline: 'nearest'
+    // Scroll to top of card with offset for header + banner + spacing
+    const yOffset = -190;
+    const y = card.getBoundingClientRect().top + window.pageYOffset + yOffset;
+    window.scrollTo({
+      top: y,
+      behavior: 'smooth'
     });
   }, 500);
 }
@@ -702,6 +704,7 @@ function attachSwipeHandler(card) {
     // Add completed class to day if all items are now complete
     const days = getDays();
     const dayData = days[date];
+    let dayJustCompleted = false;
     if (dayData) {
       const done = getDone();
       const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
@@ -710,7 +713,13 @@ function attachSwipeHandler(card) {
         if (dayGroup) {
           dayGroup.classList.add('completed');
         }
+        dayJustCompleted = true;
       }
+    }
+
+    // Update scroll banner if it exists
+    if (window.updateScrollBannerContent) {
+      window.updateScrollBannerContent();
     }
 
     // Scroll to next card
@@ -718,7 +727,48 @@ function attachSwipeHandler(card) {
     while (nextCard && !nextCard.classList.contains('halakha-card')) {
       nextCard = nextCard.nextElementSibling;
     }
-    scrollToCard(nextCard);
+
+    // If we just completed the day and there's no next card in this day, open next incomplete day
+    if (dayJustCompleted && !nextCard) {
+      const today = getJewishToday();
+      const start = getStart();
+      const allDates = dateRange(start, today).reverse();
+      const done = getDone();
+
+      // Find next incomplete day after current date
+      let foundCurrent = false;
+      for (const checkDate of allDates) {
+        if (checkDate === date) {
+          foundCurrent = true;
+          continue;
+        }
+
+        if (foundCurrent) {
+          const checkDayData = days[checkDate];
+          if (checkDayData) {
+            const checkDoneCount = Object.keys(done).filter(key => key.startsWith(`${checkDate}:`)).length;
+            if (checkDoneCount < checkDayData.count) {
+              // Found next incomplete day, open it
+              const nextDayDetails = document.querySelector(`details[data-date="${checkDate}"]`);
+              if (nextDayDetails && !nextDayDetails.open) {
+                nextDayDetails.open = true;
+
+                // Wait for content to load, then scroll to first incomplete
+                setTimeout(() => {
+                  const firstIncomplete = nextDayDetails.querySelector('.halakha-card:not(.completed)');
+                  if (firstIncomplete) {
+                    scrollToCard(firstIncomplete);
+                  }
+                }, 800);
+              }
+              break;
+            }
+          }
+        }
+      }
+    } else {
+      scrollToCard(nextCard);
+    }
   }
 
   // Unmark card as done
@@ -745,6 +795,11 @@ function attachSwipeHandler(card) {
           dayGroup.classList.remove('completed');
         }
       }
+    }
+
+    // Update scroll banner if it exists
+    if (window.updateScrollBannerContent) {
+      window.updateScrollBannerContent();
     }
 
     // Scroll to current card
@@ -1248,35 +1303,46 @@ async function init() {
     if (firstVisit) {
       openSettings();
     } else {
-      // Auto-open today's section if not completed (only if not first visit)
+      // Auto-open the first incomplete day (only if not first visit)
       const today = getJewishToday();
+      const start = getStart();
+      const allDates = dateRange(start, today).reverse(); // Today first
       const days = getDays();
       const done = getDone();
-      const todayData = days[today];
 
-      if (todayData) {
-        const todayDone = Object.keys(done).filter(key =>
-          key.startsWith(`${today}:`)
-        ).length;
+      // Find first incomplete day
+      let firstIncompleteDay = null;
+      for (const date of allDates) {
+        const dayData = days[date];
+        if (dayData) {
+          const dayDone = Object.keys(done).filter(key =>
+            key.startsWith(`${date}:`)
+          ).length;
 
-        if (todayDone < todayData.count) {
-          // Find and open today's details element
-          const todayDetails = document.querySelector(`details[data-date="${today}"]`);
-          if (todayDetails) {
-            todayDetails.open = true;
-
-            // Wait for cards to load, then scroll to first incomplete
-            todayDetails.addEventListener('toggle', function scrollToIncomplete() {
-              if (todayDetails.open) {
-                setTimeout(() => {
-                  const firstIncomplete = todayDetails.querySelector('.halakha-card:not(.completed)');
-                  if (firstIncomplete) {
-                    scrollToCard(firstIncomplete);
-                  }
-                }, 800); // Give more time for cards to render
-              }
-            }, { once: true });
+          if (dayDone < dayData.count) {
+            firstIncompleteDay = date;
+            break;
           }
+        }
+      }
+
+      if (firstIncompleteDay) {
+        // Find and open first incomplete day's details element
+        const dayDetails = document.querySelector(`details[data-date="${firstIncompleteDay}"]`);
+        if (dayDetails) {
+          dayDetails.open = true;
+
+          // Wait for cards to load, then scroll to first incomplete
+          dayDetails.addEventListener('toggle', function scrollToIncomplete() {
+            if (dayDetails.open) {
+              setTimeout(() => {
+                const firstIncomplete = dayDetails.querySelector('.halakha-card:not(.completed)');
+                if (firstIncomplete) {
+                  scrollToCard(firstIncomplete);
+                }
+              }, 800); // Give more time for cards to render
+            }
+          }, { once: true });
         }
       }
     }

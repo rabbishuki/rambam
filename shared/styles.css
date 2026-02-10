@@ -90,6 +90,143 @@
       background: rgba(255, 255, 255, 0.3);
     }
 
+    /* Top Scroll Down Button */
+    .top-scroll-down-btn {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #667eea;
+      color: white;
+      border: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      z-index: 98;
+      transition: transform 0.3s, opacity 0.3s, background 0.2s;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .top-scroll-down-btn.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .top-scroll-down-btn:hover {
+      background: #5568d3;
+    }
+
+    .top-scroll-down-btn:active {
+      background: #4854b8;
+    }
+
+    /* Scroll Banner */
+    .scroll-banner {
+      position: fixed;
+      top: 72px;
+      left: 0;
+      right: 0;
+      background: #667eea;
+      color: white;
+      padding: 1rem;
+      z-index: 99;
+      transform: translateY(-100%);
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .scroll-banner.visible {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .scroll-banner-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 640px;
+      margin: 0 auto;
+      gap: 1rem;
+    }
+
+    .scroll-banner-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      flex: 1;
+    }
+
+    .scroll-banner-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      line-height: 1.2;
+    }
+
+    .scroll-banner-meta {
+      font-size: 0.875rem;
+      opacity: 0.9;
+      line-height: 1.2;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .scroll-banner-meta span:not(:last-child)::after {
+      content: "•";
+      margin-right: 0.5rem;
+    }
+
+    .scroll-banner-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .scroll-banner-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: background 0.2s;
+    }
+
+    .scroll-banner-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .scroll-banner-btn:active {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .scroll-banner-bar {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      height: 6px;
+      background: #fb923c;
+      transition: width 0.3s ease;
+      min-width: 4px;
+      width: 0;
+    }
+
     /* Stats Bar */
     .stats {
       background: #f9fafb;
@@ -98,9 +235,6 @@
       justify-content: space-around;
       border-bottom: 2px solid #e5e7eb;
       gap: 0.5rem;
-      position: sticky;
-      top: 72px;
-      z-index: 100;
     }
 
     .stat {

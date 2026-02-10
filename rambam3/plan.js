@@ -1,6 +1,6 @@
 window.PLAN = {
   id: 'rambam3',
-  name: 'רמב"ם יומי',
+  name: 'רמב"ם - 3 פרקים',
   storagePrefix: 'rambam3',
   cycleNumber: 46,
 

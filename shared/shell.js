@@ -173,6 +173,23 @@ function initShell() {
       </div>
     </header>
 
+    <div id="scrollBanner" class="scroll-banner">
+      <div class="scroll-banner-content">
+        <div class="scroll-banner-actions">
+          <button class="scroll-banner-btn" id="scrollToTop" aria-label="חזור למעלה" title="חזור למעלה">↑</button>
+          <button class="scroll-banner-btn" id="scrollToNext" aria-label="קפוץ להלכה הבאה" title="קפוץ להלכה הבאה">↓</button>
+        </div>
+        <div class="scroll-banner-text">
+          <div class="scroll-banner-title" id="scrollBannerTitle">טוען...</div>
+          <div class="scroll-banner-meta">
+            <span id="scrollBannerDate"></span>
+            <span id="scrollBannerProgress">0/0</span>
+          </div>
+        </div>
+      </div>
+      <div class="scroll-banner-bar" id="scrollBannerBar"></div>
+    </div>
+
     <div class="stats">
       <div class="stat">
         <span class="stat-value" id="completedDaysValue">0/0</span>
@@ -296,6 +313,7 @@ function initShell() {
   attachSettingsListeners();
   attachCalendarListeners();
   attachInstallListeners();
+  initScrollBanner();
 }
 
 // ============================================================================
@@ -529,5 +547,106 @@ function attachInstallListeners() {
   document.getElementById('dismissInstallBtn').addEventListener('click', () => {
     document.getElementById('installPrompt').classList.remove('show');
     localStorage.setItem('install_prompt_shown', 'true');
+  });
+}
+
+// ============================================================================
+// Scroll Banner - Shows current day when scrolling
+// ============================================================================
+function initScrollBanner() {
+  const scrollBanner = document.getElementById('scrollBanner');
+  const scrollBannerTitle = document.getElementById('scrollBannerTitle');
+  const scrollBannerDate = document.getElementById('scrollBannerDate');
+  const scrollBannerProgress = document.getElementById('scrollBannerProgress');
+  const scrollBannerBar = document.getElementById('scrollBannerBar');
+
+  let ticking = false;
+  let currentDisplayedDate = null;
+
+  function updateBannerContent() {
+    // Find the current day in viewport
+    const dayGroups = document.querySelectorAll('.day-group[open]');
+    let currentDay = null;
+
+    for (const dayGroup of dayGroups) {
+      const rect = dayGroup.getBoundingClientRect();
+      // Check if day is visible in viewport (accounting for header + banner)
+      if (rect.top < 200 && rect.bottom > 150) {
+        currentDay = dayGroup;
+        break;
+      }
+    }
+
+    if (currentDay) {
+      const date = currentDay.dataset.date;
+      currentDisplayedDate = date;
+      const days = getDays();
+      const done = getDone();
+      const dayData = days[date];
+
+      if (dayData) {
+        const today = getJewishToday();
+        const isToday = date === today;
+        const dateLabel = isToday ? 'היום' : formatHebrewDate(date);
+
+        scrollBannerTitle.textContent = dayData.he;
+        scrollBannerDate.textContent = dateLabel;
+        const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
+        scrollBannerProgress.textContent = `${doneCount}/${dayData.count}`;
+
+        // Update progress bar
+        const percentage = dayData.count > 0 ? (doneCount / dayData.count) * 100 : 0;
+        scrollBannerBar.style.width = `${percentage}%`;
+      }
+    }
+  }
+
+  function updateScrollBanner() {
+    const scrollY = window.scrollY;
+
+    // Show banner after scrolling 50px
+    if (scrollY > 50) {
+      scrollBanner.classList.add('visible');
+      updateBannerContent();
+    } else {
+      scrollBanner.classList.remove('visible');
+    }
+
+    ticking = false;
+  }
+
+  // Expose updateBannerContent globally so it can be called when marking halakhot
+  window.updateScrollBannerContent = updateBannerContent;
+
+  function requestTick() {
+    if (!ticking) {
+      requestAnimationFrame(updateScrollBanner);
+      ticking = true;
+    }
+  }
+
+  window.addEventListener('scroll', requestTick, { passive: true });
+
+  // Scroll to top button
+  document.getElementById('scrollToTop').addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // Scroll to next incomplete halakha button (in banner)
+  document.getElementById('scrollToNext').addEventListener('click', () => {
+    const done = getDone();
+    const allCards = document.querySelectorAll('.halakha-card');
+
+    for (const card of allCards) {
+      const date = card.dataset.date;
+      const index = parseInt(card.dataset.index);
+      const key = `${date}:${index}`;
+
+      if (!done[key]) {
+        // Found first incomplete card, scroll to it using scrollToCard function
+        scrollToCard(card);
+        return;
+      }
+    }
   });
 }
