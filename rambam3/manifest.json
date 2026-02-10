@@ -1,6 +1,6 @@
 {
-  "name": "רמב\"ם יומי - Daily Rambam (3 Chapters)",
-  "short_name": "רמב\"ם יומי",
+  "name": "רמב\"ם - 3 פרקים ליום",
+  "short_name": "רמב\"ם - 3",
   "description": "עקוב אחר לימוד הרמב\"ם היומי שלך (3 פרקים) עם כרטיסיות להחלקה",
   "start_url": "/rambam3/",
   "scope": "/rambam3/",

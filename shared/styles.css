@@ -877,7 +877,7 @@
     .dedication {
       position: fixed;
       bottom: 2rem;
-      width: 640px;
+      width: clamp(200px, 100vw, 640px);
       z-index: 900;
       margin: 0 auto;
       box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
