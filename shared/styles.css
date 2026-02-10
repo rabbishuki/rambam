@@ -124,7 +124,7 @@
     /* Main Content */
     main {
       padding: 1rem;
-      padding-bottom: 2rem;
+      padding-bottom: 8rem; /* Extra padding for fixed dedications at bottom */
     }
 
     .day-group {
@@ -298,7 +298,8 @@
       transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease;
     }
 
-    .hide-completed .day-group.completed {
+    /* Hide completed days when setting is enabled */
+    .hide-completed-days .day-group.completed {
       max-height: 0;
       opacity: 0;
       margin: 0;
@@ -320,7 +321,8 @@
       margin-bottom: 0.5rem;
     }
 
-    .hide-completed .completed-counter {
+    /* Show halakha completed counter when hiding completed items */
+    .hide-completed .completed-counter:not(.completed-days-counter) {
       display: block;
     }
 
@@ -329,8 +331,15 @@
       display: none;
     }
 
-    .completed-days-counter {
+    /* Show days completed counter when hiding completed days */
+    .hide-completed-days .completed-days-counter {
+      display: block;
       margin-bottom: 1rem;
+    }
+
+    .hide-completed-days .completed-days-counter:empty,
+    .hide-completed-days .completed-days-counter[data-count="0"] {
+      display: none;
     }
 
     .halakha-text {
@@ -459,6 +468,13 @@
       border-bottom: 1px solid #e5e7eb;
     }
 
+    .settings-section.toggle {
+        padding: 1rem;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
     .settings-section:last-of-type {
       border-bottom: none;
     }
@@ -479,7 +495,7 @@
 
     .toggle-btn {
       flex: 1;
-      padding: 0.625rem 1rem;
+      padding: 0.4rem 0.5rem;
       border: none;
       background: transparent;
       color: #6b7280;
@@ -488,6 +504,7 @@
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s;
+      white-space: nowrap;
     }
 
     .toggle-btn:hover {
@@ -498,6 +515,40 @@
       background: white;
       color: #2563eb;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Time and date inputs inside toggle buttons */
+    .time-input-inline,
+    .date-input-inline {
+      border: none;
+      background: transparent;
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: inherit;
+      padding: 0;
+      margin: 0 -0.25rem;
+      width: calc(100% + 0.5rem);
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .date-input-inline {
+        margin: 0 -0.75rem;
+    }
+
+    .time-input-inline:focus,
+    .date-input-inline:focus {
+      outline: none;
+    }
+
+    /* Calendar icon for date input */
+    .date-input-inline::-webkit-calendar-picker-indicator {
+      filter: invert(0.5);
+      cursor: pointer;
+    }
+
+    .toggle-btn.active .date-input-inline::-webkit-calendar-picker-indicator {
+      filter: invert(0) brightness(0.2);
     }
 
     .date-row {
@@ -529,7 +580,7 @@
 
     .btn-compact {
       white-space: nowrap;
-      padding: 0.6rem 1rem;
+      padding: 0.4rem 0.75rem;
     }
 
     .btn-secondary {
@@ -550,7 +601,7 @@
 
     .btn {
       border: 1px solid #d1d5db;
-      padding: 0.75rem 1rem;
+      padding: 0.4rem 0.75rem;
       font-size: 0.875rem;
       font-weight: 500;
       border-radius: 6px;
@@ -559,6 +610,7 @@
       transition: all 0.2s;
       background: white;
       color: #374151;
+      white-space: nowrap;
     }
 
     .btn:hover {
@@ -821,10 +873,21 @@
       font-weight: 500;
     }
 
+    /* Fixed dedications on main page */
+    .dedication {
+      position: fixed;
+      bottom: 2rem;
+      width: 640px;
+      z-index: 900;
+      margin: 0 auto;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    }
+
     .yechi {
       background: #667eea;
       color: white;
       padding: 0.5rem;
+      bottom: 0;
     }
 
     .changelog-version {

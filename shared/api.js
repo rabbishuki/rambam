@@ -3,37 +3,27 @@
 // ============================================================================
 const SEFARIA_API = 'https://www.sefaria.org';
 const HEBCAL_API = 'https://www.hebcal.com';
-const DEFAULT_COORDS = { latitude: 32.0853, longitude: 34.7818 }; // Tel Aviv fallback
 const textCache = new Map(); // In-memory cache for halakha texts
 let cachedSunsetHour = 18;   // fallback
 let cachedSunsetMinute = 0;
-let cachedCoords = DEFAULT_COORDS;
-let isUsingDefaultLocation = true;
-let cachedLocationName = 'תל אביב';
 
 // ============================================================================
 // Geolocation
 // ============================================================================
 function getUserCoords() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
-      console.log('Geolocation not supported, using Tel Aviv');
-      isUsingDefaultLocation = true;
-      resolve(DEFAULT_COORDS);
+      reject(new Error('Geolocation not supported'));
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        console.log('Got user location:', pos.coords.latitude, pos.coords.longitude);
-        isUsingDefaultLocation = false;
         resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
       },
       (error) => {
-        console.log('Geolocation error:', error.message, '- using Tel Aviv');
-        isUsingDefaultLocation = true;
-        resolve(DEFAULT_COORDS);
+        reject(error);
       },
-      { timeout: 5000 }
+      { timeout: 10000 }
     );
   });
 }
@@ -125,77 +115,19 @@ async function fetchText(ref) {
 // ============================================================================
 // Location & Sunset
 // ============================================================================
-async function fetchLocationName(coords) {
-  try {
-    // Use BigDataCloud's free reverse geocoding API (no API key, no rate limits)
-    const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${coords.latitude}&longitude=${coords.longitude}&localityLanguage=he`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Geocoding failed: ${res.status}`);
-    const data = await res.json();
-
-    console.log('Geocoding response:', data);
-
-    // Try to get city name in Hebrew - locality is most accurate
-    const cityName = data.locality || data.city || data.principalSubdivision || 'מיקום נוכחי';
-    console.log('Extracted city name:', cityName);
-    return cityName;
-  } catch (error) {
-    console.error('Failed to fetch location name:', error);
-    return 'מיקום נוכחי';
-  }
-}
-
 async function fetchSunset(dateStr, coords) {
-  try {
-    cachedCoords = coords;
+  const sunsetRes = await fetch(`${HEBCAL_API}/zmanim?cfg=json&latitude=${coords.latitude}&longitude=${coords.longitude}&date=${dateStr}`);
 
-    // Fetch location name and sunset in parallel
-    const [locationName, sunsetRes] = await Promise.all([
-      isUsingDefaultLocation ? Promise.resolve('תל אביב') : fetchLocationName(coords),
-      fetch(`${HEBCAL_API}/zmanim?cfg=json&latitude=${coords.latitude}&longitude=${coords.longitude}&date=${dateStr}`)
-    ]);
+  if (!sunsetRes.ok) throw new Error(`Zmanim API failed: ${sunsetRes.status}`);
+  const data = await sunsetRes.json();
 
-    cachedLocationName = locationName;
-
-    if (!sunsetRes.ok) throw new Error(`Zmanim API failed: ${sunsetRes.status}`);
-    const data = await sunsetRes.json();
-
-    if (data.times && data.times.sunset) {
-      const sunsetTime = new Date(data.times.sunset);
-      cachedSunsetHour = sunsetTime.getHours();
-      cachedSunsetMinute = sunsetTime.getMinutes();
-    }
-    updateLocationDisplay();
-  } catch (error) {
-    console.error('Failed to fetch sunset time:', error);
-    // Keep fallback values (18:00)
-    updateLocationDisplay();
-  }
-}
-
-function updateLocationDisplay() {
-  const locationText = document.getElementById('locationText');
-  const sunsetText = document.getElementById('sunsetText');
-
-  console.log('Updating location display:', {
-    cachedLocationName,
-    isUsingDefaultLocation,
-    cachedSunsetHour,
-    cachedSunsetMinute,
-    locationText: !!locationText,
-    sunsetText: !!sunsetText
-  });
-
-  if (locationText) {
-    const suffix = isUsingDefaultLocation ? ' (ברירת מחדל)' : '';
-    locationText.textContent = `מיקום: ${cachedLocationName}${suffix}`;
+  if (!data.times || !data.times.sunset) {
+    throw new Error('Sunset data not available');
   }
 
-  if (sunsetText) {
-    const hourStr = String(cachedSunsetHour).padStart(2, '0');
-    const minStr = String(cachedSunsetMinute).padStart(2, '0');
-    sunsetText.textContent = `שקיעה: ${hourStr}:${minStr}`;
-  }
+  const sunsetTime = new Date(data.times.sunset);
+  cachedSunsetHour = sunsetTime.getHours();
+  cachedSunsetMinute = sunsetTime.getMinutes();
 }
 
 // ============================================================================

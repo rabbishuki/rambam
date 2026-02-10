@@ -145,6 +145,11 @@ The plan's `loadDay()` and `loadContent()` methods abstract away the data source
 ## Shared Code Details
 
 ### shell.js
+- `TOGGLE_SETTINGS` — config array defining all toggle settings (auto-mark, hide-completed-items, hide-completed-days)
+  - Each toggle config includes: `id`, `label`, `trueLabel`, `falseLabel`, `getter`, `setter`, optional `sideEffect`
+  - Config-driven approach eliminates code duplication and makes adding new toggles trivial
+- `generateToggleSettings()` — dynamically generates HTML for all toggle settings from config
+- `attachToggleListeners()` — generic event listener that handles all toggle logic (initial state, clicks, storage, side effects)
 - `initShell()` — injects all HTML structure into `#app` container
 - Reads `window.PLAN.name` for header title
 - Creates header, stats bar, progress bar, main content area, settings panel, footer
@@ -152,6 +157,8 @@ The plan's `loadDay()` and `loadContent()` methods abstract away the data source
 - **Note**: No chapter count toggle — each plan is a separate app
 
 ### core.js
+- `getSetting(key, defaultValue)` / `setSetting(key, value)` — generic localStorage utilities for boolean settings
+- Specific setting wrappers: `getAutoMark()`, `setAutoMark()`, `getHideCompleted()`, `setHideCompleted()`, `getHideCompletedDays()`, `setHideCompletedDays()`
 - `init()` — main entry point called from each app's `index.html`
 - Reads `window.PLAN.storagePrefix` for all localStorage operations
 - Calls `window.PLAN.loadDay(date)` to fetch day metadata
@@ -183,8 +190,9 @@ The plan's `loadDay()` and `loadContent()` methods abstract away the data source
 
 ### Shared (no prefix, same across all plans on same origin)
 - `rambam_start` — cycle start date (shared by all plans that use a fixed start date)
-- `rambam_auto_mark` — auto-mark previous items when marking later ones (boolean)
-- `rambam_hide_completed` — hide completed items/days (boolean)
+- `rambam_auto_mark` — auto-mark previous items when marking later ones (boolean, default: true)
+- `rambam_hide_completed` — hide completed halakhot/items within days (boolean, default: true)
+- `rambam_hide_completed_days` — hide entire completed days (boolean, default: true)
 - `install_prompt_shown` — PWA install prompt dismissed (boolean)
 - `rambam_chapters` — legacy key from old app (`1` or `3`), used only for migration
 
@@ -356,10 +364,34 @@ const CACHE_NAME = 'rambam1-v5';
 
 ## Common Modifications
 
-### Add a new setting
-1. Add toggle HTML to `shell.js` settings panel
-2. Add event listener in `shell.js`
-3. Add localStorage getter/setter in `core.js` (unprefixed for shared settings, or prefixed for plan-specific)
+### Add a new toggle setting
+1. Add getter/setter functions in `core.js`:
+   ```javascript
+   function getNewSetting() {
+     return getSetting('rambam_new_setting', true);
+   }
+   function setNewSetting(enabled) {
+     setSetting('rambam_new_setting', enabled);
+   }
+   ```
+2. Add entry to `TOGGLE_SETTINGS` array in `shell.js`:
+   ```javascript
+   {
+     id: 'new-setting',
+     label: 'תיאור ההגדרה',
+     trueLabel: 'כן',
+     falseLabel: 'לא',
+     getter: getNewSetting,
+     setter: setNewSetting,
+     sideEffect: (newValue) => { /* optional side effect */ }
+   }
+   ```
+3. That's it! The config-driven system handles HTML generation and event listeners automatically
+
+### Add a non-toggle setting
+1. Add HTML manually to settings panel in `shell.js`
+2. Add event listener in `attachSettingsListeners()`
+3. Add localStorage getter/setter in `core.js` if needed
 4. Use the setting value in relevant logic
 
 ### Change header/footer

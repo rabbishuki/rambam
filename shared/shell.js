@@ -1,6 +1,140 @@
 // ============================================================================
 // Shell - Injects shared HTML structure
 // ============================================================================
+
+// ============================================================================
+// Toggle Settings Configuration
+// ============================================================================
+const TOGGLE_SETTINGS = [
+  {
+    id: 'daily-reminder',
+    label: 'תזכורת יומית',
+    trueLabel: 'פעיל',
+    falseLabel: 'כבוי',
+    getter: getDailyReminderEnabled,
+    setter: setDailyReminderEnabled,
+    sideEffect: async (newValue) => {
+      if (newValue) {
+        const hasPermission = await requestNotificationPermission();
+        if (hasPermission) {
+          scheduleDailyReminder();
+        } else {
+          alert('יש לאפשר התראות בדפדפן כדי לקבל תזכורות יומיות');
+          // Revert the setting if permission denied
+          setDailyReminderEnabled(false);
+          // Update UI
+          const buttons = document.querySelectorAll(`[data-setting-id="daily-reminder"]`);
+          buttons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === 'false');
+          });
+        }
+      }
+    }
+  },
+  {
+    id: 'auto-mark',
+    label: 'סימון הלכות קודמות כנקראו',
+    trueLabel: 'כן',
+    falseLabel: 'לא',
+    getter: getAutoMark,
+    setter: setAutoMark
+  },
+  {
+    id: 'hide-completed-items',
+    label: 'הלכות שהושלמו',
+    trueLabel: 'הסתר',
+    falseLabel: 'הצג',
+    getter: getHideCompleted,
+    setter: setHideCompleted,
+    sideEffect: (newValue) => {
+      const container = document.querySelector('.container');
+      if (container) {
+        if (newValue) {
+          container.classList.add('hide-completed');
+        } else {
+          container.classList.remove('hide-completed');
+        }
+      }
+    }
+  },
+  {
+    id: 'hide-completed-days',
+    label: 'ימים שהושלמו',
+    trueLabel: 'הסתר',
+    falseLabel: 'הצג',
+    getter: getHideCompletedDays,
+    setter: setHideCompletedDays,
+    sideEffect: (newValue) => {
+      const container = document.querySelector('.container');
+      if (container) {
+        if (newValue) {
+          container.classList.add('hide-completed-days');
+        } else {
+          container.classList.remove('hide-completed-days');
+        }
+      }
+    }
+  }
+];
+
+// Generate toggle settings HTML
+function generateToggleSettings() {
+  return TOGGLE_SETTINGS.map(setting => `
+    <div class="settings-section toggle">
+      <label class="settings-label">${setting.label}</label>
+      <div class="toggle-container">
+        <button class="toggle-btn" data-setting-id="${setting.id}" data-value="true">${setting.trueLabel}</button>
+        <button class="toggle-btn" data-setting-id="${setting.id}" data-value="false">${setting.falseLabel}</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Generic toggle settings event listeners
+function attachToggleListeners() {
+  TOGGLE_SETTINGS.forEach(setting => {
+    const currentValue = setting.getter();
+    const buttons = document.querySelectorAll(`[data-setting-id="${setting.id}"]`);
+
+    // Set initial active state
+    buttons.forEach(btn => {
+      const btnValue = btn.dataset.value === 'true';
+      if (btnValue === currentValue) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // Attach click listeners
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const newValue = btn.dataset.value === 'true';
+
+        // Update storage
+        setting.setter(newValue);
+
+        // Update UI state
+        buttons.forEach(b => {
+          b.classList.toggle('active', b.dataset.value === btn.dataset.value);
+        });
+
+        // Execute side effect if defined
+        if (setting.sideEffect) {
+          setting.sideEffect(newValue);
+        }
+      });
+    });
+  });
+
+  // Apply initial side effects
+  TOGGLE_SETTINGS.forEach(setting => {
+    if (setting.sideEffect) {
+      setting.sideEffect(setting.getter());
+    }
+  });
+}
+
 function initShell() {
   const app = document.getElementById('app');
   if (!app) {
@@ -9,6 +143,8 @@ function initShell() {
   }
 
   const planName = window.PLAN?.name || 'רמב"ם יומי';
+  const cycleNumber = window.PLAN?.cycleNumber;
+  const cycleText = cycleNumber ? `מחזור ${cycleNumber}` : 'תחילת המחזור';
 
   app.innerHTML = `
     <header id="mainHeader">
@@ -53,6 +189,14 @@ function initShell() {
     </div>
 
     <main id="mainContent"></main>
+
+    <div class="dedication">
+      הלימוד לעילוי נשמת <b>ישראל שאול</b> בן <b>משה אהרון</b> ו<b>מלכה</b> בת <b>נתן</b>
+    </div>
+
+    <div class="dedication yechi">
+      יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד
+    </div>
   `;
 
   // Add overlay
@@ -89,41 +233,30 @@ function initShell() {
     </div>
     <div class="settings-content">
       <div class="settings-scrollable">
-        <div class="settings-section">
-          <label class="settings-label">תאריך התחלת לימוד</label>
-          <div class="date-row">
-            <button class="btn btn-primary btn-compact" id="setCycleBtn">מחזור 46</button>
-            <input type="date" class="date-input" id="startDateInput">
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <label class="settings-label">סימון הלכות קודמות כנקראו</label>
+        <div class="settings-section toggle">
+          <label class="settings-label">תאריך התחלה</label>
           <div class="toggle-container">
-            <button class="toggle-btn auto-mark active" data-value="true">כן</button>
-            <button class="toggle-btn auto-mark" data-value="false">לא</button>
+            <button class="toggle-btn" id="setCycleBtn">${cycleText}</button>
+            <button class="toggle-btn" id="startDateCustomBtn">
+              <input type="date" id="startDateInput" class="date-input-inline">
+            </button>
           </div>
         </div>
 
-        <div class="settings-section">
-          <label class="settings-label">הלכות וימים שהושלמו</label>
+        <div class="settings-section toggle">
+          <label class="settings-label">עבור ליום הבא</label>
           <div class="toggle-container">
-            <button class="toggle-btn hide-completed active" data-value="true">הסתר</button>
-            <button class="toggle-btn hide-completed" data-value="false">הצג</button>
+            <button class="toggle-btn" id="dayTransitionTimeBtn">
+              <input type="time" id="dayTransitionTime" class="time-input-inline">
+            </button>
+            <button class="toggle-btn" id="dayTransitionSunsetBtn">שקיעה</button>
           </div>
         </div>
+        
+        ${generateToggleSettings()}
 
-        <div class="settings-section">
-          <label class="settings-label">מיקום ושקיעה</label>
-          <div style="display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 8px; font-size: 0.875rem; color: #374151;">
-            <div id="locationText">מיקום: תל אביב (ברירת מחדל)</div>
-            <div id="sunsetText">שקיעה: 18:00</div>
-          </div>
-          <button class="btn btn-primary" id="updateLocationBtn">עדכן מיקום ושקיעה</button>
-        </div>
-
-        <div class="settings-section">
-          <label class="settings-label">מחק נתונים</label>
+        <div class="settings-section toggle">
+          <label class="settings-label">איפוס</label>
           <div class="date-row">
             <button class="btn btn-warning" id="refreshDataBtn">שמור התקדמות</button>
             <button class="btn btn-danger" id="resetBtn">מחק התקדמות</button>
@@ -134,10 +267,6 @@ function initShell() {
           <label class="settings-label">רשימת שינויים</label>
           <div id="changelogContainer"></div>
         </div>
-      </div>
-
-      <div class="settings-dedication">
-        לעילוי נשמת <b>ישראל שאול</b> בן <b>משה אהרון</b> ו<b>מלכה</b> בת <b>נתן</b>
       </div>
 
       <footer class="footer">
@@ -159,10 +288,6 @@ function initShell() {
           <span>הגה והכווין.</span>
         </div>
       </footer>
-
-      <div class="settings-dedication yechi">
-        יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד
-      </div>
     </div>
   `;
   document.body.appendChild(settingsPanel);
@@ -179,7 +304,6 @@ function initShell() {
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
   document.getElementById('overlay').classList.add('visible');
-  updateLocationDisplay();
 }
 
 function closeSettings() {
@@ -192,62 +316,16 @@ function attachSettingsListeners() {
   document.getElementById('closeBtn').addEventListener('click', closeSettings);
   document.getElementById('overlay').addEventListener('click', closeSettings);
 
-  // Auto-mark toggle
-  const currentAutoMark = getAutoMark();
-  document.querySelectorAll('.toggle-btn.auto-mark').forEach(btn => {
-    const value = btn.dataset.value === 'true';
-    if (value === currentAutoMark) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-
-    btn.addEventListener('click', () => {
-      const newValue = btn.dataset.value === 'true';
-      setAutoMark(newValue);
-      document.querySelectorAll('.toggle-btn.auto-mark').forEach(b => {
-        b.classList.toggle('active', b.dataset.value === btn.dataset.value);
-      });
-    });
-  });
-
-  // Hide completed toggle
-  const currentHideCompleted = getHideCompleted();
-  const container = document.querySelector('.container');
-
-  // Apply initial state
-  if (currentHideCompleted) {
-    container.classList.add('hide-completed');
-  }
-
-  document.querySelectorAll('.toggle-btn.hide-completed').forEach(btn => {
-    const value = btn.dataset.value === 'true';
-    if (value === currentHideCompleted) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-
-    btn.addEventListener('click', () => {
-      const newValue = btn.dataset.value === 'true';
-      setHideCompleted(newValue);
-      document.querySelectorAll('.toggle-btn.hide-completed').forEach(b => {
-        b.classList.toggle('active', b.dataset.value === btn.dataset.value);
-      });
-
-      // Toggle the class on container
-      if (newValue) {
-        container.classList.add('hide-completed');
-      } else {
-        container.classList.remove('hide-completed');
-      }
-    });
-  });
+  // Toggle settings
+  attachToggleListeners();
 
   // Refresh data button
   document.getElementById('refreshDataBtn').addEventListener('click', () => {
     if (confirm('האם לרענן את הנתונים? ההתקדמות שלך תישמר.')) {
       localStorage.removeItem(`${window.PLAN.storagePrefix}_days`);
+      // Reset day transition settings to defaults
+      localStorage.removeItem(`${window.PLAN.storagePrefix}_day_transition_mode`);
+      localStorage.removeItem(`${window.PLAN.storagePrefix}_day_transition_time`);
       location.reload();
     }
   });
@@ -262,28 +340,35 @@ function attachSettingsListeners() {
     }
   });
 
-  // Set start date input value
+  // Start date settings
   const startDateInput = document.getElementById('startDateInput');
+  const startDateCustomBtn = document.getElementById('startDateCustomBtn');
   const setCycleBtn = document.getElementById('setCycleBtn');
 
-  function updateDateButtons() {
+  function updateStartDateUI() {
     const currentStart = getStart();
     const isCycleDate = currentStart === CYCLE_START;
 
+    startDateInput.value = currentStart;
+
     if (isCycleDate) {
-      setCycleBtn.classList.remove('btn-secondary');
-      setCycleBtn.classList.add('btn-primary');
-      startDateInput.classList.add('date-input-inactive');
+      startDateCustomBtn.classList.remove('active');
+      setCycleBtn.classList.add('active');
     } else {
-      setCycleBtn.classList.remove('btn-primary');
-      setCycleBtn.classList.add('btn-secondary');
-      startDateInput.classList.remove('date-input-inactive');
+      startDateCustomBtn.classList.add('active');
+      setCycleBtn.classList.remove('active');
     }
   }
 
-  startDateInput.value = getStart();
-  updateDateButtons();
+  updateStartDateUI();
 
+  // Custom date button click - activate custom mode
+  startDateCustomBtn.addEventListener('click', () => {
+    // Just focus the date input when clicking the button
+    startDateInput.focus();
+  });
+
+  // Date input change
   startDateInput.addEventListener('change', (e) => {
     const newStart = e.target.value;
     if (confirm(`האם לשנות את תאריך ההתחלה ל-${newStart}? זה עלול לאפס את ההתקדמות.`)) {
@@ -294,6 +379,7 @@ function attachSettingsListeners() {
     }
   });
 
+  // Cycle button click
   setCycleBtn.addEventListener('click', () => {
     if (confirm('האם לקבוע את תאריך ההתחלה לט״ו שבט ה׳תשפ״ו (3 בפברואר 2026)?')) {
       setStart(CYCLE_START);
@@ -301,9 +387,46 @@ function attachSettingsListeners() {
     }
   });
 
-  // Update location button
-  document.getElementById('updateLocationBtn').addEventListener('click', async () => {
-    const btn = document.getElementById('updateLocationBtn');
+  // Day transition settings
+  const dayTransitionTime = document.getElementById('dayTransitionTime');
+  const dayTransitionTimeBtn = document.getElementById('dayTransitionTimeBtn');
+  const dayTransitionSunsetBtn = document.getElementById('dayTransitionSunsetBtn');
+
+  // Initialize day transition UI
+  function updateDayTransitionUI() {
+    const mode = getDayTransitionMode();
+    dayTransitionTime.value = getDayTransitionTime();
+
+    if (mode === 'time') {
+      dayTransitionTimeBtn.classList.add('active');
+      dayTransitionSunsetBtn.classList.remove('active');
+    } else {
+      dayTransitionTimeBtn.classList.remove('active');
+      dayTransitionSunsetBtn.classList.add('active');
+    }
+  }
+
+  updateDayTransitionUI();
+
+  // Time button click - activate time mode
+  dayTransitionTimeBtn.addEventListener('click', () => {
+    setDayTransitionMode('time');
+    updateDayTransitionUI();
+    // Focus the time input
+    dayTransitionTime.focus();
+  });
+
+  // Time input change
+  dayTransitionTime.addEventListener('change', (e) => {
+    const newTime = e.target.value;
+    setDayTransitionTime(newTime);
+    setDayTransitionMode('time');
+    updateDayTransitionUI();
+  });
+
+  // Sunset button click - fetch location and sunset
+  dayTransitionSunsetBtn.addEventListener('click', async () => {
+    const btn = dayTransitionSunsetBtn;
     const originalText = btn.textContent;
     btn.textContent = 'מעדכן...';
     btn.disabled = true;
@@ -319,18 +442,36 @@ function attachSettingsListeners() {
       const rawDateStr = `${year}-${month}-${day}`;
       await fetchSunset(rawDateStr, coords);
 
+      // Get the updated sunset time from cachedSunsetHour/Minute (set by fetchSunset)
+      const hourStr = String(cachedSunsetHour).padStart(2, '0');
+      const minStr = String(cachedSunsetMinute).padStart(2, '0');
+      const sunsetTime = `${hourStr}:${minStr}`;
+
+      // Save sunset time to localStorage
+      setDayTransitionTime(sunsetTime);
+      setDayTransitionMode('sunset');
+
+      // Update UI
+      dayTransitionTime.value = sunsetTime;
+      updateDayTransitionUI();
+
       btn.textContent = '✓ עודכן';
       setTimeout(() => {
         btn.textContent = originalText;
+        btn.disabled = false;
       }, 2000);
     } catch (error) {
-      console.error('Failed to update location:', error);
-      btn.textContent = '❌ שגיאה';
+      console.error('Failed to fetch sunset:', error);
+
+      // Revert to time mode on any error
+      setDayTransitionMode('time');
+      updateDayTransitionUI();
+
+      btn.textContent = '✗';
       setTimeout(() => {
         btn.textContent = originalText;
+        btn.disabled = false;
       }, 2000);
-    } finally {
-      btn.disabled = false;
     }
   });
 }
@@ -359,7 +500,7 @@ function attachCalendarListeners() {
     const selectedDate = e.target.value;
     viewingDate = selectedDate;
 
-    const today = getTodayInIsrael();
+    const today = getJewishToday();
     if (selectedDate !== today) {
       mainHeader.classList.add('viewing-other-date');
     } else {

@@ -13,29 +13,67 @@ function setStart(dateStr) {
   localStorage.setItem('rambam_start', dateStr);
 }
 
+// Generic setting utilities
+function getSetting(key, defaultValue = true) {
+  const stored = localStorage.getItem(key);
+  return stored === null ? defaultValue : stored === 'true';
+}
+
+function setSetting(key, value) {
+  localStorage.setItem(key, value.toString());
+}
+
+// Specific setting functions (backward compatibility wrappers)
 function getAutoMark() {
-  const stored = localStorage.getItem('rambam_auto_mark');
-  return stored === null ? true : stored === 'true';
+  return getSetting('rambam_auto_mark', true);
 }
 
 function setAutoMark(enabled) {
-  localStorage.setItem('rambam_auto_mark', enabled.toString());
+  setSetting('rambam_auto_mark', enabled);
 }
 
 function getHideCompleted() {
-  const stored = localStorage.getItem('rambam_hide_completed');
-  return stored === null ? true : stored === 'true'; // Default to true (hide completed)
+  return getSetting('rambam_hide_completed', true);
 }
 
 function setHideCompleted(enabled) {
-  localStorage.setItem('rambam_hide_completed', enabled.toString());
+  setSetting('rambam_hide_completed', enabled);
+}
+
+function getHideCompletedDays() {
+  return getSetting('rambam_hide_completed_days', true);
+}
+
+function setHideCompletedDays(enabled) {
+  setSetting('rambam_hide_completed_days', enabled);
+}
+
+// Day transition settings
+function getDayTransitionMode() {
+  // 'time' or 'sunset'
+  const stored = localStorage.getItem(`${window.PLAN.storagePrefix}_day_transition_mode`);
+  return stored || 'time';
+}
+
+function setDayTransitionMode(mode) {
+  localStorage.setItem(`${window.PLAN.storagePrefix}_day_transition_mode`, mode);
+}
+
+function getDayTransitionTime() {
+  // Default to 18:00
+  const stored = localStorage.getItem(`${window.PLAN.storagePrefix}_day_transition_time`);
+  return stored || '18:00';
+}
+
+function setDayTransitionTime(time) {
+  localStorage.setItem(`${window.PLAN.storagePrefix}_day_transition_time`, time);
 }
 
 function isFirstVisit() {
   return !localStorage.getItem('rambam_start');
 }
 
-function getTodayInIsrael() {
+function getJewishToday() {
   // Get current time in Israel timezone (Asia/Jerusalem)
   const now = new Date();
   const israelTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
@@ -43,17 +81,32 @@ function getTodayInIsrael() {
   const hour = israelTime.getHours();
   const minute = israelTime.getMinutes();
 
-  // Jewish day starts at sunset (using cached sunset time)
-  const isPastSunset = (hour > cachedSunsetHour) ||
-                       (hour === cachedSunsetHour && minute >= cachedSunsetMinute);
+  // Get transition time based on mode
+  let transitionHour, transitionMinute;
+  const mode = getDayTransitionMode();
+
+  if (mode === 'sunset') {
+    // Use cached sunset time from API
+    transitionHour = cachedSunsetHour;
+    transitionMinute = cachedSunsetMinute;
+  } else {
+    // Use custom time from settings
+    const [h, m] = getDayTransitionTime().split(':').map(Number);
+    transitionHour = h;
+    transitionMinute = m;
+  }
+
+  // Jewish day starts at transition time
+  const isPastTransition = (hour > transitionHour) ||
+                           (hour === transitionHour && minute >= transitionMinute);
 
   let jewishDate = new Date(israelTime);
 
-  if (!isPastSunset) {
-    // Before sunset - still in previous Jewish day
+  if (!isPastTransition) {
+    // Before transition time - still in previous Jewish day
     // No adjustment needed, use current calendar date
   } else {
-    // After sunset - advance to next Jewish day
+    // After transition time - advance to next Jewish day
     jewishDate.setDate(jewishDate.getDate() + 1);
   }
 
@@ -161,7 +214,7 @@ function toHebrewLetter(num) {
 // ============================================================================
 async function loadMissingDays() {
   const start = getStart();
-  const today = getTodayInIsrael();
+  const today = getJewishToday();
   const allDates = dateRange(start, today);
   const days = getDays();
 
@@ -215,7 +268,7 @@ async function loadMissingDays() {
 function computeStats() {
   const days = getDays();
   const done = getDone();
-  const today = getTodayInIsrael();
+  const today = getJewishToday();
 
   // Completed days: count how many days have been fully completed
   let completedDays = 0;
@@ -294,7 +347,7 @@ function updateDayHeader(date) {
 
   // Update the progress text
   const dayMeta = details.querySelector('.day-meta');
-  const today = getTodayInIsrael();
+  const today = getJewishToday();
   const isToday = date === today;
   const dateLabel = isToday ? 'היום' : formatHebrewDate(date);
   dayMeta.textContent = `${dateLabel} • ${doneCount}/${dayData.count}`;
@@ -324,7 +377,7 @@ function updateDayHeader(date) {
 function renderDays() {
   const days = getDays();
   const done = getDone();
-  const today = getTodayInIsrael();
+  const today = getJewishToday();
   const start = getStart();
 
   const allDates = dateRange(start, today).reverse(); // Today first
@@ -834,7 +887,7 @@ let viewingDate = null; // null means viewing normal mode (all days)
 async function renderSingleDay(date) {
   const days = getDays();
   const done = getDone();
-  const today = getTodayInIsrael();
+  const today = getJewishToday();
   const mainContent = document.getElementById('mainContent');
 
   // Check if we have this date cached
@@ -906,6 +959,98 @@ async function renderSingleDay(date) {
   details.querySelectorAll('.day-action-btn').forEach(btn => {
     btn.addEventListener('click', handleDayAction);
   });
+}
+
+// ============================================================================
+// Notifications
+// ============================================================================
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    console.log('This browser does not support notifications');
+    return false;
+  }
+
+  if (Notification.permission === 'granted') {
+    return true;
+  }
+
+  if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  }
+
+  return false;
+}
+
+function showNotification(title, options = {}) {
+  if (Notification.permission === 'granted') {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      // Use service worker for better reliability
+      navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification(title, options);
+      });
+    } else {
+      // Fallback to regular notification
+      new Notification(title, options);
+    }
+  }
+}
+
+// Schedule daily study reminder
+function scheduleDailyReminder() {
+  const mode = getDayTransitionMode();
+  let transitionHour, transitionMinute;
+
+  if (mode === 'sunset') {
+    transitionHour = cachedSunsetHour;
+    transitionMinute = cachedSunsetMinute;
+  } else {
+    const [h, m] = getDayTransitionTime().split(':').map(Number);
+    transitionHour = h;
+    transitionMinute = m;
+  }
+
+  // Calculate time until next transition
+  const now = new Date();
+  const israelTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
+  const israelTime = new Date(israelTimeStr);
+
+  const nextTransition = new Date(israelTime);
+  nextTransition.setHours(transitionHour, transitionMinute, 0, 0);
+
+  // If we've passed today's transition, schedule for tomorrow
+  if (israelTime >= nextTransition) {
+    nextTransition.setDate(nextTransition.getDate() + 1);
+  }
+
+  const msUntilTransition = nextTransition - israelTime;
+
+  // Schedule notification
+  setTimeout(() => {
+    showNotification('יום חדש בלימוד!', {
+      body: `הגיע הזמן ללימוד היומי של ${window.PLAN.name}`,
+      icon: './assets/icon-192.png',
+      badge: './assets/icon-192.png',
+      tag: 'daily-study',
+      requireInteraction: false,
+      actions: [
+        { action: 'open', title: 'פתח את האפליקציה' }
+      ]
+    });
+
+    // Schedule next day's reminder
+    scheduleDailyReminder();
+  }, msUntilTransition);
+
+  console.log(`Daily reminder scheduled for ${nextTransition.toLocaleString('he-IL')}`);
+}
+
+function getDailyReminderEnabled() {
+  return getSetting(`${window.PLAN.storagePrefix}_daily_reminder`, false);
+}
+
+function setDailyReminderEnabled(enabled) {
+  setSetting(`${window.PLAN.storagePrefix}_daily_reminder`, enabled);
 }
 
 // ============================================================================
@@ -989,7 +1134,20 @@ if ('serviceWorker' in navigator) {
           const newWorker = reg.installing;
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New version available
+              // New version available - show notification
+              showNotification('עדכון זמין', {
+                body: 'גרסה חדשה של האפליקציה זמינה!',
+                icon: './assets/icon-192.png',
+                badge: './assets/icon-192.png',
+                tag: 'app-update',
+                requireInteraction: true,
+                actions: [
+                  { action: 'update', title: 'עדכן עכשיו' },
+                  { action: 'dismiss', title: 'מאוחר יותר' }
+                ]
+              });
+
+              // Also show confirm dialog as fallback
               if (confirm('גרסה חדשה של האפליקציה זמינה! האם לרענן את הדף?')) {
                 newWorker.postMessage({ type: 'SKIP_WAITING' });
                 window.location.reload();
@@ -1077,24 +1235,17 @@ async function init() {
     // Load changelog
     loadChangelog();
 
-    // Fetch coords and sunset in background (non-blocking)
-    getUserCoords().then(coords => {
-      const now = new Date();
-      const israelTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
-      const israelTime = new Date(israelTimeStr);
-      const year = israelTime.getFullYear();
-      const month = String(israelTime.getMonth() + 1).padStart(2, '0');
-      const day = String(israelTime.getDate()).padStart(2, '0');
-      const rawDateStr = `${year}-${month}-${day}`;
-      fetchSunset(rawDateStr, coords);
-    });
+    // Schedule daily reminder if enabled
+    if (getDailyReminderEnabled()) {
+      scheduleDailyReminder();
+    }
 
     // Open settings on first visit
     if (firstVisit) {
       openSettings();
     } else {
       // Auto-open today's section if not completed (only if not first visit)
-      const today = getTodayInIsrael();
+      const today = getJewishToday();
       const days = getDays();
       const done = getDone();
       const todayData = days[today];
