@@ -846,6 +846,29 @@
       line-height: 1.6;
     }
 
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 6rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1e3a8a;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 1001;
+      font-size: 0.875rem;
+      font-weight: 500;
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
     /* Install Prompt */
     .install-prompt {
       position: fixed;
@@ -927,6 +950,7 @@
 
     .dedication {
       background: #fef3e3;
+      border-top: 1px solid #d87858;
       padding: 1rem;
       text-align: center;
       font-size: 0.875rem;
@@ -1019,6 +1043,7 @@
 
     .yechi {
       background: #1e3a8a;
+      border-top: none;
       color: white;
       padding: 0.5rem;
       bottom: 0;

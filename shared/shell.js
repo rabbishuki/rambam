@@ -154,6 +154,15 @@ function initShell() {
       </div>
       <input type="date" id="headerDatePicker" class="header-date-picker">
       <div class="header-actions">
+        <button class="header-btn" id="shareBtn" style="display: none;" aria-label="שתף אפליקציה">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+        </button>
         <button class="header-btn" id="installHeaderBtn" style="display: none;" aria-label="התקן אפליקציה">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -313,6 +322,7 @@ function initShell() {
   attachSettingsListeners();
   attachCalendarListeners();
   attachInstallListeners();
+  attachShareListener();
   initScrollBanner();
 }
 
@@ -548,6 +558,91 @@ function attachInstallListeners() {
     document.getElementById('installPrompt').classList.remove('show');
     localStorage.setItem('install_prompt_shown', 'true');
   });
+}
+
+// ============================================================================
+// Share Button - Shows when installed as PWA
+// ============================================================================
+function attachShareListener() {
+  const shareBtn = document.getElementById('shareBtn');
+
+  // Check if app is running as installed PWA
+  const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
+                      window.navigator.standalone === true;
+
+  if (isInstalled) {
+    shareBtn.style.display = '';
+
+    shareBtn.addEventListener('click', async () => {
+      const shareText = 'תראה איזה אפליקציה מגניבה מצאתי ללימוד רמב״ם!';
+      const shareUrl = window.location.href;
+
+      // Try native share API first
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            text: shareText,
+            url: shareUrl
+          });
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            console.error('Share failed:', err);
+            fallbackCopyToClipboard(shareText, shareUrl);
+          }
+        }
+      } else {
+        // Fallback to copy to clipboard
+        fallbackCopyToClipboard(shareText, shareUrl);
+      }
+    });
+  }
+}
+
+function fallbackCopyToClipboard(text, url) {
+  const fullText = `${text}\n${url}`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(fullText).then(() => {
+      showToast('הקישור הועתק ללוח!');
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      showToast('לא ניתן להעתיק');
+    });
+  } else {
+    // Old-school fallback
+    const textArea = document.createElement('textarea');
+    textArea.value = fullText;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showToast('הקישור הועתק ללוח!');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      showToast('לא ניתן להעתיק');
+    }
+    document.body.removeChild(textArea);
+  }
+}
+
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('show');
+  }, 10);
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 300);
+  }, 2000);
 }
 
 // ============================================================================
