@@ -516,6 +516,23 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
+    /* Day transition time input inside toggle button */
+    .time-input-inline {
+      border: none;
+      background: transparent;
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: inherit;
+      padding: 0;
+      width: 100%;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .time-input-inline:focus {
+      outline: none;
+    }
+
     .date-row {
       display: flex;
       gap: 0.5rem;

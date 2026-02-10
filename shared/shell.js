@@ -216,13 +216,14 @@ function initShell() {
 
         ${generateToggleSettings()}
 
-        <div class="settings-section">
-          <label class="settings-label">מיקום ושקיעה</label>
-          <div style="display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 8px; font-size: 0.875rem; color: #374151;">
-            <div id="locationText">מיקום: תל אביב (ברירת מחדל)</div>
-            <div id="sunsetText">שקיעה: 18:00</div>
+        <div class="settings-section toggle">
+          <label class="settings-label">עבור ליום הבא ב</label>
+          <div class="toggle-container">
+            <button class="toggle-btn" id="dayTransitionTimeBtn">
+              <input type="time" id="dayTransitionTime" class="time-input-inline">
+            </button>
+            <button class="toggle-btn" id="dayTransitionSunsetBtn">שקיעה</button>
           </div>
-          <button class="btn btn-primary" id="updateLocationBtn">עדכן מיקום ושקיעה</button>
         </div>
 
         <div class="settings-section">
@@ -274,7 +275,6 @@ function initShell() {
 function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
   document.getElementById('overlay').classList.add('visible');
-  updateLocationDisplay();
 }
 
 function closeSettings() {
@@ -294,6 +294,9 @@ function attachSettingsListeners() {
   document.getElementById('refreshDataBtn').addEventListener('click', () => {
     if (confirm('האם לרענן את הנתונים? ההתקדמות שלך תישמר.')) {
       localStorage.removeItem(`${window.PLAN.storagePrefix}_days`);
+      // Reset day transition settings to defaults
+      localStorage.removeItem(`${window.PLAN.storagePrefix}_day_transition_mode`);
+      localStorage.removeItem(`${window.PLAN.storagePrefix}_day_transition_time`);
       location.reload();
     }
   });
@@ -347,9 +350,46 @@ function attachSettingsListeners() {
     }
   });
 
-  // Update location button
-  document.getElementById('updateLocationBtn').addEventListener('click', async () => {
-    const btn = document.getElementById('updateLocationBtn');
+  // Day transition settings
+  const dayTransitionTime = document.getElementById('dayTransitionTime');
+  const dayTransitionTimeBtn = document.getElementById('dayTransitionTimeBtn');
+  const dayTransitionSunsetBtn = document.getElementById('dayTransitionSunsetBtn');
+
+  // Initialize day transition UI
+  function updateDayTransitionUI() {
+    const mode = getDayTransitionMode();
+    dayTransitionTime.value = getDayTransitionTime();
+
+    if (mode === 'time') {
+      dayTransitionTimeBtn.classList.add('active');
+      dayTransitionSunsetBtn.classList.remove('active');
+    } else {
+      dayTransitionTimeBtn.classList.remove('active');
+      dayTransitionSunsetBtn.classList.add('active');
+    }
+  }
+
+  updateDayTransitionUI();
+
+  // Time button click - activate time mode
+  dayTransitionTimeBtn.addEventListener('click', () => {
+    setDayTransitionMode('time');
+    updateDayTransitionUI();
+    // Focus the time input
+    dayTransitionTime.focus();
+  });
+
+  // Time input change
+  dayTransitionTime.addEventListener('change', (e) => {
+    const newTime = e.target.value;
+    setDayTransitionTime(newTime);
+    setDayTransitionMode('time');
+    updateDayTransitionUI();
+  });
+
+  // Sunset button click - fetch location and sunset
+  dayTransitionSunsetBtn.addEventListener('click', async () => {
+    const btn = dayTransitionSunsetBtn;
     const originalText = btn.textContent;
     btn.textContent = 'מעדכן...';
     btn.disabled = true;
@@ -365,18 +405,36 @@ function attachSettingsListeners() {
       const rawDateStr = `${year}-${month}-${day}`;
       await fetchSunset(rawDateStr, coords);
 
+      // Get the updated sunset time from cachedSunsetHour/Minute (set by fetchSunset)
+      const hourStr = String(cachedSunsetHour).padStart(2, '0');
+      const minStr = String(cachedSunsetMinute).padStart(2, '0');
+      const sunsetTime = `${hourStr}:${minStr}`;
+
+      // Save sunset time to localStorage
+      setDayTransitionTime(sunsetTime);
+      setDayTransitionMode('sunset');
+
+      // Update UI
+      dayTransitionTime.value = sunsetTime;
+      updateDayTransitionUI();
+
       btn.textContent = '✓ עודכן';
       setTimeout(() => {
         btn.textContent = originalText;
+        btn.disabled = false;
       }, 2000);
     } catch (error) {
-      console.error('Failed to update location:', error);
-      btn.textContent = '❌ שגיאה';
+      console.error('Failed to fetch sunset:', error);
+
+      // Revert to time mode on any error
+      setDayTransitionMode('time');
+      updateDayTransitionUI();
+
+      btn.textContent = '✗';
       setTimeout(() => {
         btn.textContent = originalText;
+        btn.disabled = false;
       }, 2000);
-    } finally {
-      btn.disabled = false;
     }
   });
 }
@@ -405,7 +463,7 @@ function attachCalendarListeners() {
     const selectedDate = e.target.value;
     viewingDate = selectedDate;
 
-    const today = getTodayInIsrael();
+    const today = getJewishToday();
     if (selectedDate !== today) {
       mainHeader.classList.add('viewing-other-date');
     } else {

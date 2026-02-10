@@ -48,11 +48,32 @@ function setHideCompletedDays(enabled) {
   setSetting('rambam_hide_completed_days', enabled);
 }
 
+// Day transition settings
+function getDayTransitionMode() {
+  // 'time' or 'sunset'
+  const stored = localStorage.getItem(`${window.PLAN.storagePrefix}_day_transition_mode`);
+  return stored || 'time';
+}
+
+function setDayTransitionMode(mode) {
+  localStorage.setItem(`${window.PLAN.storagePrefix}_day_transition_mode`, mode);
+}
+
+function getDayTransitionTime() {
+  // Default to 18:00
+  const stored = localStorage.getItem(`${window.PLAN.storagePrefix}_day_transition_time`);
+  return stored || '18:00';
+}
+
+function setDayTransitionTime(time) {
+  localStorage.setItem(`${window.PLAN.storagePrefix}_day_transition_time`, time);
+}
+
 function isFirstVisit() {
   return !localStorage.getItem('rambam_start');
 }
 
-function getTodayInIsrael() {
+function getJewishToday() {
   // Get current time in Israel timezone (Asia/Jerusalem)
   const now = new Date();
   const israelTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
@@ -60,17 +81,32 @@ function getTodayInIsrael() {
   const hour = israelTime.getHours();
   const minute = israelTime.getMinutes();
 
-  // Jewish day starts at sunset (using cached sunset time)
-  const isPastSunset = (hour > cachedSunsetHour) ||
-                       (hour === cachedSunsetHour && minute >= cachedSunsetMinute);
+  // Get transition time based on mode
+  let transitionHour, transitionMinute;
+  const mode = getDayTransitionMode();
+
+  if (mode === 'sunset') {
+    // Use cached sunset time from API
+    transitionHour = cachedSunsetHour;
+    transitionMinute = cachedSunsetMinute;
+  } else {
+    // Use custom time from settings
+    const [h, m] = getDayTransitionTime().split(':').map(Number);
+    transitionHour = h;
+    transitionMinute = m;
+  }
+
+  // Jewish day starts at transition time
+  const isPastTransition = (hour > transitionHour) ||
+                           (hour === transitionHour && minute >= transitionMinute);
 
   let jewishDate = new Date(israelTime);
 
-  if (!isPastSunset) {
-    // Before sunset - still in previous Jewish day
+  if (!isPastTransition) {
+    // Before transition time - still in previous Jewish day
     // No adjustment needed, use current calendar date
   } else {
-    // After sunset - advance to next Jewish day
+    // After transition time - advance to next Jewish day
     jewishDate.setDate(jewishDate.getDate() + 1);
   }
 
@@ -178,7 +214,7 @@ function toHebrewLetter(num) {
 // ============================================================================
 async function loadMissingDays() {
   const start = getStart();
-  const today = getTodayInIsrael();
+  const today = getJewishToday();
   const allDates = dateRange(start, today);
   const days = getDays();
 
@@ -232,7 +268,7 @@ async function loadMissingDays() {
 function computeStats() {
   const days = getDays();
   const done = getDone();
-  const today = getTodayInIsrael();
+  const today = getJewishToday();
 
   // Completed days: count how many days have been fully completed
   let completedDays = 0;
@@ -311,7 +347,7 @@ function updateDayHeader(date) {
 
   // Update the progress text
   const dayMeta = details.querySelector('.day-meta');
-  const today = getTodayInIsrael();
+  const today = getJewishToday();
   const isToday = date === today;
   const dateLabel = isToday ? 'היום' : formatHebrewDate(date);
   dayMeta.textContent = `${dateLabel} • ${doneCount}/${dayData.count}`;
@@ -341,7 +377,7 @@ function updateDayHeader(date) {
 function renderDays() {
   const days = getDays();
   const done = getDone();
-  const today = getTodayInIsrael();
+  const today = getJewishToday();
   const start = getStart();
 
   const allDates = dateRange(start, today).reverse(); // Today first
@@ -851,7 +887,7 @@ let viewingDate = null; // null means viewing normal mode (all days)
 async function renderSingleDay(date) {
   const days = getDays();
   const done = getDone();
-  const today = getTodayInIsrael();
+  const today = getJewishToday();
   const mainContent = document.getElementById('mainContent');
 
   // Check if we have this date cached
@@ -1094,24 +1130,12 @@ async function init() {
     // Load changelog
     loadChangelog();
 
-    // Fetch coords and sunset in background (non-blocking)
-    getUserCoords().then(coords => {
-      const now = new Date();
-      const israelTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
-      const israelTime = new Date(israelTimeStr);
-      const year = israelTime.getFullYear();
-      const month = String(israelTime.getMonth() + 1).padStart(2, '0');
-      const day = String(israelTime.getDate()).padStart(2, '0');
-      const rawDateStr = `${year}-${month}-${day}`;
-      fetchSunset(rawDateStr, coords);
-    });
-
     // Open settings on first visit
     if (firstVisit) {
       openSettings();
     } else {
       // Auto-open today's section if not completed (only if not first visit)
-      const today = getTodayInIsrael();
+      const today = getJewishToday();
       const days = getDays();
       const done = getDone();
       const todayData = days[today];
