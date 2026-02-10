@@ -962,6 +962,98 @@ async function renderSingleDay(date) {
 }
 
 // ============================================================================
+// Notifications
+// ============================================================================
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    console.log('This browser does not support notifications');
+    return false;
+  }
+
+  if (Notification.permission === 'granted') {
+    return true;
+  }
+
+  if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  }
+
+  return false;
+}
+
+function showNotification(title, options = {}) {
+  if (Notification.permission === 'granted') {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      // Use service worker for better reliability
+      navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification(title, options);
+      });
+    } else {
+      // Fallback to regular notification
+      new Notification(title, options);
+    }
+  }
+}
+
+// Schedule daily study reminder
+function scheduleDailyReminder() {
+  const mode = getDayTransitionMode();
+  let transitionHour, transitionMinute;
+
+  if (mode === 'sunset') {
+    transitionHour = cachedSunsetHour;
+    transitionMinute = cachedSunsetMinute;
+  } else {
+    const [h, m] = getDayTransitionTime().split(':').map(Number);
+    transitionHour = h;
+    transitionMinute = m;
+  }
+
+  // Calculate time until next transition
+  const now = new Date();
+  const israelTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
+  const israelTime = new Date(israelTimeStr);
+
+  const nextTransition = new Date(israelTime);
+  nextTransition.setHours(transitionHour, transitionMinute, 0, 0);
+
+  // If we've passed today's transition, schedule for tomorrow
+  if (israelTime >= nextTransition) {
+    nextTransition.setDate(nextTransition.getDate() + 1);
+  }
+
+  const msUntilTransition = nextTransition - israelTime;
+
+  // Schedule notification
+  setTimeout(() => {
+    showNotification('יום חדש בלימוד!', {
+      body: `הגיע הזמן ללימוד היומי של ${window.PLAN.name}`,
+      icon: './assets/icon-192.png',
+      badge: './assets/icon-192.png',
+      tag: 'daily-study',
+      requireInteraction: false,
+      actions: [
+        { action: 'open', title: 'פתח את האפליקציה' }
+      ]
+    });
+
+    // Schedule next day's reminder
+    scheduleDailyReminder();
+  }, msUntilTransition);
+
+  console.log(`Daily reminder scheduled for ${nextTransition.toLocaleString('he-IL')}`);
+}
+
+function getDailyReminderEnabled() {
+  return getSetting(`${window.PLAN.storagePrefix}_daily_reminder`, false);
+}
+
+function setDailyReminderEnabled(enabled) {
+  setSetting(`${window.PLAN.storagePrefix}_daily_reminder`, enabled);
+}
+
+// ============================================================================
 // PWA Install Prompt
 // ============================================================================
 let deferredPrompt;
@@ -1042,7 +1134,20 @@ if ('serviceWorker' in navigator) {
           const newWorker = reg.installing;
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New version available
+              // New version available - show notification
+              showNotification('עדכון זמין', {
+                body: 'גרסה חדשה של האפליקציה זמינה!',
+                icon: './assets/icon-192.png',
+                badge: './assets/icon-192.png',
+                tag: 'app-update',
+                requireInteraction: true,
+                actions: [
+                  { action: 'update', title: 'עדכן עכשיו' },
+                  { action: 'dismiss', title: 'מאוחר יותר' }
+                ]
+              });
+
+              // Also show confirm dialog as fallback
               if (confirm('גרסה חדשה של האפליקציה זמינה! האם לרענן את הדף?')) {
                 newWorker.postMessage({ type: 'SKIP_WAITING' });
                 window.location.reload();
@@ -1129,6 +1234,11 @@ async function init() {
 
     // Load changelog
     loadChangelog();
+
+    // Schedule daily reminder if enabled
+    if (getDailyReminderEnabled()) {
+      scheduleDailyReminder();
+    }
 
     // Open settings on first visit
     if (firstVisit) {

@@ -101,3 +101,36 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// Handle notification clicks
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'update') {
+    // User clicked "Update Now" - trigger update
+    event.waitUntil(
+      self.skipWaiting().then(() => {
+        return clients.matchAll({ type: 'window' }).then(clientList => {
+          clientList.forEach(client => client.postMessage({ type: 'RELOAD' }));
+        });
+      })
+    );
+  } else if (event.action === 'open' || !event.action) {
+    // User clicked notification or "Open App" - focus/open the app
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+        // Check if there's already a window open
+        for (let client of clientList) {
+          if (client.url.includes(self.location.origin) && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        // If no window is open, open a new one
+        if (clients.openWindow) {
+          return clients.openWindow('/');
+        }
+      })
+    );
+  }
+  // 'dismiss' action or no action - just close the notification (already done above)
+});

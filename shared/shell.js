@@ -7,6 +7,31 @@
 // ============================================================================
 const TOGGLE_SETTINGS = [
   {
+    id: 'daily-reminder',
+    label: 'תזכורת יומית',
+    trueLabel: 'פעיל',
+    falseLabel: 'כבוי',
+    getter: getDailyReminderEnabled,
+    setter: setDailyReminderEnabled,
+    sideEffect: async (newValue) => {
+      if (newValue) {
+        const hasPermission = await requestNotificationPermission();
+        if (hasPermission) {
+          scheduleDailyReminder();
+        } else {
+          alert('יש לאפשר התראות בדפדפן כדי לקבל תזכורות יומיות');
+          // Revert the setting if permission denied
+          setDailyReminderEnabled(false);
+          // Update UI
+          const buttons = document.querySelectorAll(`[data-setting-id="daily-reminder"]`);
+          buttons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === 'false');
+          });
+        }
+      }
+    }
+  },
+  {
     id: 'auto-mark',
     label: 'סימון הלכות קודמות כנקראו',
     trueLabel: 'כן',
