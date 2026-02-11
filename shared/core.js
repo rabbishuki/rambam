@@ -297,16 +297,6 @@ function computeStats() {
     }
   });
 
-  // Today percentage
-  const todayData = days[today];
-  let todayPercent = 0;
-  if (todayData) {
-    const todayDone = Object.keys(done).filter(key =>
-      key.startsWith(`${today}:`)
-    ).length;
-    todayPercent = Math.round((todayDone / todayData.count) * 100);
-  }
-
   // Backlog: sum of incomplete halakhot before today (not including today)
   let backlog = 0;
   Object.keys(days).forEach(date => {
@@ -322,14 +312,26 @@ function computeStats() {
     }
   });
 
-  return { completedDays, totalDays, todayPercent, backlog };
-}
+  // Total chapters and halakhot completed
+  let totalChapters = 0;
+  let totalHalakhot = 0;
+  Object.keys(days).forEach(date => {
+    if (date <= today) {
+      const dayData = days[date];
+      const doneCount = Object.keys(done).filter(key =>
+        key.startsWith(`${date}:`)
+      ).length;
 
-function renderStats() {
-  const { completedDays, totalDays, todayPercent, backlog } = computeStats();
-  document.getElementById('completedDaysValue').textContent = `${completedDays}/${totalDays}`;
-  document.getElementById('todayValue').textContent = `${todayPercent}%`;
-  document.getElementById('backlogValue').textContent = backlog;
+      // For completed days, count chapters (assuming 3 chapters per day for rambam3)
+      if (doneCount >= dayData.count) {
+        totalChapters += 3; // Adjust based on plan
+      }
+
+      totalHalakhot += doneCount;
+    }
+  });
+
+  return { completedDays, totalChapters, totalHalakhot };
 }
 
 function updateDayHeader(date) {
@@ -381,6 +383,219 @@ function updateDayHeader(date) {
 }
 
 // ============================================================================
+// Celebration Page
+// ============================================================================
+function renderCelebration(consecutiveDays) {
+  const mainContent = document.getElementById('mainContent');
+  const { completedDays, totalChapters, totalHalakhot } = computeStats();
+
+  // Get day transition time
+  const transitionMode = getDayTransitionMode();
+  let transitionTimeText = '';
+  if (transitionMode === 'sunset') {
+    transitionTimeText = 'בשקיעה';
+  } else {
+    transitionTimeText = 'ב-' + getDayTransitionTime();
+  }
+
+  mainContent.classList.add('celebration-page');
+
+  // Hide scroll banner during celebration
+  const scrollBanner = document.getElementById('scrollBanner');
+  if (scrollBanner) {
+    scrollBanner.style.display = 'none';
+  }
+
+  // Prevent header from collapsing
+  const mainHeader = document.getElementById('mainHeader');
+  if (mainHeader) {
+    mainHeader.classList.remove('scrolled');
+  }
+
+  mainContent.innerHTML = `
+      <div class="confetti-container" id="confetti"></div>
+      <div class="rays"></div>
+
+      <div class="celebration-content">
+      
+        <!-- Stats -->
+        <div class="celebration-stats">
+          <div class="celebration-stat">
+            <span class="celebration-stat-value">${completedDays}</span>
+            <span class="celebration-stat-label">ימי לימוד</span>
+          </div>
+          <div class="celebration-stat">
+            <span class="celebration-stat-value">${totalChapters}</span>
+            <span class="celebration-stat-label">פרקים</span>
+          </div>
+          <div class="celebration-stat">
+            <span class="celebration-stat-value">${totalHalakhot}</span>
+            <span class="celebration-stat-label">הלכות</span>
+          </div>
+        </div>
+
+        <!-- Title -->
+        <h2 class="celebration-title">איזה אלוף!</h2>
+
+        <!-- Subtitle -->
+        <div class="celebration-subtitle">
+          השלמת את <strong>כל הלימוד</strong> של היום
+        </div>
+
+        <div class="celebration-message">
+          וכבר <strong>${consecutiveDays} ימים ברציפות</strong> שאתה לא מפספס הלכה אחת
+        </div>
+
+        <!-- Rambam Quote -->
+        <div class="celebration-quote">
+          ״כל איש מישראל חייב בתלמוד תורה, בין עני בין עשיר, בין שלם בגופו בין בעל יסורין, בין בחור בין שהיה זקן גדול שתשש כחו״
+        </div>
+        <div class="celebration-quote-source">רמב״ם, הלכות תלמוד תורה א׳ ח׳</div>
+
+        <!-- Rebbe Line -->
+        <div class="celebration-rebbe-line">הרבי ממש גאה בך!</div>
+
+        <!-- CTA Button -->
+        <div class="celebration-cta">
+          <button class="celebration-btn" onclick="window.celebrationShare(${completedDays}, ${totalHalakhot}, ${totalChapters})">🎉 שתף את ההישג</button>
+        </div>
+
+        <!-- Return Message -->
+        <div class="celebration-return-message">
+          תחזור מחר ${transitionTimeText} כדי להמשיך להתמיד
+        </div>
+      </div>
+  `;
+
+  // Initialize confetti and animations
+  setTimeout(() => initCelebrationEffects(completedDays, totalHalakhot, totalChapters), 100);
+}
+
+function initCelebrationEffects() {
+  const confettiColors = ['#ffc107','#ffe082','#ff6f00','#ffffff','#64b5f6','#e1f5fe','#ffd54f','#ffab00','#7c4dff','#ff4081'];
+  const confettiShapes = ['■','●','▲','★','◆'];
+  const container = document.getElementById('confetti');
+
+  function burst(count, delayBase) {
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.textContent = confettiShapes[Math.floor(Math.random() * confettiShapes.length)];
+      el.style.left = Math.random() * 100 + '%';
+      el.style.color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+      el.style.fontSize = (6 + Math.random() * 12) + 'px';
+      el.style.animationDuration = (2.5 + Math.random() * 3) + 's';
+      el.style.animationDelay = (delayBase + Math.random() * 1.5) + 's';
+      container.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+  }
+
+  // Three waves of confetti
+  burst(50, 0.3);
+  burst(35, 2);
+  burst(25, 4.5);
+
+  // Unified share function
+  // Parameters:
+  // - text: The full text to share (used as fallback if image fails)
+  // - image: Optional Blob/File object for image sharing
+  window.shareContent = async function(text, image = null) {
+    const planId = window.PLAN?.id || 'rambam3';
+    const shareUrl = `https://${planId}.pages.dev`;
+
+    // Check if running as PWA
+    const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
+                        window.navigator.standalone === true;
+
+    // Try sharing with image first if provided
+    if (image && navigator.canShare) {
+      try {
+        const file = new File([image], 'share.png', { type: 'image/png' });
+        const files = [file];
+
+        // Check if file sharing is supported
+        if (navigator.canShare({ files })) {
+          await navigator.share({
+            files: files,
+            text: shareUrl  // Just the link when sharing with image
+          });
+          return; // Success with image
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          return; // User cancelled, don't fallback
+        }
+        console.error('Image share failed:', err);
+        // Continue to text fallback
+      }
+    }
+
+    // Fallback to text-only sharing
+    if (isInstalled && navigator.share) {
+      // PWA: Use native share dialog
+      try {
+        await navigator.share({
+          text: text
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Share failed:', err);
+          // Fallback to WhatsApp if share fails
+          openWhatsAppShare(text);
+        }
+      }
+    } else {
+      // Website: Open WhatsApp
+      openWhatsAppShare(text);
+    }
+  };
+
+  function openWhatsAppShare(text) {
+    const encodedText = encodeURIComponent(text);
+    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
+  }
+
+  // Capture celebration screen as image
+  // Uses the external screenshot.js file for simple text overlay on background image
+  async function captureCelebrationScreenshot(days, halakhot, chapters) {
+    try {
+      // Check if screenshot generator is loaded
+      if (typeof window.generateCelebrationScreenshot !== 'function') {
+        console.error('Screenshot generator not loaded');
+        return null;
+      }
+
+      // Use the simple screenshot generator
+      return await window.generateCelebrationScreenshot(days, halakhot, chapters, 'https://rambam3.pages.dev');
+    } catch (err) {
+      console.error('Failed to capture screenshot:', err);
+      return null;
+    }
+  }
+
+  // Global share function for celebration with confetti
+  window.celebrationShare = async function(days, halakhot, chapters) {
+    // Trigger confetti burst
+    burst(60, 0);
+    setTimeout(() => burst(40, 0), 1500);
+
+    // Build share URL based on plan
+    const planId = window.PLAN?.id || 'rambam3';
+    const shareUrl = `https://${planId}.pages.dev`;
+
+    // Build share text
+    const shareText = `בזכות האפליקציה כבר ${days} ימים שאני לומד רמב״ם!\n\nעד היום למדתי ${halakhot} הלכות ו-${chapters} פרקים\n\n${shareUrl}`;
+
+    // Capture screenshot with parameters
+    const screenshot = await captureCelebrationScreenshot(days, halakhot, chapters);
+
+    // Call unified share function with screenshot
+    await window.shareContent(shareText, screenshot);
+  };
+}
+
+// ============================================================================
 // Rendering
 // ============================================================================
 function renderDays() {
@@ -400,6 +615,19 @@ function renderDays() {
         <div class="empty-state-text">טוען את הלימוד היומי שלך...</div>
       </div>
     `;
+    return;
+  }
+
+  // Check if all days are complete
+  const allComplete = allDates.every(date => {
+    const dayData = days[date];
+    if (!dayData) return false;
+    const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
+    return doneCount >= dayData.count;
+  });
+
+  if (allComplete && allDates.length > 0) {
+    renderCelebration(allDates.length);
     return;
   }
 
@@ -504,7 +732,6 @@ function handleDayAction(event) {
 
     // Refresh the display
     renderDays();
-    renderStats();
   } else if (action === 'complete') {
     if (!confirm(`האם לסמן את כל ${dayData.he} כהושלם?`)) return;
 
@@ -517,7 +744,6 @@ function handleDayAction(event) {
 
     // Refresh the display
     renderDays();
-    renderStats();
   }
 }
 
@@ -706,7 +932,6 @@ function attachSwipeHandler(card) {
 
     card.classList.add('completed');
     markDone(date, index);
-    renderStats();
     updateDayHeader(date);
     updateCompletedCounter(card);
 
@@ -789,7 +1014,6 @@ function attachSwipeHandler(card) {
     const done = getDone();
     delete done[`${date}:${index}`];
     saveDone(done);
-    renderStats();
     updateDayHeader(date);
     updateCompletedCounter(card);
 
@@ -1312,7 +1536,6 @@ async function init() {
     // Load days first for fast initial render
     await loadMissingDays();
     renderDays();
-    renderStats();
 
     // Load changelog
     loadChangelog();

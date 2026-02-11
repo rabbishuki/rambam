@@ -267,34 +267,6 @@
       width: 0;
     }
 
-    /* Stats Bar */
-    .stats {
-      background: #f9fafb;
-      padding: 1rem;
-      display: flex;
-      justify-content: space-around;
-      border-bottom: 2px solid #e5e7eb;
-      gap: 0.5rem;
-    }
-
-    .stat {
-      text-align: center;
-      flex: 1;
-    }
-
-    .stat-value {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: #2563eb;
-      display: block;
-    }
-
-    .stat-label {
-      font-size: 0.875rem;
-      color: #6b7280;
-      margin-top: 0.25rem;
-    }
-
     /* Main Content */
     main {
       padding: 1rem;
@@ -1171,4 +1143,265 @@
       content: '• ';
       color: #2563eb;
       font-weight: bold;
+    }
+
+    /* Celebration Page */
+    .celebration-page {
+      position: relative;
+      background: linear-gradient(180deg, #1a237e 0%, #2a3eb1 50%, #3949ab 100%);
+      min-height: calc(100vh - 180px);
+      height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .celebration-content {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 36px 24px 120px;
+      max-width: 420px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+
+    .celebration-stats {
+        display: flex;
+        width: 100%;
+        background: rgba(255,255,255,0.08);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.1);
+        opacity: 0;
+        animation: text-up 0.6s ease-out 0.1s forwards;
+    }
+
+    .celebration-stat {
+        flex: 1;
+        padding: 14px 8px;
+        text-align: center;
+        border-left: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .celebration-stat:last-child {
+        border-left: none;
+    }
+
+    .celebration-stat-value {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #ffc107;
+    }
+
+    .celebration-stat-label {
+        font-size: 0.72rem;
+        color: rgba(255,255,255,0.5);
+        margin-top: 2px;
+    }
+
+    .celebration-title {
+      font-size: 2.6rem;
+      text-align: center;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+      line-height: 1.2;
+      margin-bottom: 10px;
+      margin-top: 1.5rem;
+      color: #fff;
+      opacity: 0;
+      animation: text-up 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.3s forwards;
+    }
+
+    .celebration-subtitle {
+        font-size: 1.3rem;
+        font-weight: 400;
+        color: rgba(255,255,255,0.88);
+        text-align: center;
+        line-height: 1.6;
+        opacity: 0;
+        animation: text-up 0.6s ease-out 0.5s forwards;
+    }
+
+    .celebration-message {
+      font-size: 1rem;
+      font-weight: 400;
+      color: rgba(255,255,255,0.88);
+      text-align: center;
+      line-height: 1.6;
+      margin-bottom: 4px;
+      opacity: 0;
+      animation: text-up 0.6s ease-out 0.7s forwards;
+    }
+
+    .celebration-subtitle strong, .celebration-message strong {
+      font-weight: 700;
+      color: #ffe082;
+    }
+
+    .celebration-quote {
+      font-size: 1.05rem;
+      color: #ffc107;
+      text-align: center;
+      line-height: 1.55;
+      margin-top: 20px;
+      opacity: 0;
+      animation: text-up 0.6s ease-out 0.9s forwards;
+      padding: 0 8px;
+    }
+
+    .celebration-quote-source {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      margin-top: 4px;
+      opacity: 0;
+      animation: text-up 0.5s ease-out 1.1s forwards;
+    }
+
+    .celebration-rebbe-line {
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: #ffc107;
+      text-align: center;
+      margin-top: 20px;
+      opacity: 0;
+      animation: text-up 0.6s ease-out 1.3s forwards;
+    }
+
+    .celebration-cta {
+      margin-top: 26px;
+      opacity: 0;
+      animation: text-up 0.6s ease-out 1.7s forwards;
+    }
+
+    .celebration-btn {
+      font-family: 'Heebo', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1a237e;
+      background: linear-gradient(135deg, #ffc107, #f9a825);
+      border: none;
+      padding: 13px 44px;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 24px rgba(255,193,7,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .celebration-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 32px rgba(255,193,7,0.6);
+    }
+
+    .celebration-btn:active {
+      transform: scale(0.97);
+    }
+
+    .celebration-return-message {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.7);
+      text-align: center;
+      opacity: 0;
+      animation: text-up 0.6s ease-out 1.9s forwards;
+    }
+
+    /* Confetti */
+    .confetti-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 50;
+      overflow: hidden;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -20px;
+      width: 10px;
+      height: 10px;
+      opacity: 0;
+      animation: confetti-drop linear forwards;
+    }
+
+    /* Golden Rays */
+    .rays {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      opacity: 0;
+      animation: rays-in 1.2s ease-out 0.6s forwards;
+      pointer-events: none;
+    }
+
+    .rays::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: conic-gradient(
+        from 0deg,
+        transparent 0deg, #ffc107 4deg, transparent 8deg,
+        transparent 30deg, #ffc107 34deg, transparent 38deg,
+        transparent 60deg, #ffc107 64deg, transparent 68deg,
+        transparent 90deg, #ffc107 94deg, transparent 98deg,
+        transparent 120deg, #ffc107 124deg, transparent 128deg,
+        transparent 150deg, #ffc107 154deg, transparent 158deg,
+        transparent 180deg, #ffc107 184deg, transparent 188deg,
+        transparent 210deg, #ffc107 214deg, transparent 218deg,
+        transparent 240deg, #ffc107 244deg, transparent 248deg,
+        transparent 270deg, #ffc107 274deg, transparent 278deg,
+        transparent 300deg, #ffc107 304deg, transparent 308deg,
+        transparent 330deg, #ffc107 334deg, transparent 338deg
+      );
+      border-radius: 50%;
+      animation: spin 25s linear infinite;
+    }
+
+    /* Celebration Animations */
+    @keyframes confetti-drop {
+      0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg) scale(1);
+      }
+      20% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(110vh) rotate(1080deg) scale(0.3);
+      }
+    }
+
+    @keyframes rays-in {
+      to {
+        opacity: 0.18;
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes text-up {
+      0% {
+        opacity: 0;
+        transform: translateY(24px) scale(0.9);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }

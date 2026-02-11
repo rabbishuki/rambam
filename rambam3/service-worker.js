@@ -14,13 +14,15 @@ self.addEventListener('install', (event) => {
         './plan.js',
         './manifest.json',
         './shared/styles.css',
+        './shared/screenshot.js',
         './shared/api.js',
         './shared/core.js',
         './shared/shell.js',
         './shared/changelog.js',
         './assets/logo.png',
         './assets/icon-192.png',
-        './assets/icon-512.png'
+        './assets/icon-512.png',
+        './assets/celebration-bg.png'
       ]);
     })
   );

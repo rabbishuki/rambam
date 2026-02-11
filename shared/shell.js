@@ -218,25 +218,11 @@ function initShell() {
       <div class="scroll-banner-bar" id="scrollBannerBar"></div>
     </div>
 
-    <div class="stats">
-      <div class="stat">
-        <span class="stat-value" id="completedDaysValue">0/0</span>
-        <div class="stat-label">ימים שלמדתי</div>
-      </div>
-      <div class="stat">
-        <span class="stat-value" id="todayValue">0%</span>
-        <div class="stat-label">היום</div>
-      </div>
-      <div class="stat">
-        <span class="stat-value" id="backlogValue">0</span>
-        <div class="stat-label">הלכות להשלים</div>
-      </div>
-    </div>
-
     <main id="mainContent"></main>
 
     <div class="dedication">
-      הלימוד לעילוי נשמת <b>ישראל שאול</b> בן <b>משה אהרון</b> ו<b>מלכה</b> בת <b>נתן</b>
+       <div style="font-size: 12px">הלימוד לעילוי נשמת</div>
+       <b>ישראל שאול</b> בן <b>משה אהרון</b> ו<b>מלכה</b> בת <b>נתן</b>
     </div>
 
     <div class="dedication yechi">
@@ -593,25 +579,14 @@ function attachShareListener() {
     shareBtn.style.display = '';
 
     shareBtn.addEventListener('click', async () => {
-      const shareText = 'תראה איזה אפליקציה מגניבה מצאתי ללימוד רמב״ם!';
-      const shareUrl = window.location.href;
+      const shareText = `תראה איזה אפליקציה מגניבה מצאתי ללימוד רמב״ם!\n\n${window.location.href}`;
 
-      // Try native share API first
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            text: shareText,
-            url: shareUrl
-          });
-        } catch (err) {
-          if (err.name !== 'AbortError') {
-            console.error('Share failed:', err);
-            fallbackCopyToClipboard(shareText, shareUrl);
-          }
-        }
+      // Use unified share function
+      if (window.shareContent) {
+        await window.shareContent(shareText, null);
       } else {
-        // Fallback to copy to clipboard
-        fallbackCopyToClipboard(shareText, shareUrl);
+        // Fallback if shareContent not loaded yet
+        fallbackCopyToClipboard('תראה איזה אפליקציה מגניבה מצאתי ללימוד רמב״ם!', window.location.href);
       }
     });
   }
@@ -722,15 +697,23 @@ function initScrollBanner() {
   function updateScrollBanner() {
     const scrollY = window.scrollY;
     const mainHeader = document.getElementById('mainHeader');
+    const mainContent = document.getElementById('mainContent');
+
+    // Don't collapse header on celebration page
+    const isCelebrationPage = mainContent && mainContent.classList.contains('celebration-page');
 
     // Show banner after scrolling 50px
     if (scrollY > 50) {
       scrollBanner.classList.add('visible');
       updateBannerContent();
-      mainHeader.classList.add('scrolled');
+      if (!isCelebrationPage) {
+        mainHeader.classList.add('scrolled');
+      }
     } else {
       scrollBanner.classList.remove('visible');
-      mainHeader.classList.remove('scrolled');
+      if (!isCelebrationPage) {
+        mainHeader.classList.remove('scrolled');
+      }
     }
 
     ticking = false;
