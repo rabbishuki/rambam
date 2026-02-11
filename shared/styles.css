@@ -34,7 +34,12 @@
       position: sticky;
       top: 0;
       z-index: 101;
-      transition: background 0.3s;
+      transition: background 0.3s, padding 0.3s, height 0.3s;
+    }
+
+    header.scrolled {
+      height: 50px;
+      padding: 0.5rem 0.75rem;
     }
 
     header.viewing-other-date {
@@ -50,12 +55,23 @@
     h1 {
         font-size: clamp(16px, 5vw, 1.5rem);
         font-weight: 700;
+        transition: font-size 0.3s;
+    }
+
+    header.scrolled h1 {
+        font-size: clamp(14px, 4vw, 1.125rem);
     }
 
     .logo {
       width: 36px;
       height: 36px;
       border-radius: 8px;
+      transition: width 0.3s, height 0.3s;
+    }
+
+    header.scrolled .logo {
+      width: 28px;
+      height: 28px;
     }
 
     .header-actions {
@@ -131,11 +147,11 @@
     /* Scroll Banner */
     .scroll-banner {
       position: fixed;
-      top: 72px;
+      top: 50px;
       width: clamp(200px, 100vw, 640px);
       background: #fef3e3;
       color: #783510;
-      padding: 0.5rem;
+      padding: 0.5rem 1rem;
       z-index: 99;
       transform: translateY(-100%);
       opacity: 0;
@@ -160,17 +176,31 @@
       gap: 1rem;
     }
 
+    .scroll-banner-percentage {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #d97706;
+      line-height: 1;
+      min-width: 60px;
+      text-align: center;
+    }
+
     .scroll-banner-text {
       display: flex;
       flex-direction: column;
       justify-content: center;
       flex: 1;
+      overflow: hidden;
+      min-width: 0;
     }
 
     .scroll-banner-title {
       font-weight: 600;
       font-size: 0.95rem;
       line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .scroll-banner-meta {
@@ -180,6 +210,9 @@
       display: flex;
       gap: 0.5rem;
       align-items: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .scroll-banner-meta span:not(:last-child)::after {

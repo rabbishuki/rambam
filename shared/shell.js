@@ -213,6 +213,7 @@ function initShell() {
             <span id="scrollBannerProgress">0/0</span>
           </div>
         </div>
+        <div class="scroll-banner-percentage" id="scrollBannerPercentage">0%</div>
       </div>
       <div class="scroll-banner-bar" id="scrollBannerBar"></div>
     </div>
@@ -707,22 +708,29 @@ function initScrollBanner() {
         const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
         scrollBannerProgress.textContent = `${doneCount}/${dayData.count}`;
 
-        // Update progress bar
+        // Update progress bar and percentage
         const percentage = dayData.count > 0 ? (doneCount / dayData.count) * 100 : 0;
         scrollBannerBar.style.width = `${percentage}%`;
+
+        // Update percentage display
+        const scrollBannerPercentage = document.getElementById('scrollBannerPercentage');
+        scrollBannerPercentage.textContent = `${Math.round(percentage)}%`;
       }
     }
   }
 
   function updateScrollBanner() {
     const scrollY = window.scrollY;
+    const mainHeader = document.getElementById('mainHeader');
 
     // Show banner after scrolling 50px
     if (scrollY > 50) {
       scrollBanner.classList.add('visible');
       updateBannerContent();
+      mainHeader.classList.add('scrolled');
     } else {
       scrollBanner.classList.remove('visible');
+      mainHeader.classList.remove('scrolled');
     }
 
     ticking = false;
