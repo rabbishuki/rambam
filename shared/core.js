@@ -48,6 +48,15 @@ function setHideCompletedDays(enabled) {
   setSetting('rambam_hide_completed_days', enabled);
 }
 
+// Font size settings
+function getLargeFontSize() {
+  return getSetting('rambam_large_font', false);
+}
+
+function setLargeFontSize(enabled) {
+  setSetting('rambam_large_font', enabled);
+}
+
 // Day transition settings
 function getDayTransitionMode() {
   // 'time' or 'sunset'
@@ -1284,6 +1293,20 @@ async function init() {
     // If first visit, set the default start date
     if (firstVisit) {
       localStorage.setItem('rambam_start', CYCLE_START);
+    }
+
+    // Apply initial settings classes
+    const container = document.querySelector('.container');
+    if (container) {
+      if (getHideCompleted()) {
+        container.classList.add('hide-completed');
+      }
+      if (getHideCompletedDays()) {
+        container.classList.add('hide-completed-days');
+      }
+      if (getLargeFontSize()) {
+        container.classList.add('large-font');
+      }
     }
 
     // Load days first for fast initial render

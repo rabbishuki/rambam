@@ -74,6 +74,24 @@ const TOGGLE_SETTINGS = [
         }
       }
     }
+  },
+  {
+    id: 'font-size',
+    label: 'גודל גופן',
+    trueLabel: 'גדול',
+    falseLabel: 'קטן',
+    getter: getLargeFontSize,
+    setter: setLargeFontSize,
+    sideEffect: (newValue) => {
+      const container = document.querySelector('.container');
+      if (container) {
+        if (newValue) {
+          container.classList.add('large-font');
+        } else {
+          container.classList.remove('large-font');
+        }
+      }
+    }
   }
 ];
 
@@ -185,8 +203,8 @@ function initShell() {
     <div id="scrollBanner" class="scroll-banner">
       <div class="scroll-banner-content">
         <div class="scroll-banner-actions">
-          <button class="scroll-banner-btn" id="scrollToTop" aria-label="חזור למעלה" title="חזור למעלה">↑</button>
-          <button class="scroll-banner-btn" id="scrollToNext" aria-label="קפוץ להלכה הבאה" title="קפוץ להלכה הבאה">↓</button>
+          <button class="scroll-banner-btn up" id="scrollToTop" aria-label="חזור למעלה" title="חזור למעלה">➩</button>
+          <button class="scroll-banner-btn down" id="scrollToNext" aria-label="קפוץ להלכה הבאה" title="קפוץ להלכה הבאה">➩</button>
         </div>
         <div class="scroll-banner-text">
           <div class="scroll-banner-title" id="scrollBannerTitle">טוען...</div>

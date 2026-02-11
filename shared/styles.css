@@ -47,15 +47,15 @@
       gap: 0.75rem;
     }
 
+    h1 {
+        font-size: clamp(16px, 5vw, 1.5rem);
+        font-weight: 700;
+    }
+
     .logo {
       width: 36px;
       height: 36px;
       border-radius: 8px;
-    }
-
-    h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
     }
 
     .header-actions {
@@ -75,9 +75,10 @@
       background: rgba(255, 255, 255, 0.2);
       border: none;
       color: white;
-      font-size: 1.5rem;
-      width: 40px;
-      height: 40px;
+      font-size: 1.25rem;
+      width: 30px;
+      height: 30px;
+      padding: 7px;
       border-radius: 50%;
       cursor: pointer;
       display: flex;
@@ -132,9 +133,9 @@
       position: fixed;
       top: 72px;
       width: clamp(200px, 100vw, 640px);
-      background: #2563eb;
-      color: white;
-      padding: 1rem;
+      background: #fef3e3;
+      color: #783510;
+      padding: 0.5rem;
       z-index: 99;
       transform: translateY(-100%);
       opacity: 0;
@@ -193,18 +194,25 @@
     }
 
     .scroll-banner-btn {
-      background: rgba(255, 255, 255, 0.2);
+      background: #d97706;
       border: none;
       color: white;
-      width: 32px;
-      height: 32px;
+      width: 25px;
+      height: 25px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 1.2rem;
+      font-size: 1rem;
       transition: background 0.2s;
+    }
+
+    .scroll-banner-btn.up {
+        rotate: 270deg;
+    }
+    .scroll-banner-btn.down {
+        rotate: 90deg;
     }
 
     .scroll-banner-btn:hover {
@@ -220,7 +228,7 @@
       bottom: 0;
       right: 0;
       height: 6px;
-      background: #b45309;
+      background: #d97706;
       transition: width 0.3s ease;
       min-width: 4px;
       width: 0;
@@ -399,6 +407,12 @@
       touch-action: pan-y;
       cursor: grab;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Large font size */
+    .large-font .halakha-card {
+      font-size: 1.7rem;
+      padding: 1.25rem;
     }
 
     .halakha-card:active {
@@ -949,17 +963,44 @@
     }
 
     .dedication {
+      position: fixed;
+      bottom: 2rem;
+      width: clamp(200px, 100vw, 640px);
+      z-index: 900;
+      margin: 0 auto;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
       background: #fef3e3;
       border-top: 1px solid #d87858;
-      padding: 1rem;
+      padding: 0.5rem;
       text-align: center;
       font-size: 0.875rem;
       color: #78350f;
-      font-weight: 500;
+      font-weight: 400;
+      white-space: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .dedication::-webkit-scrollbar {
+      display: none;
     }
 
     .dedication b {
       font-weight: 700;
+    }
+
+    .yechi {
+        background: #1e3a8a;
+        border-top: none;
+        color: white;
+        bottom: 0;
+        white-space: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
     }
 
     .footer {
@@ -1031,22 +1072,8 @@
       font-weight: 500;
     }
 
-    /* Fixed dedications on main page */
-    .dedication {
-      position: fixed;
-      bottom: 2rem;
-      width: clamp(200px, 100vw, 640px);
-      z-index: 900;
-      margin: 0 auto;
-      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .yechi {
-      background: #1e3a8a;
-      border-top: none;
-      color: white;
-      padding: 0.5rem;
-      bottom: 0;
+    .yechi::-webkit-scrollbar {
+      display: none;
     }
 
     .changelog-version {
