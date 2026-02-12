@@ -152,6 +152,107 @@ function markDone(date, index) {
 }
 
 // ============================================================================
+// Reading Time Tracking
+// ============================================================================
+
+// Get current book being read (from active cards on screen)
+function getCurrentBook() {
+  const stored = localStorage.getItem(`${window.PLAN.storagePrefix}_current_book`);
+  return stored ? JSON.parse(stored) : null;
+}
+
+function saveCurrentBook(bookInfo) {
+  localStorage.setItem(`${window.PLAN.storagePrefix}_current_book`, JSON.stringify(bookInfo));
+}
+
+// Get book reading times (accumulated minutes per book)
+function getBookTimes() {
+  const stored = localStorage.getItem(`${window.PLAN.storagePrefix}_book_times`);
+  return stored ? JSON.parse(stored) : {};
+}
+
+function saveBookTimes(times) {
+  localStorage.setItem(`${window.PLAN.storagePrefix}_book_times`, JSON.stringify(times));
+}
+
+// Get active session info
+function getActiveSession() {
+  const stored = localStorage.getItem(`${window.PLAN.storagePrefix}_active_session`);
+  return stored ? JSON.parse(stored) : null;
+}
+
+function saveActiveSession(session) {
+  localStorage.setItem(`${window.PLAN.storagePrefix}_active_session`, JSON.stringify(session));
+}
+
+function clearActiveSession() {
+  localStorage.removeItem(`${window.PLAN.storagePrefix}_active_session`);
+}
+
+// Start tracking time for a book
+function startBookTimer(bookName) {
+  const currentBook = getCurrentBook();
+
+  // If switching books, save time for previous book
+  if (currentBook && currentBook.name !== bookName) {
+    saveCurrentBookTime();
+  }
+
+  // Set new current book and start session
+  saveCurrentBook({ name: bookName, startTime: Date.now() });
+  saveActiveSession({ startTime: Date.now(), lastActivity: Date.now() });
+}
+
+// Save accumulated time for current book
+function saveCurrentBookTime() {
+  const session = getActiveSession();
+  const currentBook = getCurrentBook();
+
+  if (!session || !currentBook) return;
+
+  const now = Date.now();
+  const elapsed = now - session.startTime;
+  const minutes = Math.round(elapsed / 60000);
+
+  if (minutes > 0) {
+    const times = getBookTimes();
+    times[currentBook.name] = (times[currentBook.name] || 0) + minutes;
+    saveBookTimes(times);
+  }
+
+  // Clear session
+  clearActiveSession();
+}
+
+// Update activity timestamp (call on scroll/interaction)
+function updateActivity() {
+  const session = getActiveSession();
+  if (session) {
+    session.lastActivity = Date.now();
+    saveActiveSession(session);
+  }
+}
+
+// Get total time for a book in minutes
+function getBookTime(bookName) {
+  const times = getBookTimes();
+  return times[bookName] || 0;
+}
+
+// Format minutes as Hebrew time string
+function formatLearningTime(minutes) {
+  if (minutes < 60) {
+    return `${minutes} דקות`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (mins === 0) {
+    return `${hours} שעות`;
+  }
+  return `${hours} שעות ו-${mins} דקות`;
+}
+
+// ============================================================================
 // Date Utilities
 // ============================================================================
 function dateRange(start, end) {
@@ -405,8 +506,10 @@ function renderBookCelebration(bookName, totalBookChapters, totalBookHalakhot) {
     mainHeader.classList.remove('scrolled');
   }
 
-  // TODO: Calculate how many days it took to complete this book
-  // TODO: Calculate total learning time for this book
+  // Save any remaining time for current book, then get total
+  saveCurrentBookTime();
+  const totalMinutes = getBookTime(bookName);
+  const formattedTime = formatLearningTime(totalMinutes);
 
   mainContent.innerHTML = `
       <div class="confetti-container" id="confetti"></div>
@@ -439,7 +542,7 @@ function renderBookCelebration(bookName, totalBookChapters, totalBookHalakhot) {
             <span class="celebration-stat-label">הלכות</span>
           </div>
           <div class="celebration-stat">
-            <span class="celebration-stat-value">X דק׳</span>
+            <span class="celebration-stat-value">${formattedTime}</span>
             <span class="celebration-stat-label">זמן לימוד</span>
           </div>
         </div>
@@ -864,12 +967,45 @@ async function handleDetailsToggle(event) {
             ? window.extractHebrewBookName(hebrewName)
             : hebrewName;
           card.dataset.bookChapters = bookInfo.totalChapters;
-          // Calculate total halakhot in this book by summing all chapters
+
+          // Calculate total halakhot and chars from all days belonging to this book
+          const bookName = window.extractBookName ? window.extractBookName(ref) : null;
           let totalHalakhot = 0;
-          for (let i = 0; i <= chapterIdx; i++) {
-            totalHalakhot += chapters[i].length;
+          let totalChars = 0;
+
+          if (bookName) {
+            const days = getDays();
+            // Find all days that belong to this book and sum their halakhot counts
+            Object.values(days).forEach(dayData => {
+              if (dayData.ref) {
+                const dayBookName = window.extractBookName ? window.extractBookName(dayData.ref) : null;
+                if (dayBookName === bookName) {
+                  totalHalakhot += dayData.count;
+                }
+              }
+            });
+
+            // Calculate average chars per halakha from loaded chapters
+            let loadedChars = 0;
+            let loadedHalakhot = 0;
+            for (let i = 0; i <= chapterIdx; i++) {
+              loadedHalakhot += chapters[i].length;
+              chapters[i].forEach(text => {
+                loadedChars += text.length;
+              });
+            }
+
+            // Estimate total chars based on average
+            if (loadedHalakhot > 0) {
+              const avgCharsPerHalakha = loadedChars / loadedHalakhot;
+              totalChars = Math.round(avgCharsPerHalakha * totalHalakhot);
+            } else {
+              totalChars = loadedChars; // Fallback
+            }
           }
+
           card.dataset.bookHalakhot = totalHalakhot;
+          card.dataset.bookChars = totalChars;
         }
 
         // Number within chapter (1, 2, 3...)
@@ -884,6 +1020,15 @@ async function handleDetailsToggle(event) {
         globalIndex++;
       });
     });
+
+    // Start timer for this book
+    const bookName = window.extractBookName ? window.extractBookName(ref) : null;
+    if (bookName) {
+      const hebrewBookName = window.extractHebrewBookName
+        ? window.extractHebrewBookName(hebrewName)
+        : hebrewName;
+      startBookTimer(hebrewBookName);
+    }
   } catch (error) {
     console.error('Failed to load halakhot:', error);
     container.innerHTML = '<div class="loading">❌ שגיאה בטעינה</div>';
@@ -1002,10 +1147,11 @@ function attachSwipeHandler(card) {
       const bookName = card.dataset.bookName;
       const bookChapters = parseInt(card.dataset.bookChapters);
       const bookHalakhot = parseInt(card.dataset.bookHalakhot);
+      const bookChars = parseInt(card.dataset.bookChars);
 
       // Show book completion celebration
       setTimeout(() => {
-        renderBookCelebration(bookName, bookChapters, bookHalakhot);
+        renderBookCelebration(bookName, bookChapters, bookHalakhot, bookChars);
       }, 500);
       return; // Don't scroll to next card, celebration will handle navigation
     }
@@ -1678,3 +1824,36 @@ async function init() {
     `;
   }
 }
+
+// ============================================================================
+// Time Tracking - Auto-save
+// ============================================================================
+
+// Save reading time every minute
+setInterval(() => {
+  saveCurrentBookTime();
+
+  // Restart timer if there's still a current book
+  const currentBook = getCurrentBook();
+  if (currentBook) {
+    startBookTimer(currentBook.name);
+  }
+}, 60000); // Every 60 seconds
+
+// Save time when page unloads
+window.addEventListener('beforeunload', () => {
+  saveCurrentBookTime();
+});
+
+// Save time when page becomes hidden (mobile app going to background)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    saveCurrentBookTime();
+  } else {
+    // Resume timer when coming back
+    const currentBook = getCurrentBook();
+    if (currentBook) {
+      startBookTimer(currentBook.name);
+    }
+  }
+});
