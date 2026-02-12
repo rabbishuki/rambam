@@ -239,17 +239,13 @@ function getBookTime(bookName) {
   return times[bookName] || 0;
 }
 
-// Format minutes as Hebrew time string
+// Format minutes as HH:MM time string
 function formatLearningTime(minutes) {
-  if (minutes < 60) {
-    return `${minutes} דקות`;
-  }
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  if (mins === 0) {
-    return `${hours} שעות`;
-  }
-  return `${hours} שעות ו-${mins} דקות`;
+  const hoursStr = String(hours).padStart(2, '0');
+  const minsStr = String(mins).padStart(2, '0');
+  return `${hoursStr}:${minsStr}`;
 }
 
 // ============================================================================
@@ -543,7 +539,7 @@ function renderBookCelebration(bookName, totalBookChapters, totalBookHalakhot) {
           </div>
           <div class="celebration-stat">
             <span class="celebration-stat-value">${formattedTime}</span>
-            <span class="celebration-stat-label">זמן לימוד</span>
+            <span class="celebration-stat-label">שעות לימוד</span>
           </div>
         </div>
 
@@ -556,9 +552,13 @@ function renderBookCelebration(bookName, totalBookChapters, totalBookHalakhot) {
         <!-- Rebbe Line -->
         <div class="celebration-rebbe-line">הרבי ממש גאה בך!</div>
 
-        <!-- CTA Button -->
+        <!-- CTA Buttons -->
         <div class="celebration-cta">
-          <button class="celebration-btn" onclick="window.celebrationShare('${bookName}', ${totalBookChapters}, ${totalBookHalakhot})">🎉 שתף את ההישג</button>
+          <button class="celebration-btn celebration-btn-outline" onclick="window.celebrationShare('${bookName}', ${totalBookChapters}, ${totalBookHalakhot})">🎉 שתף את ההישג</button>
+          <a href="https://yomi.org.il?affId=2bcbbdd2" target="_blank" rel="noopener noreferrer" class="celebration-btn celebration-btn-yomi">
+            <img src="https://yomi.org.il/assets/icons/svg/yomi-logo-welcome.svg" alt="Yomi" class="yomi-logo">
+            ללימוד חוויתי עם ביאורים
+          </a>
         </div>
 
         <!-- Continue Message -->

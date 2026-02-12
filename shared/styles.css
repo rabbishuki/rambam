@@ -1350,29 +1350,63 @@
       margin-top: 26px;
       opacity: 0;
       animation: text-up 0.6s ease-out 1.7s forwards;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
     }
 
     .celebration-btn {
-      font-family: 'Heebo', sans-serif;
       font-size: 1.05rem;
       font-weight: 700;
-      color: #1a237e;
-      background: linear-gradient(135deg, #ffc107, #f9a825);
-      border: none;
       padding: 13px 44px;
       border-radius: 50px;
       cursor: pointer;
-      box-shadow: 0 4px 24px rgba(255,193,7,0.4);
       transition: transform 0.15s, box-shadow 0.15s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
     }
 
-    .celebration-btn:hover {
+    .celebration-btn-outline {
+      color: #ffc107;
+      background: transparent;
+      border: 2px solid #ffc107;
+      box-shadow: 0 4px 24px rgba(255,193,7,0.2);
+    }
+
+    .celebration-btn-outline:hover {
       transform: scale(1.05);
-      box-shadow: 0 6px 32px rgba(255,193,7,0.6);
+      box-shadow: 0 6px 32px rgba(255,193,7,0.4);
+      background: rgba(255,193,7,0.1);
     }
 
-    .celebration-btn:active {
+    .celebration-btn-outline:active {
       transform: scale(0.97);
+    }
+
+    .celebration-btn-yomi {
+      color: white;
+      background: linear-gradient(135deg, #7fb800, #6a9900);
+      box-shadow: 0 4px 24px rgba(127,184,0,0.4);
+    }
+
+    .celebration-btn-yomi:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 32px rgba(127,184,0,0.6);
+    }
+
+    .celebration-btn-yomi:active {
+      transform: scale(0.97);
+    }
+
+    .yomi-logo {
+      width: 24px;
+      height: 24px;
+      filter: brightness(0) invert(1);
+      margin-bottom: 2px;
     }
 
     .celebration-return-message {
