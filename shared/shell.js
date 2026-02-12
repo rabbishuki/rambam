@@ -19,7 +19,7 @@ const TOGGLE_SETTINGS = [
         if (hasPermission) {
           scheduleDailyReminder();
         } else {
-          alert('יש לאפשר התראות בדפדפן כדי לקבל תזכורות יומיות');
+          window.showNotification('יש לאפשר התראות בדפדפן כדי לקבל תזכורות יומיות');
           // Revert the setting if permission denied
           setDailyReminderEnabled(false);
           // Update UI
@@ -235,6 +235,24 @@ function initShell() {
   overlay.className = 'overlay';
   overlay.id = 'overlay';
   document.body.appendChild(overlay);
+
+  // Add notification dialog
+  const notificationDialog = document.createElement('dialog');
+  notificationDialog.id = 'notificationDialog';
+  notificationDialog.className = 'notification-dialog';
+  notificationDialog.innerHTML = `
+    <div class="notification-content">
+      <div class="notification-icon"></div>
+      <div class="notification-message"></div>
+      <button class="notification-close">סגור</button>
+    </div>
+  `;
+  document.body.appendChild(notificationDialog);
+
+  // Attach close listener
+  notificationDialog.querySelector('.notification-close').addEventListener('click', () => {
+    notificationDialog.close();
+  });
 
   // Add install prompt
   const installPrompt = document.createElement('div');
@@ -638,6 +656,38 @@ function showToast(message) {
     }, 300);
   }, 2000);
 }
+
+// Global notification function
+window.showNotification = function(message, type = 'success') {
+  const dialog = document.getElementById('notificationDialog');
+  if (!dialog) return;
+
+  const iconEl = dialog.querySelector('.notification-icon');
+  const messageEl = dialog.querySelector('.notification-message');
+
+  // Set icon based on type
+  const icons = {
+    success: '✅',
+    error: '❌',
+    info: 'ℹ️'
+  };
+  iconEl.textContent = icons[type] || icons.info;
+
+  // Set message
+  messageEl.textContent = message;
+
+  // Show dialog
+  dialog.showModal();
+
+  // Auto-close after 5 seconds for success messages
+  if (type === 'success') {
+    setTimeout(() => {
+      if (dialog.open) {
+        dialog.close();
+      }
+    }, 5000);
+  }
+};
 
 // ============================================================================
 // Scroll Banner - Shows current day when scrolling

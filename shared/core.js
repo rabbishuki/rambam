@@ -756,7 +756,7 @@ function initCelebrationEffects() {
       const blob = await captureCelebrationScreenshot(bookName, totalChapters, totalHalakhot, formattedTime, currentStreak);
 
       if (!blob) {
-        alert('לא ניתן ליצור תמונה');
+        console.error('Failed to generate screenshot blob');
         return;
       }
 
@@ -790,9 +790,9 @@ function initCelebrationEffects() {
             'text/plain': new Blob([shareText], { type: 'text/plain' })
           })
         ]);
-        alert('התמונה והטקסט הועתקו ללוח! ✅\nעכשיו אפשר להדביק בוואטסאפ או ברשתות חברתיות');
+        window.showNotification('התמונה והטקסט הועתקו ללוח!\n\nעכשיו אפשר להדביק בוואטסאפ או ברשתות חברתיות', 'success');
       } catch (clipboardErr) {
-        console.error('Failed to copy to clipboard:', clipboardErr);
+        console.error('Failed to copy both to clipboard:', clipboardErr);
         // Try copying just the image
         try {
           await navigator.clipboard.write([
@@ -800,15 +800,15 @@ function initCelebrationEffects() {
               'image/png': blob
             })
           ]);
-          alert('התמונה הועתקה ללוח! ✅\n(הטקסט לא הועתק אוטומטית)');
+          window.showNotification('התמונה הועתקה ללוח!\n\nעכשיו אפשר להדביק בוואטסאפ או ברשתות חברתיות', 'success');
         } catch (imageErr) {
-          console.error('Failed to copy image:', imageErr);
-          alert('לא ניתן להעתיק ללוח');
+          console.error('Failed to copy image to clipboard:', imageErr);
+          // Silent fallback - don't show error to user
         }
       }
     } catch (err) {
       console.error('Failed to capture/copy screenshot:', err);
-      alert('שגיאה: ' + err.message);
+      // Silent fallback - don't show error to user
     }
   };
 }
