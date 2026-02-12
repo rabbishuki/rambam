@@ -221,8 +221,8 @@ function initShell() {
     <main id="mainContent"></main>
 
     <div class="dedication">
-       <div style="font-size: 12px">הלימוד לעילוי נשמת</div>
-       <b>ישראל שאול</b> בן <b>משה אהרון</b> ו<b>מלכה</b> בת <b>נתן</b>
+       <div class="dedication-label">הלימוד לעילוי נשמת</div>
+       <div class="dedication-names"><b>ישראל שאול</b> בן <b>משה אהרון</b> ו<b>מלכה</b> בת <b>נתן</b></div>
     </div>
 
     <div class="dedication yechi">
@@ -651,6 +651,8 @@ function initScrollBanner() {
 
   let ticking = false;
   let currentDisplayedDate = null;
+  let lastScrollY = 0;
+  let scrollDirection = 'down';
 
   function updateBannerContent() {
     // Find the current day in viewport
@@ -699,6 +701,10 @@ function initScrollBanner() {
     const mainHeader = document.getElementById('mainHeader');
     const mainContent = document.getElementById('mainContent');
 
+    // Detect scroll direction
+    scrollDirection = scrollY > lastScrollY ? 'down' : 'up';
+    lastScrollY = scrollY;
+
     // Don't collapse header on celebration page
     const isCelebrationPage = mainContent && mainContent.classList.contains('celebration-page');
 
@@ -706,14 +712,30 @@ function initScrollBanner() {
     if (scrollY > 50) {
       scrollBanner.classList.add('visible');
       updateBannerContent();
-      if (!isCelebrationPage) {
-        mainHeader.classList.add('scrolled');
-      }
     } else {
       scrollBanner.classList.remove('visible');
-      if (!isCelebrationPage) {
+    }
+
+    // Header and Dedication: hide on scroll down, show on scroll up (after initial scroll past 20px)
+    // Don't add scrolled class on celebration page
+    if (!isCelebrationPage) {
+      if (scrollY > 20) {
+        if (scrollDirection === 'down') {
+          document.body.classList.add('scrolled');
+          mainHeader.classList.add('scrolled');
+        } else {
+          document.body.classList.remove('scrolled');
+          mainHeader.classList.remove('scrolled');
+        }
+      } else {
+        // Always show full version at the very top
+        document.body.classList.remove('scrolled');
         mainHeader.classList.remove('scrolled');
       }
+    } else {
+      // Always show full version on celebration page
+      document.body.classList.remove('scrolled');
+      mainHeader.classList.remove('scrolled');
     }
 
     ticking = false;

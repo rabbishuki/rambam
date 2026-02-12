@@ -34,12 +34,13 @@
       position: sticky;
       top: 0;
       z-index: 101;
-      transition: background 0.3s, padding 0.3s, height 0.3s;
+      transition: background 0.3s, transform 0.3s, opacity 0.3s;
     }
 
     header.scrolled {
-      height: 50px;
-      padding: 0.5rem 0.75rem;
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
     }
 
     header.viewing-other-date {
@@ -55,23 +56,12 @@
     h1 {
         font-size: clamp(16px, 5vw, 1.5rem);
         font-weight: 700;
-        transition: font-size 0.3s;
-    }
-
-    header.scrolled h1 {
-        font-size: clamp(14px, 4vw, 1.125rem);
     }
 
     .logo {
       width: 36px;
       height: 36px;
       border-radius: 8px;
-      transition: width 0.3s, height 0.3s;
-    }
-
-    header.scrolled .logo {
-      width: 28px;
-      height: 28px;
     }
 
     .header-actions {
@@ -147,7 +137,7 @@
     /* Scroll Banner */
     .scroll-banner {
       position: fixed;
-      top: 50px;
+      top: 75px;
       width: clamp(200px, 100vw, 640px);
       background: #fef3e3;
       color: #783510;
@@ -155,10 +145,16 @@
       z-index: 99;
       transform: translateY(-100%);
       opacity: 0;
-      transition: transform 0.3s, opacity 0.3s;
+      transition: transform 0.3s ease, opacity 0.3s ease, top 0.3s ease, border-top 0.3s ease;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       overflow: hidden;
       pointer-events: none;
+      border-top: 2px solid transparent;
+    }
+
+    body.scrolled .scroll-banner {
+      top: 0;
+      border-top-color: #1e40af;
     }
 
     .scroll-banner.visible {
@@ -969,16 +965,15 @@
 
     .dedication {
       position: fixed;
-      bottom: 2rem;
+      bottom: 45px;
       width: clamp(200px, 100vw, 640px);
       z-index: 900;
       margin: 0 auto;
       box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
       background: #fef3e3;
       border-top: 1px solid #d87858;
-      padding: 0.5rem;
+      padding: 0.75rem 0.5rem;
       text-align: center;
-      font-size: 0.875rem;
       color: #78350f;
       font-weight: 400;
       white-space: nowrap;
@@ -986,6 +981,7 @@
       overflow-y: hidden;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
+      transition: padding 0.3s ease, bottom 0.3s ease;
     }
 
     .dedication::-webkit-scrollbar {
@@ -996,7 +992,35 @@
       font-weight: 700;
     }
 
-    .yechi {
+    .dedication-label {
+      font-size: 0.75rem;
+      opacity: 0.85;
+      transition: opacity 0.3s ease, max-height 0.3s ease, margin-bottom 0.3s ease;
+      max-height: 20px;
+      margin-bottom: 0.25rem;
+    }
+
+    .dedication-names {
+      font-size: 1rem;
+      transition: font-size 0.3s ease;
+    }
+
+    body.scrolled .dedication-label {
+      opacity: 0;
+      max-height: 0;
+      margin-bottom: 0;
+      overflow: hidden;
+    }
+
+    body.scrolled .dedication-names {
+      font-size: 0.75rem;
+    }
+
+    body.scrolled .dedication-names::before {
+      content: 'לע״נ ';
+    }
+
+    .yechi, body.scrolled .dedication.yechi {
         background: #1e3a8a;
         border-top: none;
         color: white;
@@ -1006,6 +1030,13 @@
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
+    }
+
+    /* When scrolling, hide label and add prefix to names */
+    body.scrolled .dedication {
+        padding: 0.4rem 0.5rem;
+        bottom: 29px;
+        font-size: 0.75rem;
     }
 
     .footer {
