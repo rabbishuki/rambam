@@ -1,14 +1,17 @@
 // Screenshot generation for celebration sharing
 // Overlays dynamic text on a static background image
 
-async function generateCelebrationScreenshot(days, halakhot, chapters, url) {
+async function generateCelebrationScreenshot(chapterName, chapters, halachot, timelapse, days) {
   try {
-    // Load the static background image from local assets
+    // Load the static background image from ImgBB (CORS-enabled)
     const bgImage = new Image();
+    bgImage.crossOrigin = 'anonymous'; // Enable CORS
 
-    await new Promise((resolve, reject) => {
+    await new Promise((resolve) => {
       bgImage.onload = resolve;
-      bgImage.onerror = () => reject(new Error('Failed to load background image'));
+      bgImage.onerror = () => {
+        bgImage.src = 'https://i.ibb.co/ds16VmN9/celebration-bg.png';
+      };
       bgImage.src = './assets/celebration-bg.png';
     });
 
@@ -31,24 +34,23 @@ async function generateCelebrationScreenshot(days, halakhot, chapters, url) {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#ffc107'; // Gold color for numbers
 
-    // Draw the 3 stats numbers (RTL order: days, chapters, halakhot)
-    const statsY = 500;
-    const statsX = [785, 535, 285]; // RTL order: days, chapters, halakhot
+    // Draw the chapterName to the app
+    ctx.font = '700 80px "Noto Sans Hebrew", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(chapterName.toString(), 540, 520);
 
-    ctx.font = '700 50px "Noto Sans Hebrew", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(days.toString(), statsX[0], statsY);
-    ctx.fillText(chapters.toString(), statsX[1], statsY);
-    ctx.fillText(halakhot.toString(), statsX[2], statsY);
+    // Draw the 3 stats numbers (RTL order: chapters, halachot, timelapse)
+    const statsY = 710;
+    const statsX = [785, 535, 285];
+
+    ctx.font = '400 50px "Noto Sans Hebrew", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(chapters.toString(), statsX[0], statsY);
+    ctx.fillText(halachot.toString(), statsX[1], statsY);
+    ctx.fillText(timelapse.toString(), statsX[2], statsY);
 
     // Draw only the number of days (text is already in background)
     ctx.font = '700 30px "Noto Sans Hebrew", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = '#fddd7f';
-    ctx.fillText(days.toString(), 795, 976);
-
-    // Draw the url to the app
-    ctx.font = '700 36px "Noto Sans Hebrew", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif';
-    ctx.fillStyle = '#ffc107';
-    ctx.fillText(url.toString(), 550, 1450);
+    ctx.fillText(days.toString(), 795, 930);
 
     // Convert to blob
     return new Promise((resolve) => {

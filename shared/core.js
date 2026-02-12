@@ -711,7 +711,7 @@ function initCelebrationEffects() {
 
   // Capture celebration screen as image
   // Uses the external screenshot.js file for simple text overlay on background image
-  async function captureCelebrationScreenshot(days, halakhot, chapters) {
+  async function captureCelebrationScreenshot(chapterName, chapters, halachot, timelapse, days) {
     try {
       // Check if screenshot generator is loaded
       if (typeof window.generateCelebrationScreenshot !== 'function') {
@@ -720,7 +720,7 @@ function initCelebrationEffects() {
       }
 
       // Use the simple screenshot generator
-      return await window.generateCelebrationScreenshot(days, halakhot, chapters, 'https://rambam3.pages.dev');
+      return await window.generateCelebrationScreenshot(chapterName, chapters, halachot, timelapse, days);
     } catch (err) {
       console.error('Failed to capture screenshot:', err);
       return null;
@@ -728,23 +728,88 @@ function initCelebrationEffects() {
   }
 
   // Global share function for book celebration with confetti
-  window.celebrationShare = async function(bookName, totalChapters) {
+  window.celebrationShare = async function(bookName, totalChapters, totalHalakhot) {
     // Trigger confetti burst
     burst(60, 0);
     setTimeout(() => burst(40, 0), 1500);
 
-    // Build share URL based on plan
+    // Check if running as installed PWA
+    const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
+                        window.navigator.standalone === true;
+
+    // Build share URL
     const planId = window.PLAN?.id || 'rambam3';
     const shareUrl = `https://${planId}.pages.dev`;
+    const shareText = `סיימתי את הלכות ${bookName} ברמב״ם! 🎉\n\n${totalChapters} פרקים של ${totalHalakhot} הלכות\n\n${shareUrl}`;
 
-    // Build share text for book completion
-    const shareText = `סיימתי את הלכות ${bookName} ברמב״ם! 🎉\n\n${totalChapters} פרקים, רק כמה דקות ביום\n\n${shareUrl}`;
+    // Capture screenshot
+    try {
+      // Get the time spent on this book
+      const totalMinutes = getBookTime(bookName);
+      const formattedTime = formatLearningTime(totalMinutes);
 
-    // TODO: Capture screenshot with book celebration
-    // const screenshot = await captureCelebrationScreenshot(bookName, totalChapters);
+      // Get current streak (completed days)
+      const stats = computeStats();
+      const currentStreak = stats.completedDays;
 
-    // Call unified share function
-    await window.shareContent(shareText, null);
+      // captureCelebrationScreenshot expects: chapterName, chapters, halachot, timelapse, days
+      const blob = await captureCelebrationScreenshot(bookName, totalChapters, totalHalakhot, formattedTime, currentStreak);
+
+      if (!blob) {
+        alert('לא ניתן ליצור תמונה');
+        return;
+      }
+
+      // If installed as PWA, use native share
+      if (isInstalled && navigator.share && navigator.canShare) {
+        const file = new File([blob], 'celebration.png', { type: 'image/png' });
+        const shareData = {
+          text: shareText,
+          files: [file]
+        };
+
+        // Check if we can share files
+        if (navigator.canShare(shareData)) {
+          try {
+            await navigator.share(shareData);
+            return;
+          } catch (shareErr) {
+            // User cancelled or share failed, fall through to clipboard
+            if (shareErr.name !== 'AbortError') {
+              console.error('Native share failed:', shareErr);
+            }
+          }
+        }
+      }
+
+      // Fallback: Copy image and text to clipboard
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'image/png': blob,
+            'text/plain': new Blob([shareText], { type: 'text/plain' })
+          })
+        ]);
+        alert('התמונה והטקסט הועתקו ללוח! ✅\nעכשיו אפשר להדביק בוואטסאפ או ברשתות חברתיות');
+      } catch (clipboardErr) {
+        console.error('Failed to copy to clipboard:', clipboardErr);
+        // Try copying just the image
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'image/png': blob
+            })
+          ]);
+          alert('התמונה הועתקה ללוח! ✅\n(הטקסט לא הועתק אוטומטית)');
+        } catch (imageErr) {
+          console.error('Failed to copy image:', imageErr);
+          alert('לא ניתן להעתיק ללוח');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to capture/copy screenshot:', err);
+      alert('שגיאה: ' + err.message);
+    }
   };
 }
 
