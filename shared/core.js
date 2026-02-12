@@ -383,20 +383,13 @@ function updateDayHeader(date) {
 }
 
 // ============================================================================
-// Celebration Page
+// Book Completion Celebration Page
 // ============================================================================
-function renderCelebration(consecutiveDays) {
+function renderBookCelebration(bookName, totalBookChapters, totalBookHalakhot) {
   const mainContent = document.getElementById('mainContent');
-  const { completedDays, totalChapters, totalHalakhot } = computeStats();
 
-  // Get day transition time
-  const transitionMode = getDayTransitionMode();
-  let transitionTimeText = '';
-  if (transitionMode === 'sunset') {
-    transitionTimeText = 'בשקיעה';
-  } else {
-    transitionTimeText = 'ב-' + getDayTransitionTime();
-  }
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 
   mainContent.classList.add('celebration-page');
 
@@ -412,43 +405,48 @@ function renderCelebration(consecutiveDays) {
     mainHeader.classList.remove('scrolled');
   }
 
+  // TODO: Calculate how many days it took to complete this book
+  // TODO: Calculate total learning time for this book
+
   mainContent.innerHTML = `
       <div class="confetti-container" id="confetti"></div>
       <div class="rays"></div>
 
+      <button class="celebration-close" onclick="window.exitCelebration()" title="חזור ללימוד">✕</button>
+
       <div class="celebration-content">
-      
-        <!-- Stats -->
-        <div class="celebration-stats">
-          <div class="celebration-stat">
-            <span class="celebration-stat-value">${completedDays}</span>
-            <span class="celebration-stat-label">ימי לימוד</span>
-          </div>
-          <div class="celebration-stat">
-            <span class="celebration-stat-value">${totalChapters}</span>
-            <span class="celebration-stat-label">פרקים</span>
-          </div>
-          <div class="celebration-stat">
-            <span class="celebration-stat-value">${totalHalakhot}</span>
-            <span class="celebration-stat-label">הלכות</span>
-          </div>
-        </div>
 
         <!-- Title -->
-        <h2 class="celebration-title">איזה אלוף!</h2>
+        <h2 class="celebration-title">🎉 מזל טוב! 🎉</h2>
 
         <!-- Subtitle -->
         <div class="celebration-subtitle">
-          השלמת את <strong>כל הלימוד</strong> של היום
+          סיימת את הלכות
         </div>
 
-        <div class="celebration-message">
-          וכבר <strong>${consecutiveDays} ימים ברציפות</strong> שאתה לא מפספס הלכה אחת
+        <div class="celebration-book-name">
+          ${bookName}
+        </div>
+
+        <!-- Stats -->
+        <div class="celebration-stats">
+          <div class="celebration-stat">
+            <span class="celebration-stat-value">${totalBookChapters}</span>
+            <span class="celebration-stat-label">פרקים</span>
+          </div>
+          <div class="celebration-stat">
+            <span class="celebration-stat-value">${totalBookHalakhot}</span>
+            <span class="celebration-stat-label">הלכות</span>
+          </div>
+          <div class="celebration-stat">
+            <span class="celebration-stat-value">X דק׳</span>
+            <span class="celebration-stat-label">זמן לימוד</span>
+          </div>
         </div>
 
         <!-- Rambam Quote -->
         <div class="celebration-quote">
-          ״כל איש מישראל חייב בתלמוד תורה, בין עני בין עשיר, בין שלם בגופו בין בעל יסורין, בין בחור בין שהיה זקן גדול שתשש כחו״
+          ״כל איש מישראל חייב בתלמוד תורה, בין עני בין עשיר, בין שלם בגופו בין בעל יסורין, בין בחור בין שהיה זקן גדול שתשש כחו...״
         </div>
         <div class="celebration-quote-source">רמב״ם, הלכות תלמוד תורה א׳ ח׳</div>
 
@@ -457,18 +455,70 @@ function renderCelebration(consecutiveDays) {
 
         <!-- CTA Button -->
         <div class="celebration-cta">
-          <button class="celebration-btn" onclick="window.celebrationShare(${completedDays}, ${totalHalakhot}, ${totalChapters})">🎉 שתף את ההישג</button>
+          <button class="celebration-btn" onclick="window.celebrationShare('${bookName}', ${totalBookChapters}, ${totalBookHalakhot})">🎉 שתף את ההישג</button>
         </div>
 
-        <!-- Return Message -->
+        <!-- Continue Message -->
         <div class="celebration-return-message">
-          תחזור מחר ${transitionTimeText} כדי להמשיך להתמיד
+          לחץ על ה-X כדי להמשיך ללמוד
         </div>
       </div>
   `;
 
   // Initialize confetti and animations
-  setTimeout(() => initCelebrationEffects(completedDays, totalHalakhot, totalChapters), 100);
+  setTimeout(() => initCelebrationEffects(bookName, totalBookChapters, totalBookHalakhot), 100);
+
+  // Exit celebration mode
+  window.exitCelebration = function() {
+    mainContent.classList.remove('celebration-page');
+
+    // Restore scroll banner
+    const scrollBanner = document.getElementById('scrollBanner');
+    if (scrollBanner) {
+      scrollBanner.style.display = '';
+    }
+
+    renderDays();
+
+    // After rendering, find and open the next incomplete day, then scroll to first incomplete card
+    setTimeout(() => {
+      // Find the first day with incomplete halakhot
+      const days = getDays();
+      const done = getDone();
+      const today = getJewishToday();
+      const start = getStart();
+      const allDates = dateRange(start, today).reverse();
+
+      for (const date of allDates) {
+        const dayData = days[date];
+        if (dayData) {
+          const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
+          if (doneCount < dayData.count) {
+            // Found incomplete day, open it
+            const details = document.querySelector(`details[data-date="${date}"]`);
+            if (details && !details.open) {
+              details.open = true;
+
+              // Wait for content to load, then scroll to first incomplete
+              setTimeout(() => {
+                const firstIncomplete = details.querySelector('.halakha-card:not(.completed)');
+                if (firstIncomplete) {
+                  scrollToCard(firstIncomplete);
+                }
+              }, 500);
+            } else if (details) {
+              // Already open, just scroll
+              const firstIncomplete = details.querySelector('.halakha-card:not(.completed)');
+              if (firstIncomplete) {
+                scrollToCard(firstIncomplete);
+              }
+            }
+            break;
+          }
+        }
+      }
+    }, 100);
+  };
 }
 
 function initCelebrationEffects() {
@@ -524,7 +574,7 @@ function initCelebrationEffects() {
         }
       } catch (err) {
         if (err.name === 'AbortError') {
-          return; // User cancelled, don't fallback
+          return; // User canceled, don't fall back
         }
         console.error('Image share failed:', err);
         // Continue to text fallback
@@ -574,8 +624,8 @@ function initCelebrationEffects() {
     }
   }
 
-  // Global share function for celebration with confetti
-  window.celebrationShare = async function(days, halakhot, chapters) {
+  // Global share function for book celebration with confetti
+  window.celebrationShare = async function(bookName, totalChapters) {
     // Trigger confetti burst
     burst(60, 0);
     setTimeout(() => burst(40, 0), 1500);
@@ -584,14 +634,14 @@ function initCelebrationEffects() {
     const planId = window.PLAN?.id || 'rambam3';
     const shareUrl = `https://${planId}.pages.dev`;
 
-    // Build share text
-    const shareText = `בזכות האפליקציה כבר ${days} ימים שאני לומד רמב״ם!\n\nעד היום למדתי ${halakhot} הלכות ו-${chapters} פרקים\n\n${shareUrl}`;
+    // Build share text for book completion
+    const shareText = `סיימתי את הלכות ${bookName} ברמב״ם! 🎉\n\n${totalChapters} פרקים, רק כמה דקות ביום\n\n${shareUrl}`;
 
-    // Capture screenshot with parameters
-    const screenshot = await captureCelebrationScreenshot(days, halakhot, chapters);
+    // TODO: Capture screenshot with book celebration
+    // const screenshot = await captureCelebrationScreenshot(bookName, totalChapters);
 
-    // Call unified share function with screenshot
-    await window.shareContent(shareText, screenshot);
+    // Call unified share function
+    await window.shareContent(shareText, null);
   };
 }
 
@@ -615,19 +665,6 @@ function renderDays() {
         <div class="empty-state-text">טוען את הלימוד היומי שלך...</div>
       </div>
     `;
-    return;
-  }
-
-  // Check if all days are complete
-  const allComplete = allDates.every(date => {
-    const dayData = days[date];
-    if (!dayData) return false;
-    const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
-    return doneCount >= dayData.count;
-  });
-
-  if (allComplete && allDates.length > 0) {
-    renderCelebration(allDates.length);
     return;
   }
 
@@ -661,6 +698,7 @@ function renderDays() {
     details.className = `day-group ${isComplete ? 'completed' : ''}`;
     details.dataset.date = date;
     details.dataset.ref = dayData.ref;
+    details.dataset.he = dayData.he;
 
     const isToday = date === today;
     const dateLabel = isToday ? 'היום' : formatHebrewDate(date);
@@ -753,6 +791,7 @@ async function handleDetailsToggle(event) {
 
   const date = details.dataset.date;
   const ref = details.dataset.ref;
+  const hebrewName = details.dataset.he; // Get Hebrew name
   const container = details.querySelector('.cards-container');
 
   if (container.children.length > 0) return; // Already loaded
@@ -769,11 +808,16 @@ async function handleDetailsToggle(event) {
     const showChapterDividers = chapters.length > 1; // Only show dividers if multiple chapters
 
     chapters.forEach((chapter, chapterIdx) => {
+      const currentChapterNum = chapterNumbers[chapterIdx];
+
+      // Check if this is the last chapter of a book
+      const bookInfo = window.checkIfLastChapter && window.checkIfLastChapter(ref, currentChapterNum);
+
       // Add chapter divider only if there are multiple chapters
       if (showChapterDividers) {
         const divider = document.createElement('div');
         divider.className = 'chapter-divider';
-        divider.innerHTML = `<span>פרק ${toHebrewLetter(chapterNumbers[chapterIdx])}</span>`;
+        divider.innerHTML = `<span>פרק ${toHebrewLetter(currentChapterNum)}</span>`;
         container.appendChild(divider);
       }
 
@@ -801,6 +845,9 @@ async function handleDetailsToggle(event) {
       // Add halakhot for this chapter
       chapter.forEach((text, halakhaIdx) => {
         const isDone = done[`${date}:${globalIndex}`];
+        const isLastHalakhaOfChapter = halakhaIdx === chapter.length - 1;
+        // If bookInfo exists, this chapter IS the last of the book
+        const isLastHalakhaOfBook = bookInfo && isLastHalakhaOfChapter;
 
         const card = document.createElement('div');
         card.className = 'halakha-card';
@@ -809,6 +856,21 @@ async function handleDetailsToggle(event) {
         }
         card.dataset.date = date;
         card.dataset.index = globalIndex;
+
+        // Mark if this is the last halakha of a book
+        if (isLastHalakhaOfBook) {
+          // Extract just the book name from Hebrew (e.g., "דעות" from "הלכות דעות ו׳-ז׳")
+          card.dataset.bookName = window.extractHebrewBookName
+            ? window.extractHebrewBookName(hebrewName)
+            : hebrewName;
+          card.dataset.bookChapters = bookInfo.totalChapters;
+          // Calculate total halakhot in this book by summing all chapters
+          let totalHalakhot = 0;
+          for (let i = 0; i <= chapterIdx; i++) {
+            totalHalakhot += chapters[i].length;
+          }
+          card.dataset.bookHalakhot = totalHalakhot;
+        }
 
         // Number within chapter (1, 2, 3...)
         const hebrewNum = toHebrewLetter(halakhaIdx + 1);
@@ -934,6 +996,19 @@ function attachSwipeHandler(card) {
     markDone(date, index);
     updateDayHeader(date);
     updateCompletedCounter(card);
+
+    // Check if this is the last halakha of a book
+    if (card.dataset.bookName) {
+      const bookName = card.dataset.bookName;
+      const bookChapters = parseInt(card.dataset.bookChapters);
+      const bookHalakhot = parseInt(card.dataset.bookHalakhot);
+
+      // Show book completion celebration
+      setTimeout(() => {
+        renderBookCelebration(bookName, bookChapters, bookHalakhot);
+      }, 500);
+      return; // Don't scroll to next card, celebration will handle navigation
+    }
 
     // Add completed class to day if all items are now complete
     const days = getDays();

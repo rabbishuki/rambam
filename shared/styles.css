@@ -1154,6 +1154,39 @@
       overflow-x: hidden;
     }
 
+    .celebration-close {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 100;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.9);
+      font-size: 20px;
+      font-weight: 300;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .celebration-close:hover {
+      background: rgba(255,255,255,0.25);
+      transform: scale(1.05);
+    }
+
+    .celebration-close:active {
+      transform: scale(0.95);
+    }
+
     .celebration-content {
       position: relative;
       z-index: 20;
@@ -1224,6 +1257,16 @@
         line-height: 1.6;
         opacity: 0;
         animation: text-up 0.6s ease-out 0.5s forwards;
+    }
+
+    .celebration-book-name {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ffc107;
+      text-align: center;
+      margin: 16px 0;
+      opacity: 0;
+      animation: text-up 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.6s forwards;
     }
 
     .celebration-message {
@@ -1318,7 +1361,6 @@
       right: 0;
       bottom: 0;
       pointer-events: none;
-      z-index: 50;
       overflow: hidden;
     }
 
