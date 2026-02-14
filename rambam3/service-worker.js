@@ -19,6 +19,7 @@ self.addEventListener('install', (event) => {
         './shared/api.js',
         './shared/core.js',
         './shared/shell.js',
+        './shared/about.js',
         './shared/changelog.js',
         './assets/logo.png',
         './assets/icon-192.png',

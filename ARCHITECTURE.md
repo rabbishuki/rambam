@@ -145,20 +145,25 @@ The plan's `loadDay()` and `loadContent()` methods abstract away the data source
 ## Shared Code Details
 
 ### shell.js
-- `TOGGLE_SETTINGS` — config array defining all toggle settings (auto-mark, hide-completed-items, hide-completed-days)
+ל- `TOGGLE_SETTINGS` — config array defining all toggle settings (auto-mark, hide-completed-items, hide-completed-days, font-size, daily-reminder)
   - Each toggle config includes: `id`, `label`, `trueLabel`, `falseLabel`, `getter`, `setter`, optional `sideEffect`
   - Config-driven approach eliminates code duplication and makes adding new toggles trivial
 - `generateToggleSettings()` — dynamically generates HTML for all toggle settings from config
 - `attachToggleListeners()` — generic event listener that handles all toggle logic (initial state, clicks, storage, side effects)
 - `initShell()` — injects all HTML structure into `#app` container
 - Reads `window.PLAN.name` for header title
-- Creates header, stats bar, progress bar, main content area, settings panel, footer
-- Attaches event listeners for settings toggles, install prompt, calendar picker
+- Creates header (with calendar, info, settings buttons), stats bar, progress bar, main content area, settings panel, footer, notification dialog
+- Attaches event listeners for settings toggles, install prompt, calendar picker, info button
+- Calls `initAboutPanel()` at end of initialization to create info panel
+- **Scroll-responsive UI**: Header and dedication hide on scroll down, show on scroll up using scroll direction detection
+- **Scroll banner**: Shows current day's progress when scrolling, moves from top: 75px to top: 0 when header hides
+- **Notification dialog**: `window.showNotification(message, type)` — modal dialog for user feedback (success/error/info), auto-closes after 5s for success
+- **Info button**: ⓘ icon in header opens info panel, mutually exclusive with settings panel
 - **Note**: No chapter count toggle — each plan is a separate app
 
 ### core.js
 - `getSetting(key, defaultValue)` / `setSetting(key, value)` — generic localStorage utilities for boolean settings
-- Specific setting wrappers: `getAutoMark()`, `setAutoMark()`, `getHideCompleted()`, `setHideCompleted()`, `getHideCompletedDays()`, `setHideCompletedDays()`
+- Specific setting wrappers: `getAutoMark()`, `setAutoMark()`, `getHideCompleted()`, `setHideCompleted()`, `getHideCompletedDays()`, `setHideCompletedDays()`, `getLargeFontSize()`, `setLargeFontSize()`
 - `init()` — main entry point called from each app's `index.html`
 - Reads `window.PLAN.storagePrefix` for all localStorage operations
 - Calls `window.PLAN.loadDay(date)` to fetch day metadata
@@ -167,6 +172,10 @@ The plan's `loadDay()` and `loadContent()` methods abstract away the data source
 - Manages swipe gestures (right = mark done, left = unmark, double-tap = toggle)
 - Handles completion tracking, stats computation, scroll progress
 - Auto-opens today's section and scrolls to first incomplete item
+- **Book completion tracking**: Tracks reading time per book, triggers celebration on book completion
+- **Celebration page**: `renderBookCelebration()` — full-screen celebration with confetti, stats, Rambam quote, share button, and Yomi integration link
+- **Screenshot sharing**: `window.celebrationShare()` — captures celebration screenshot, uses native share on PWA or copies to clipboard with text on web
+- **Time tracking**: `formatLearningTime()` — formats minutes as HH:MM, `getBookTime()` / `saveCurrentBookTime()` — tracks actual reading time per book
 
 ### api.js
 - Pure API functions, no DOM manipulation
@@ -182,9 +191,35 @@ The plan's `loadDay()` and `loadContent()` methods abstract away the data source
 - Mobile-first, RTL, Hebrew typography
 - Uses Noto Sans Hebrew from Google Fonts
 - Swipeable card styles with smooth transitions
-- Settings panel slide-in animation
+- Settings panel slide-in animation (from left)
+- **Info panel**: Slide-up from bottom, full-screen, z-index 1001, scrollable content with 110px bottom padding for dedication bars
+- **Info panel demos**: 2-column layout with 33% GIF / 67% text ratio, alternating left-right, top-aligned
+- **Info panel settings**: Interactive toggle rows with headers, descriptions, and embedded controls
 - Progressive disclosure (chapter dividers, completed counters)
 - Scroll progress bar
+- **Scroll-responsive styles**: `body.scrolled` class controls header hide/show, dedication compact/full, scroll banner position
+- **Celebration page styles**: Full-screen gradient background, confetti animations, rays effect, stats display
+- **Notification dialog**: Centered modal with backdrop blur, auto-sizing, emoji icons
+- **Dedication transitions**: Smooth transition between 2-line full version and 1-line compact version with "לע״נ" prefix
+- **Body scroll lock**: `body.no-scroll` class prevents scrolling when overlay/panels are open
+
+### screenshot.js
+- `generateCelebrationScreenshot(chapterName, chapters, halachot, timelapse, days)` — generates shareable celebration image
+- Uses CORS-enabled background image from ImgBB CDN with local fallback
+- Draws dynamic text overlay on canvas: book name, stats (chapters/halakhot/time), streak counter
+- Returns PNG blob for sharing or clipboard
+
+### about.js
+- `initAboutPanel()` — creates and appends info panel to DOM, called from `shell.js` after initialization
+- `openInfo()` / `closeInfo()` — toggle info panel visibility, manage body scroll lock, close settings if open
+- **Info panel structure**: Slide-up full-screen panel with sections for Rambam study info, app purpose, usage demos, settings, and links
+- **Visual demos**: 2-column alternating layout (1/3 GIF, 2/3 text) showing swipe gestures and progress bar functionality
+- **Interactive settings**: Embedded toggles for start date, day transition time, auto-mark, hide completed items/days, font size, daily reminder
+- **Settings sync**: `initInfoSettingsToggles()` — syncs all info panel toggles with main settings panel in real-time using shared getters/setters
+- **Start date picker**: `initStartDateSetting()` — toggle between cycle start and custom date, confirms before reload
+- **Day transition**: `initDayTransitionSetting()` — toggle between fixed time and sunset mode with location-based fetching
+- **Links section**: External links to Sefaria, WhatsApp group, direct message, Yomi, and GitHub with brand icons
+- **Global functions**: Exports `window.initAboutPanel()`, `window.openInfo()`, `window.closeInfo()` for shell integration
 
 ## localStorage Keys
 
@@ -192,6 +227,11 @@ The plan's `loadDay()` and `loadContent()` methods abstract away the data source
 - `rambam_start` — cycle start date (shared by all plans that use a fixed start date)
 - `rambam_auto_mark` — auto-mark previous items when marking later ones (boolean, default: true)
 - `rambam_hide_completed` — hide completed halakhot/items within days (boolean, default: true)
+- `rambam_large_font` — use larger font size (boolean, default: false)
+- `rambam_daily_reminder` — enable daily reminder notifications (boolean, default: false)
+- `book_reading_times` — tracks actual reading time per book in minutes (JSON object: `{ "bookName": totalMinutes }`)
+- `current_book_start_time` — timestamp when user started reading current book
+- `current_book_name` — name of book currently being read
 - `rambam_hide_completed_days` — hide entire completed days (boolean, default: true)
 - `install_prompt_shown` — PWA install prompt dismissed (boolean)
 - `rambam_chapters` — legacy key from old app (`1` or `3`), used only for migration

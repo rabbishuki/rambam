@@ -196,6 +196,13 @@ function initShell() {
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
         </button>
+        <button class="header-btn" id="infoBtn" aria-label="מידע">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </button>
         <button class="header-btn" id="settingsBtn" aria-label="הגדרות">⚙</button>
       </div>
     </header>
@@ -347,25 +354,43 @@ function initShell() {
   attachInstallListeners();
   attachShareListener();
   initScrollBanner();
+
+  // Initialize about panel
+  if (typeof initAboutPanel === 'function') {
+    initAboutPanel();
+  }
 }
 
 // ============================================================================
 // Settings Event Listeners
 // ============================================================================
 function openSettings() {
+  // Close info if open
+  if (typeof closeInfo === 'function') {
+    closeInfo();
+  }
+
   document.getElementById('settingsPanel').classList.add('open');
   document.getElementById('overlay').classList.add('visible');
+  document.body.classList.add('no-scroll');
 }
 
 function closeSettings() {
   document.getElementById('settingsPanel').classList.remove('open');
   document.getElementById('overlay').classList.remove('visible');
+  document.body.classList.remove('no-scroll');
 }
 
 function attachSettingsListeners() {
   document.getElementById('settingsBtn').addEventListener('click', openSettings);
   document.getElementById('closeBtn').addEventListener('click', closeSettings);
-  document.getElementById('overlay').addEventListener('click', closeSettings);
+  document.getElementById('infoBtn').addEventListener('click', openInfo);
+  document.getElementById('overlay').addEventListener('click', () => {
+    closeSettings();
+    if (typeof closeInfo === 'function') {
+      closeInfo();
+    }
+  });
 
   // Toggle settings
   attachToggleListeners();
