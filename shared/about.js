@@ -250,7 +250,7 @@ function populateOtherFlavors() {
   const currentHost = window.location.hostname;
 
   // Filter out current app
-  const otherFlavors = flavors.filter(f => !currentHost || currentHost.includes(f.key));
+  const otherFlavors = flavors.filter(f => !currentHost || !currentHost.includes(f.key));
 
   // Generate HTML as inline badges
   container.style.display = 'flex';
