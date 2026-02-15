@@ -64,8 +64,15 @@ function getDayTransitionMode() {
   return stored || 'time';
 }
 
-function setDayTransitionMode(mode) {
+async function setDayTransitionMode(mode) {
   localStorage.setItem(`${window.PLAN.storagePrefix}_day_transition_mode`, mode);
+
+  // If daily reminder is enabled, update IndexedDB settings
+  if (getDailyReminderEnabled()) {
+    const transitionTime = getDayTransitionTime();
+    const [hour, minute] = transitionTime.split(':').map(Number);
+    await saveTransitionSettingsToIDB(mode, hour, minute);
+  }
 }
 
 function getDayTransitionTime() {
@@ -74,8 +81,15 @@ function getDayTransitionTime() {
   return stored || '18:00';
 }
 
-function setDayTransitionTime(time) {
+async function setDayTransitionTime(time) {
   localStorage.setItem(`${window.PLAN.storagePrefix}_day_transition_time`, time);
+
+  // If daily reminder is enabled, update IndexedDB settings
+  if (getDailyReminderEnabled()) {
+    const mode = getDayTransitionMode();
+    const [hour, minute] = time.split(':').map(Number);
+    await saveTransitionSettingsToIDB(mode, hour, minute);
+  }
 }
 
 function isFirstVisit() {
@@ -83,23 +97,21 @@ function isFirstVisit() {
 }
 
 function getJewishToday() {
-  // Get current time in Israel timezone (Asia/Jerusalem)
+  // Get current time in user's local timezone
   const now = new Date();
-  const israelTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
-  const israelTime = new Date(israelTimeStr);
-  const hour = israelTime.getHours();
-  const minute = israelTime.getMinutes();
+  const hour = now.getHours();
+  const minute = now.getMinutes();
 
   // Get transition time based on mode
   let transitionHour, transitionMinute;
   const mode = getDayTransitionMode();
 
   if (mode === 'sunset') {
-    // Use cached sunset time from API
+    // Use cached sunset time from API (already in user's local timezone from fetchSunset)
     transitionHour = cachedSunsetHour;
     transitionMinute = cachedSunsetMinute;
   } else {
-    // Use custom time from settings
+    // Use custom time from settings (in user's local timezone)
     const [h, m] = getDayTransitionTime().split(':').map(Number);
     transitionHour = h;
     transitionMinute = m;
@@ -109,7 +121,7 @@ function getJewishToday() {
   const isPastTransition = (hour > transitionHour) ||
                            (hour === transitionHour && minute >= transitionMinute);
 
-  let jewishDate = new Date(israelTime);
+  let jewishDate = new Date(now);
 
   if (!isPastTransition) {
     // Before transition time - still in previous Jewish day
@@ -262,6 +274,13 @@ function dateRange(start, end) {
   return dates;
 }
 
+function getHebrewDayOfWeek(dateStr) {
+  const date = new Date(dateStr + 'T00:00:00');
+  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const hebrewDays = ['יום א׳', 'יום ב׳', 'יום ג׳', 'יום ד׳', 'יום ה׳', 'יום ו׳', 'שבת'];
+  return hebrewDays[dayOfWeek];
+}
+
 function formatHebrewDate(dateStr) {
   const days = getDays();
   const dayData = days[dateStr];
@@ -274,6 +293,140 @@ function formatHebrewDate(dateStr) {
   // Fall back to Gregorian format
   const [y, m, d] = dateStr.split('-').map(Number);
   return `${d}/${m}/${y}`;
+}
+
+// ============================================================================
+// Shabbat Learning Tracking
+// ============================================================================
+function getLastShabbatPrompt() {
+  return localStorage.getItem('rambam_last_shabbat_prompt');
+}
+
+function setLastShabbatPrompt(dateStr) {
+  localStorage.setItem('rambam_last_shabbat_prompt', dateStr);
+}
+
+function checkShabbatLearning() {
+  const today = getJewishToday(); // This is the Jewish date (respects transition time)
+
+  // Parse the date properly to avoid timezone issues
+  const [year, month, day] = today.split('-').map(Number);
+  const jewishDate = new Date(year, month - 1, day); // Use local date constructor
+  const jewishDayOfWeek = jewishDate.getDay();
+
+  console.log('Checking Shabbat learning:', {
+    today,
+    jewishDate: jewishDate.toString(),
+    jewishDayOfWeek,
+    dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][jewishDayOfWeek],
+    isSunday: jewishDayOfWeek === 0
+  });
+
+  // Only check on Sunday (day after Shabbat)
+  if (jewishDayOfWeek !== 0) return;
+
+  // Get yesterday's date (which would be Shabbat)
+  // Subtract 1 day from the Jewish today
+  const shabbatDateObj = new Date(year, month - 1, day - 1);
+  const shabbatYear = shabbatDateObj.getFullYear();
+  const shabbatMonth = String(shabbatDateObj.getMonth() + 1).padStart(2, '0');
+  const shabbatDay = String(shabbatDateObj.getDate()).padStart(2, '0');
+  const shabbatDate = `${shabbatYear}-${shabbatMonth}-${shabbatDay}`;
+
+  console.log('Calculated Shabbat date:', {
+    shabbatDateObj: shabbatDateObj.toString(),
+    shabbatDate,
+    shabbatDayOfWeek: shabbatDateObj.getDay()
+  });
+
+  // Check if we already prompted for this Shabbat
+  const lastPrompt = getLastShabbatPrompt();
+
+  console.log('Shabbat check details:', {
+    shabbatDate,
+    lastPrompt,
+    alreadyPrompted: lastPrompt === shabbatDate
+  });
+
+  if (lastPrompt === shabbatDate) {
+    console.log('Already prompted for this Shabbat, skipping');
+    return;
+  }
+
+  // Check if Shabbat day exists in our data
+  const days = getDays();
+  const shabbatData = days[shabbatDate];
+  if (!shabbatData) {
+    console.log('No data for this Shabbat date:', shabbatDate);
+    return;
+  }
+
+  // Show the Shabbat learning prompt
+  console.log('Showing Shabbat prompt for:', shabbatDate);
+  showShabbatPrompt(shabbatDate, shabbatData);
+}
+
+// Test function - call from console: window.testShabbatPrompt()
+window.testShabbatPrompt = function() {
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const shabbatDate = yesterday.toISOString().split('T')[0];
+
+  const days = getDays();
+  const shabbatData = days[shabbatDate];
+
+  if (shabbatData) {
+    showShabbatPrompt(shabbatDate, shabbatData);
+  } else {
+    console.error('No data for yesterday:', shabbatDate);
+  }
+};
+
+function showShabbatPrompt(shabbatDate, shabbatData) {
+  // Mark that we've shown the prompt for this Shabbat
+  // Do this BEFORE showing to avoid double-prompts on reload
+  setLastShabbatPrompt(shabbatDate);
+
+  // Create a custom dialog for Shabbat prompt
+  const dialog = document.createElement('dialog');
+  dialog.className = 'notification-dialog shabbat-dialog';
+  dialog.innerHTML = `
+    <div class="notification-content">
+      <div class="notification-icon">📖</div>
+      <div class="notification-message">למדת בשבת מתוך הספר?</div>
+      <div class="shabbat-actions">
+        <button class="shabbat-btn shabbat-yes">כן</button>
+        <button class="shabbat-btn shabbat-no">לא</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(dialog);
+  dialog.showModal();
+
+  // Handle Yes button - mark all items for Shabbat as complete
+  dialog.querySelector('.shabbat-yes').addEventListener('click', () => {
+    const done = getDone();
+    for (let i = 0; i < shabbatData.count; i++) {
+      const key = `${shabbatDate}:${i}`;
+      if (!done[key]) {
+        done[key] = new Date().toISOString();
+      }
+    }
+    saveDone(done);
+    dialog.close();
+    dialog.remove();
+
+    // Reload the UI to show the updated completion
+    window.location.reload();
+  });
+
+  // Handle No button - just dismiss
+  dialog.querySelector('.shabbat-no').addEventListener('click', () => {
+    dialog.close();
+    dialog.remove();
+  });
 }
 
 function toHebrewLetter(num) {
@@ -457,8 +610,10 @@ function updateDayHeader(date) {
   const dayMeta = details.querySelector('.day-meta');
   const today = getJewishToday();
   const isToday = date === today;
-  const dateLabel = isToday ? 'היום' : formatHebrewDate(date);
-  dayMeta.textContent = `${dateLabel} • ${doneCount}/${dayData.count}`;
+  const dayOfWeek = getHebrewDayOfWeek(date);
+  const dateLabel = formatHebrewDate(date);
+  const displayLabel = isToday ? `${dayOfWeek} (היום)` : `${dayOfWeek} • ${dateLabel}`;
+  dayMeta.textContent = `${displayLabel} • ${doneCount}/${dayData.count}`;
 
   // Update button visibility
   const checkBtn = details.querySelector('.day-action-btn.check');
@@ -869,7 +1024,9 @@ function renderDays() {
     details.dataset.he = dayData.he;
 
     const isToday = date === today;
-    const dateLabel = isToday ? 'היום' : formatHebrewDate(date);
+    const dayOfWeek = getHebrewDayOfWeek(date);
+    const dateLabel = formatHebrewDate(date);
+    const displayLabel = isToday ? `${dayOfWeek} (היום)` : `${dayOfWeek} • ${dateLabel}`;
 
     // Determine button visibility
     const showCheckBtn = !isComplete;
@@ -881,7 +1038,7 @@ function renderDays() {
           <span class="day-arrow">◀</span>
           <div class="day-info">
             <div>${dayData.he}</div>
-            <div class="day-meta">${dateLabel} • ${doneCount}/${dayData.count}</div>
+            <div class="day-meta">${displayLabel} • ${doneCount}/${dayData.count}</div>
           </div>
         </div>
         <div class="day-actions">
@@ -1508,7 +1665,9 @@ async function renderSingleDay(date) {
   details.open = true; // Auto-open when viewing single day
 
   const isToday = date === today;
-  const dateLabel = isToday ? 'היום' : formatHebrewDate(date);
+  const dayOfWeek = getHebrewDayOfWeek(date);
+  const dateLabel = formatHebrewDate(date);
+  const displayLabel = isToday ? `${dayOfWeek} (היום)` : `${dayOfWeek} • ${dateLabel}`;
 
   const showCheckBtn = !isComplete;
   const showResetBtn = doneCount > 0;
@@ -1519,7 +1678,7 @@ async function renderSingleDay(date) {
         <span class="day-arrow">◀</span>
         <div class="day-info">
           <div>${dayData.he}</div>
-          <div class="day-meta">${dateLabel} • ${doneCount}/${dayData.count}</div>
+          <div class="day-meta">${displayLabel} • ${doneCount}/${dayData.count}</div>
         </div>
       </div>
       <div class="day-actions">
@@ -1588,20 +1747,18 @@ function scheduleDailyReminder() {
     transitionMinute = m;
   }
 
-  // Calculate time until next transition
+  // Calculate time until next transition (using user's local time)
   const now = new Date();
-  const israelTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
-  const israelTime = new Date(israelTimeStr);
 
-  const nextTransition = new Date(israelTime);
+  const nextTransition = new Date(now);
   nextTransition.setHours(transitionHour, transitionMinute, 0, 0);
 
   // If we've passed today's transition, schedule for tomorrow
-  if (israelTime >= nextTransition) {
+  if (now >= nextTransition) {
     nextTransition.setDate(nextTransition.getDate() + 1);
   }
 
-  const msUntilTransition = nextTransition - israelTime;
+  const msUntilTransition = nextTransition - now;
 
   // Schedule notification
   setTimeout(() => {
@@ -1627,8 +1784,108 @@ function getDailyReminderEnabled() {
   return getSetting(`${window.PLAN.storagePrefix}_daily_reminder`, false);
 }
 
-function setDailyReminderEnabled(enabled) {
+async function setDailyReminderEnabled(enabled) {
   setSetting(`${window.PLAN.storagePrefix}_daily_reminder`, enabled);
+
+  // Register or unregister periodic background sync
+  if ('serviceWorker' in navigator && 'periodicSync' in ServiceWorkerRegistration.prototype) {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+
+      if (enabled) {
+        // Get user's configured transition settings
+        const mode = getDayTransitionMode();
+        const transitionTime = getDayTransitionTime(); // e.g., "18:00"
+        const [hour, minute] = transitionTime.split(':').map(Number);
+
+        // Store transition settings in IndexedDB so service worker can access them
+        await saveTransitionSettingsToIDB(mode, hour, minute);
+
+        // Register periodic sync for daily reminders
+        const channel = new MessageChannel();
+        const response = await new Promise((resolve) => {
+          channel.port1.onmessage = (event) => resolve(event.data);
+          registration.active.postMessage(
+            {
+              type: 'REGISTER_DAILY_SYNC',
+              settings: { mode, hour, minute }
+            },
+            [channel.port2]
+          );
+        });
+
+        if (response.success) {
+          console.log('Daily reminder registered (background sync) for', transitionTime);
+        } else {
+          console.warn('Failed to register background sync:', response.error);
+          // Fallback to setTimeout approach
+          scheduleDailyReminder();
+        }
+      } else {
+        // Unregister periodic sync
+        const channel = new MessageChannel();
+        registration.active.postMessage(
+          { type: 'UNREGISTER_DAILY_SYNC' },
+          [channel.port2]
+        );
+        console.log('Daily reminder unregistered');
+      }
+    } catch (error) {
+      console.error('Periodic sync not supported, using fallback:', error);
+      // Fallback to setTimeout approach
+      if (enabled) {
+        scheduleDailyReminder();
+      }
+    }
+  } else {
+    console.log('Periodic Background Sync not supported, using in-app notifications');
+    // Fallback to setTimeout approach (only works while app is open)
+    if (enabled) {
+      scheduleDailyReminder();
+    }
+  }
+}
+
+// ============================================================================
+// IndexedDB for Service Worker Settings
+// ============================================================================
+
+async function saveTransitionSettingsToIDB(mode, hour, minute) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('RambamSettings', 1);
+
+    request.onerror = () => reject(request.error);
+
+    request.onsuccess = () => {
+      const db = request.result;
+      const transaction = db.transaction(['settings'], 'readwrite');
+      const store = transaction.objectStore('settings');
+
+      const settings = {
+        key: 'dayTransition',
+        mode: mode,
+        hour: hour,
+        minute: minute,
+        planId: window.PLAN.id
+      };
+
+      store.put(settings);
+
+      transaction.oncomplete = () => {
+        db.close();
+        resolve();
+      };
+
+      transaction.onerror = () => reject(transaction.error);
+    };
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains('settings')) {
+        db.createObjectStore('settings', { keyPath: 'key' });
+      }
+    };
+  });
 }
 
 // ============================================================================
@@ -1826,9 +2083,15 @@ async function init() {
     // Load changelog
     loadChangelog();
 
-    // Schedule daily reminder if enabled
+    // Register daily reminder if enabled (uses periodic sync if available, fallback to setTimeout)
     if (getDailyReminderEnabled()) {
-      scheduleDailyReminder();
+      // Re-register to ensure sync is active (idempotent operation)
+      await setDailyReminderEnabled(true);
+    }
+
+    // Check for Shabbat learning prompt (on Sunday mornings)
+    if (!firstVisit) {
+      checkShabbatLearning();
     }
 
     // Open settings on first visit
@@ -1922,3 +2185,82 @@ document.addEventListener('visibilitychange', () => {
     }
   }
 });
+
+// ============================================================================
+// Testing & Debug Functions
+// ============================================================================
+
+// Test notification - call from console: window.testNotification()
+window.testNotification = function() {
+  console.log('Testing notification...');
+  showNotification('בדיקת התראה', {
+    body: 'זו הודעת בדיקה - אם אתה רואה אותה, ההתראות עובדות!',
+    icon: './assets/icon-192.png',
+    badge: './assets/icon-192.png',
+    tag: 'test',
+    requireInteraction: false
+  });
+};
+
+// Check periodic sync status - call from console: window.checkPeriodicSync()
+window.checkPeriodicSync = async function() {
+  if (!('serviceWorker' in navigator)) {
+    console.log('❌ Service Worker not supported');
+    return;
+  }
+
+  if (!('periodicSync' in ServiceWorkerRegistration.prototype)) {
+    console.log('❌ Periodic Background Sync not supported in this browser');
+    console.log('ℹ️  This feature only works in Chrome/Edge on desktop/Android');
+    console.log('ℹ️  Falling back to in-app notifications (only work when app is open)');
+    return;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const tags = await registration.periodicSync.getTags();
+
+    console.log('✅ Periodic Background Sync is supported!');
+    console.log('📋 Registered sync tags:', tags);
+
+    // Show user's configured time
+    const transitionTime = getDayTransitionTime();
+    const mode = getDayTransitionMode();
+
+    if (tags.includes('daily-study-check')) {
+      console.log('✅ Daily study reminder is registered');
+      console.log(`ℹ️  Mode: ${mode}`);
+      console.log(`ℹ️  Notifications will be shown around ${transitionTime} local time daily`);
+      console.log('ℹ️  (Actually shows during the hour containing your transition time)');
+    } else {
+      console.log('⚠️  Daily study reminder is NOT registered');
+      console.log('ℹ️  Enable "תזכורת יומית" in settings to register');
+    }
+
+    // Check what's in IndexedDB
+    console.log('\n📦 Checking IndexedDB settings...');
+    const request = indexedDB.open('RambamSettings', 1);
+    request.onsuccess = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains('settings')) {
+        console.log('⚠️  No settings in IndexedDB yet');
+        db.close();
+        return;
+      }
+      const transaction = db.transaction(['settings'], 'readonly');
+      const store = transaction.objectStore('settings');
+      const getRequest = store.get('dayTransition');
+      getRequest.onsuccess = () => {
+        const data = getRequest.result;
+        if (data) {
+          console.log('✅ IndexedDB settings:', data);
+        } else {
+          console.log('⚠️  No transition settings in IndexedDB');
+        }
+        db.close();
+      };
+    };
+  } catch (error) {
+    console.error('❌ Error checking periodic sync:', error);
+  }
+};

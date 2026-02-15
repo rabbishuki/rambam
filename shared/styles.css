@@ -1208,6 +1208,51 @@
       background: #1a2f6f;
     }
 
+    /* Shabbat Dialog */
+    .shabbat-actions {
+      display: flex;
+      gap: 1rem;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+
+    .shabbat-btn {
+      flex: 1;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .shabbat-yes {
+      background: #10b981;
+      color: white;
+    }
+
+    .shabbat-yes:hover {
+      background: #059669;
+    }
+
+    .shabbat-yes:active {
+      background: #047857;
+    }
+
+    .shabbat-no {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .shabbat-no:hover {
+      background: #e5e7eb;
+    }
+
+    .shabbat-no:active {
+      background: #d1d5db;
+    }
+
     /* Install Prompt */
     .install-prompt {
       position: fixed;

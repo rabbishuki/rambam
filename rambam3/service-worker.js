@@ -106,6 +106,130 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
+// ============================================================================
+// Periodic Background Sync for Daily Reminders
+// ============================================================================
+
+// Register periodic sync when requested by the page
+self.addEventListener('message', async (event) => {
+  if (event.data && event.data.type === 'REGISTER_DAILY_SYNC') {
+    try {
+      // Periodic Background Sync (Chrome/Edge only)
+      // Minimum interval is 12 hours, we'll check daily (24 hours)
+      await self.registration.periodicSync.register('daily-study-check', {
+        minInterval: 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+      });
+      console.log('Periodic sync registered for daily study reminders');
+      event.ports[0].postMessage({ success: true });
+    } catch (error) {
+      console.error('Periodic sync registration failed:', error);
+      event.ports[0].postMessage({ success: false, error: error.message });
+    }
+  } else if (event.data && event.data.type === 'UNREGISTER_DAILY_SYNC') {
+    try {
+      await self.registration.periodicSync.unregister('daily-study-check');
+      console.log('Periodic sync unregistered');
+      event.ports[0].postMessage({ success: true });
+    } catch (error) {
+      console.error('Periodic sync unregistration failed:', error);
+      event.ports[0].postMessage({ success: false, error: error.message });
+    }
+  }
+});
+
+// Handle periodic sync event
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'daily-study-check') {
+    event.waitUntil(checkAndNotifyDailyStudy());
+  }
+});
+
+// Get transition settings from IndexedDB
+async function getTransitionSettings() {
+  return new Promise((resolve) => {
+    const request = indexedDB.open('RambamSettings', 1);
+
+    request.onerror = () => {
+      console.error('Failed to open IndexedDB:', request.error);
+      // Return defaults
+      resolve({ mode: 'time', hour: 18, minute: 0 });
+    };
+
+    request.onsuccess = () => {
+      const db = request.result;
+
+      // Check if object store exists
+      if (!db.objectStoreNames.contains('settings')) {
+        db.close();
+        resolve({ mode: 'time', hour: 18, minute: 0 });
+        return;
+      }
+
+      const transaction = db.transaction(['settings'], 'readonly');
+      const store = transaction.objectStore('settings');
+      const getRequest = store.get('dayTransition');
+
+      getRequest.onsuccess = () => {
+        db.close();
+        const data = getRequest.result;
+        if (data) {
+          resolve({ mode: data.mode, hour: data.hour, minute: data.minute });
+        } else {
+          // No settings stored, use defaults
+          resolve({ mode: 'time', hour: 18, minute: 0 });
+        }
+      };
+
+      getRequest.onerror = () => {
+        db.close();
+        resolve({ mode: 'time', hour: 18, minute: 0 });
+      };
+    };
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains('settings')) {
+        db.createObjectStore('settings', { keyPath: 'key' });
+      }
+    };
+  });
+}
+
+// Check if it's time to study and show notification
+async function checkAndNotifyDailyStudy() {
+  try {
+    // Get user's configured transition time from IndexedDB
+    const settings = await getTransitionSettings();
+    console.log('Transition settings from IndexedDB:', settings);
+
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    // Show notification if we're within the transition hour
+    // Example: if transition is 18:30, show notification between 18:00-18:59
+    // This gives a 1-hour window since we can't control exact sync timing
+    if (currentHour === settings.hour) {
+      console.log('Time to study! Showing notification...');
+      await self.registration.showNotification('יום חדש בלימוד!', {
+        body: 'הגיע הזמן ללימוד היומי של רמב"ם',
+        icon: './assets/icon-192.png',
+        badge: './assets/icon-192.png',
+        tag: 'daily-study',
+        requireInteraction: false,
+        data: { type: 'daily-reminder', transitionTime: `${settings.hour}:${settings.minute}` },
+        actions: [
+          { action: 'open', title: 'פתח את האפליקציה' }
+        ]
+      });
+    } else {
+      console.log(`Not time yet. Current: ${currentHour}:${currentMinute}, Transition: ${settings.hour}:${settings.minute}`);
+    }
+  } catch (error) {
+    console.error('Failed to check/notify for daily study:', error);
+  }
+}
+
 // Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();

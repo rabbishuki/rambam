@@ -16,18 +16,17 @@ const TOGGLE_SETTINGS = [
     sideEffect: async (newValue) => {
       if (newValue) {
         const hasPermission = await requestNotificationPermission();
-        if (hasPermission) {
-          scheduleDailyReminder();
-        } else {
+        if (!hasPermission) {
           window.showNotification('יש לאפשר התראות בדפדפן כדי לקבל תזכורות יומיות');
           // Revert the setting if permission denied
-          setDailyReminderEnabled(false);
+          await setDailyReminderEnabled(false);
           // Update UI
           const buttons = document.querySelectorAll(`[data-setting-id="daily-reminder"]`);
           buttons.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.value === 'false');
           });
         }
+        // If permission granted, setDailyReminderEnabled already registered the sync
       }
     }
   },
@@ -753,10 +752,12 @@ function initScrollBanner() {
       if (dayData) {
         const today = getJewishToday();
         const isToday = date === today;
-        const dateLabel = isToday ? 'היום' : formatHebrewDate(date);
+        const dayOfWeek = getHebrewDayOfWeek(date);
+        const dateLabel = formatHebrewDate(date);
+        const displayLabel = isToday ? `${dayOfWeek} (היום)` : `${dayOfWeek} • ${dateLabel}`;
 
         scrollBannerTitle.textContent = dayData.he;
-        scrollBannerDate.textContent = dateLabel;
+        scrollBannerDate.textContent = displayLabel;
         const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
         scrollBannerProgress.textContent = `${doneCount}/${dayData.count}`;
 
