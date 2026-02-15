@@ -12,6 +12,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="changelog.js"></script>
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "vhiz64qdo7");
+  </script>
   <style>
     * {
       margin: 0;
@@ -827,6 +834,196 @@
       vertical-align: middle;
     }
 
+    /* App Selection Modal */
+    .app-selector-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .app-selector-modal.hidden {
+      display: none;
+    }
+
+    .app-selector-content {
+      background: white;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .app-selector-header {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      padding: 1.5rem 1.5rem 0.25rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .app-selector-close {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      line-height: 1;
+    }
+
+    .app-selector-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .app-selector-close:active {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .app-selector-header h2 {
+      margin: 1rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .app-selector-header .new-badge {
+      display: inline-block;
+      background: #10b981;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .app-selector-highlights {
+      padding: 1rem 1.5rem;
+      background: #fffbeb;
+      border-top: 1px solid #fde68a;
+      border-bottom: 1px solid #fde68a;
+    }
+
+    .app-selector-highlights h3 {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 0.5rem;
+    }
+
+    .app-selector-highlights ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .app-selector-highlights li {
+      font-size: 0.875rem;
+      color: #78350f;
+      padding: 0.25rem 0;
+      line-height: 1.4;
+    }
+
+    .app-selector-highlights li::before {
+      content: '✨ ';
+      margin-left: 0.25rem;
+    }
+
+    .app-selector-options {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .app-option {
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: right;
+    }
+
+    .app-option:hover {
+      border-color: #2563eb;
+      background: #f9fafb;
+    }
+
+    .app-option:active {
+      background: #f3f4f6;
+    }
+
+    .app-option-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 0.25rem;
+    }
+
+    .app-option-description {
+      font-size: 0.875rem;
+      color: #6b7280;
+      line-height: 1.4;
+    }
+
+    .app-option.recommended {
+      border-color: #2563eb;
+      background: #eff6ff;
+    }
+
+    .app-option.recommended .app-option-title {
+      color: #2563eb;
+    }
+
+    .app-option.secondary {
+      border-color: #d1d5db;
+      border-style: dotted;
+      background: #f9fafb;
+      padding-top: 0.5rem;
+    }
+
+    .app-option.secondary .app-option-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #6b7280;
+    }
+
+    .app-option.secondary .app-option-description {
+      font-size: 0.8rem;
+    }
+
     .settings-dedication {
       background: #fef3c7;
       padding: 1rem;
@@ -908,6 +1105,29 @@
   </style>
 </head>
 <body>
+  <!-- App Selector Modal -->
+  <div class="app-selector-modal" id="appSelectorModal">
+    <div class="app-selector-content">
+      <div class="app-selector-header">
+        <button class="app-selector-close" id="appSelectorCloseBtn" aria-label="סגור">×</button>
+        <div class="new-badge">חדש!</div>
+        <h2>בחר את מסלול הלימוד שלך</h2>
+      </div>
+      <div class="app-selector-options" id="appSelectorOptionsContainer">
+        <!-- Options will be injected by JavaScript -->
+      </div>
+      <div class="app-selector-highlights">
+        <h3>שיפורים בגרסה החדשה:</h3>
+        <ul>
+          <li>יותר מקום למסך - עיצוב נקי וממוקד</li>
+          <li>מעבר יום בשקיעה מדויקת לפי מיקום</li>
+          <li>שליטה על גודל הפונט</li>
+          <li>ועוד שיפורים מעניינים</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <header id="mainHeader">
       <div class="header-content">
@@ -922,6 +1142,13 @@
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
+        </button>
+        <button class="header-btn" id="updateNotificationBtn" aria-label="גרסה חדשה זמינה" style="position: relative;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span style="position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; background: #10b981; border-radius: 50%; border: 2px solid white;"></span>
         </button>
         <button class="header-btn" id="calendarBtn" aria-label="בחר תאריך">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2580,9 +2807,108 @@
     }
 
     // ============================================================================
+    // App Selector Modal
+    // ============================================================================
+    function navigateToApp(url) {
+      // Store preference to not show modal again
+      localStorage.setItem('rambam_app_selected', 'true');
+      window.location.href = url;
+    }
+
+    function closeAppSelector() {
+      // Store preference to not show modal again
+      localStorage.setItem('rambam_app_selected', 'true');
+      document.getElementById('appSelectorModal').classList.add('hidden');
+    }
+
+    function closeAppSelectorTemporarily() {
+      // Just hide the modal without setting preference (will show again next time)
+      document.getElementById('appSelectorModal').classList.add('hidden');
+    }
+
+    function openAppSelector() {
+      // Show the modal again
+      renderAppSelectorOptions();
+      document.getElementById('appSelectorModal').classList.remove('hidden');
+    }
+
+    function renderAppSelectorOptions() {
+      const container = document.getElementById('appSelectorOptionsContainer');
+      if (!container) return;
+
+      // Detect user's current chapter count preference
+      const currentChapterCount = getChapterCount();
+      const is3Chapters = currentChapterCount === 3;
+
+      // Build options HTML
+      const options = [];
+
+      // Recommended option based on user's settings
+      if (is3Chapters) {
+        options.push(`
+          <div class="app-option recommended" onclick="navigateToApp('https://rambam3.pages.dev')">
+            <div class="app-option-title">רמב"ם 3 פרקים</div>
+            <div class="app-option-description">המשך את הלימוד היומי בגרסה המשופרת</div>
+          </div>
+        `);
+        options.push(`
+          <div class="app-option" onclick="navigateToApp('https://rambam1.pages.dev')">
+            <div class="app-option-title">רמב"ם פרק אחד</div>
+          </div>
+        `);
+      } else {
+        options.push(`
+          <div class="app-option recommended" onclick="navigateToApp('https://rambam1.pages.dev')">
+            <div class="app-option-title">רמב"ם פרק אחד</div>
+            <div class="app-option-description">המשך את הלימוד היומי בגרסה המשופרת</div>
+          </div>
+        `);
+        options.push(`
+          <div class="app-option" onclick="navigateToApp('https://rambam3.pages.dev')">
+            <div class="app-option-title">רמב"ם 3 פרקים</div>
+          </div>
+        `);
+      }
+
+      // Sefer HaMitzvot option
+      options.push(`
+        <div class="app-option" onclick="navigateToApp('https://sefer-mitzvot.pages.dev')">
+          <div class="app-option-title">ספר המצוות</div>
+        </div>
+      `);
+
+      // Classic version (less prominent)
+      options.push(`
+        <div class="app-option secondary" onclick="closeAppSelector()">
+          <div class="app-option-title">הישאר בגרסה הישנה</div>
+          <div class="app-option-description">לא מומלץ - הגרסה הזו לא תקבל עדכונים</div>
+        </div>
+      `);
+
+      container.innerHTML = options.join('');
+    }
+
+    function showAppSelectorIfNeeded() {
+      // Show if user hasn't selected an app preference yet
+      const appSelected = localStorage.getItem('rambam_app_selected');
+
+      if (!appSelected) {
+        renderAppSelectorOptions();
+        document.getElementById('appSelectorModal').classList.remove('hidden');
+        return true;
+      } else {
+        document.getElementById('appSelectorModal').classList.add('hidden');
+        return false;
+      }
+    }
+
+    // ============================================================================
     // App Initialization
     // ============================================================================
     async function init() {
+      // Show app selector modal if needed (non-blocking)
+      showAppSelectorIfNeeded();
+
       try {
         // Check if this is the first visit BEFORE any other operations
         const firstVisit = isFirstVisit();
@@ -2660,7 +2986,21 @@
       }
     }
 
+    // Initialize app
     init();
+
+    // Make functions globally accessible for onclick handlers
+    window.navigateToApp = navigateToApp;
+    window.closeAppSelector = closeAppSelector;
+
+    // App selector close button (temporary close - will show again)
+    document.getElementById('appSelectorCloseBtn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeAppSelectorTemporarily();
+    });
+
+    // Update notification button - opens app selector
+    document.getElementById('updateNotificationBtn')?.addEventListener('click', openAppSelector);
   </script>
 </body>
 </html>
