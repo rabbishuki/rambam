@@ -60,8 +60,8 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Cache successful API responses
-          if (response.ok) {
+          // Cache successful API responses (only GET requests)
+          if (response.ok && request.method === 'GET') {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(request, responseClone);
@@ -77,7 +77,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets: cache-first
+  // Static assets: cache-first (only GET requests)
+  if (request.method !== 'GET') {
+    // Don't cache non-GET requests (POST, PUT, DELETE, etc.)
+    event.respondWith(fetch(request));
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       if (cachedResponse) {
