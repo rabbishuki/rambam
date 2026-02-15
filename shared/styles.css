@@ -684,6 +684,12 @@
       margin-bottom: 0;
     }
 
+    .flavor-links {
+      display: flex;
+      flex-direction: row;
+      gap: 0.75rem;
+    }
+
     .info-links {
       display: flex;
       flex-direction: column;

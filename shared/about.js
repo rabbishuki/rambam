@@ -15,22 +15,6 @@ function initAboutPanel() {
     </div>
     <div class="info-content">
       <section class="info-section">
-        <h3>אודות לימוד הרמב״ם</h3>
-        <p>
-תקנת לימוד הרמב״ם היא יוזמה ללימוד יומי קבוע בספר משנה תורה לרמב״ם, שנוסדה על־ידי הרבי מליובאוויטש מלך המשיח שליט״א באחרון של פסח בשנת תשד״מ.
-        </p>
-        <p> 
-מטרת התקנה היא לאחד את עם ישראל באמצעות לימוד משותף של חיבור הלכתי המקיף את כל התורה שבעל־פה, כולל הלכות שאינן נוהגות בפועל בימינו. 
-        </p>
-        <p>
-לשם כך נקבעו שלושה מסלולי לימוד, המאפשרים לכל אחד להשתתף על־פי יכולתו: מסלול העיקרי של שלושה פרקים ביום, המאפשר סיום משנה תורה כולו בתוך שנה; מסלול של פרק אחד ביום, שבו מסיימים את הספר בשלוש שנים; ומסלול לימוד יומי בספר המצוות לרמב״ם, המקביל ללימוד ההלכות. 
-        </p>
-        <p>
-לימוד זה מבטא את שלמות התורה ואת ההכנה הרוחנית לגאולה, שבה יתגלו ויתקיימו כל דיני התורה במלואם. האחדות הנוצרת סביב לימוד יומי זה מחזקת את האמונה, הציפייה וההכנה המעשית לגאולה האמיתית והשלמה.
-        </p>
-      </section>
-
-      <section class="info-section">
         <h3>למה בניתי את האפליקציה</h3>
         <p>
           בתחילת המחזור הנוכחי התחלתי ללמוד רמב״ם, אבל מהר מאוד הבנתי שקשה לי למצוא זמן מספיק בשביל ללמוד כמו שצריך מתוך ספר.
@@ -46,6 +30,26 @@ function initAboutPanel() {
             <img src="https://yomi.org.il/assets/icons/svg/yomi-logo-welcome.svg" alt="Yomi" style="width: 25px; height: 18px">
            yomi.org.il
         </a>
+        </p>
+        <p>ולמי שבמסלול אחר יש גם אפליקציה המתאימה</p>
+        <div class="flavor-links" id="otherFlavorsLinks">
+          <!-- Links will be injected by JavaScript -->
+        </div>
+      </section>
+
+      <section class="info-section">
+        <h3>אודות לימוד הרמב״ם</h3>
+        <p>
+תקנת לימוד הרמב״ם היא יוזמה ללימוד יומי קבוע בספר משנה תורה לרמב״ם, שנוסדה על־ידי הרבי מליובאוויטש מלך המשיח שליט״א באחרון של פסח בשנת תשד״מ.
+        </p>
+        <p> 
+מטרת התקנה היא לאחד את עם ישראל באמצעות לימוד משותף של חיבור הלכתי המקיף את כל התורה שבעל־פה, כולל הלכות שאינן נוהגות בפועל בימינו. 
+        </p>
+        <p>
+לשם כך נקבעו שלושה מסלולי לימוד, המאפשרים לכל אחד להשתתף על־פי יכולתו: מסלול העיקרי של שלושה פרקים ביום, המאפשר סיום משנה תורה כולו בתוך שנה; מסלול של פרק אחד ביום, שבו מסיימים את הספר בשלוש שנים; ומסלול לימוד יומי בספר המצוות לרמב״ם, המקביל ללימוד ההלכות. 
+        </p>
+        <p>
+לימוד זה מבטא את שלמות התורה ואת ההכנה הרוחנית לגאולה, שבה יתגלו ויתקיימו כל דיני התורה במלואם. האחדות הנוצרת סביב לימוד יומי זה מחזקת את האמונה, הציפייה וההכנה המעשית לגאולה האמיתית והשלמה.
         </p>
       </section>
 
@@ -213,6 +217,93 @@ function initAboutPanel() {
 
   // Initialize settings toggles
   initInfoSettingsToggles();
+
+  // Populate other flavors links
+  populateOtherFlavors();
+}
+
+// Populate links to other app flavors
+function populateOtherFlavors() {
+  const container = document.getElementById('otherFlavorsLinks');
+  if (!container) return;
+
+  // Define all app flavors
+  const flavors = [
+    {
+      url: 'https://rambam3.pages.dev',
+      name: '3 פרקים',
+      key: 'rambam3'
+    },
+    {
+      url: 'https://rambam1.pages.dev',
+      name: 'פרק אחד',
+      key: 'rambam1'
+    },
+    {
+      url: 'https://sefer-mitzvot.pages.dev',
+      name: 'ספר המצוות',
+      key: 'mitzvot'
+    }
+  ];
+
+  // Detect current app based on hostname
+  const currentHost = window.location.hostname;
+
+  // Filter out current app
+  const otherFlavors = flavors.filter(f => !currentHost || currentHost.includes(f.key));
+
+  // Generate HTML as inline badges
+  container.style.display = 'flex';
+  container.style.gap = '0.5rem';
+  container.style.flexWrap = 'wrap';
+
+  otherFlavors.forEach(flavor => {
+    const link = document.createElement('a');
+    link.href = flavor.url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.style.cssText = `
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.5rem 0.75rem;
+      background: white;
+      border: 2px solid #6366f1;
+      border-radius: 8px;
+      color: #6366f1;
+      font-weight: 600;
+      text-size: 0.85rem
+      text-decoration: none;
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    `;
+
+    // Add external link icon (SVG)
+    link.innerHTML = `
+      ${flavor.name}
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: -2px;">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+        <polyline points="15 3 21 3 21 9"></polyline>
+        <line x1="10" y1="14" x2="21" y2="3"></line>
+      </svg>
+    `;
+
+    // Add hover effect
+    link.addEventListener('mouseenter', () => {
+      link.style.background = '#6366f1';
+      link.style.color = 'white';
+      link.style.transform = 'translateY(-1px)';
+      link.style.boxShadow = '0 4px 6px rgba(99, 102, 241, 0.3)';
+    });
+    link.addEventListener('mouseleave', () => {
+      link.style.background = 'white';
+      link.style.color = '#6366f1';
+      link.style.transform = 'translateY(0)';
+      link.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+    });
+
+    container.appendChild(link);
+  });
 }
 
 // Initialize settings toggles in info panel
