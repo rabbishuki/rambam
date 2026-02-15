@@ -57,21 +57,38 @@ self.addEventListener('fetch', (event) => {
 
   // Sefaria API: network-first (with cache fallback)
   if (url.origin === SEFARIA_API) {
+    // Add query parameters to Sefaria requests
+    url.searchParams.set('vhe', 'hebrew|Torat_Emet_363');
+    url.searchParams.set('lang', 'he');
+
+    // Create a new request with the modified URL
+    const modifiedRequest = new Request(url.toString(), {
+      method: request.method,
+      headers: request.headers,
+      body: request.body,
+      mode: request.mode,
+      credentials: request.credentials,
+      cache: request.cache,
+      redirect: request.redirect,
+      referrer: request.referrer,
+      integrity: request.integrity
+    });
+
     event.respondWith(
-      fetch(request)
+      fetch(modifiedRequest)
         .then((response) => {
           // Cache successful API responses (only GET requests)
           if (response.ok && request.method === 'GET') {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
+              cache.put(modifiedRequest, responseClone);
             });
           }
           return response;
         })
         .catch(() => {
           // Fallback to cache if offline
-          return caches.match(request);
+          return caches.match(modifiedRequest);
         })
     );
     return;

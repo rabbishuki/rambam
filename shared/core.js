@@ -1664,6 +1664,7 @@ async function renderSingleDay(date) {
   details.className = `day-group ${isComplete ? 'completed' : ''}`;
   details.dataset.date = date;
   details.dataset.ref = dayData.ref;
+  details.dataset.he = dayData.he;
   details.open = true; // Auto-open when viewing single day
 
   const isToday = date === today;
