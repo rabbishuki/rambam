@@ -1230,11 +1230,13 @@ async function handleDetailsToggle(event) {
           card.dataset.bookChars = totalChars;
         }
 
-        // Number within chapter (1, 2, 3...)
+        // Number within chapter (1, 2, 3...) - but skip if text already has numbering
+        // (e.g., mitzvot already have their number in the title)
+        const hasOwnNumbering = text.trim().startsWith('<b>');
         const hebrewNum = toHebrewLetter(halakhaIdx + 1);
-        card.innerHTML = `
-          <div class="halakha-text"><b>${hebrewNum}.</b> ${text}</div>
-        `;
+        card.innerHTML = hasOwnNumbering
+          ? `<div class="halakha-text">${text}</div>`
+          : `<div class="halakha-text"><b>${hebrewNum}.</b> ${text}</div>`;
 
         attachSwipeHandler(card);
         container.appendChild(card);

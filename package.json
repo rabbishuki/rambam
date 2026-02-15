@@ -8,6 +8,9 @@
     "unlink:rambam3": "rm -rf rambam3/shared rambam3/assets",
     "build:rambam1": "mkdir -p rambam1/shared rambam1/assets && cp -r shared/* rambam1/shared/ && cp -r assets/* rambam1/assets/",
     "link:rambam1": "cd rambam1 && ln -sf ../shared shared && ln -sf ../assets assets",
-    "unlink:rambam1": "rm -rf rambam1/shared rambam1/assets"
+    "unlink:rambam1": "rm -rf rambam1/shared rambam1/assets",
+    "build:mitzvot": "mkdir -p mitzvot/shared mitzvot/assets && cp -r shared/* mitzvot/shared/ && cp -r assets/* mitzvot/assets/",
+    "link:mitzvot": "cd mitzvot && ln -sf ../shared shared && ln -sf ../assets assets",
+    "unlink:mitzvot": "rm -rf mitzvot/shared mitzvot/assets"
   }
 }
