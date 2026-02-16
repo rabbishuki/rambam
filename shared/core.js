@@ -57,6 +57,15 @@ function setLargeFontSize(enabled) {
   setSetting('rambam_large_font', enabled);
 }
 
+// Dark mode settings
+function getDarkMode() {
+  return getSetting('rambam_dark_mode', false);
+}
+
+function setDarkMode(enabled) {
+  setSetting('rambam_dark_mode', enabled);
+}
+
 // Day transition settings
 function getDayTransitionMode() {
   // 'time' or 'sunset'
@@ -1071,7 +1080,7 @@ function renderDays() {
   });
 }
 
-function handleDayAction(event) {
+async function handleDayAction(event) {
   event.stopPropagation(); // Prevent summary toggle
   const btn = event.currentTarget;
   const action = btn.dataset.action;
@@ -1082,7 +1091,7 @@ function handleDayAction(event) {
   if (!dayData) return;
 
   if (action === 'reset') {
-    if (!confirm(`האם לאפס את כל ההתקדמות של ${dayData.he}?`)) return;
+    if (!await showConfirm(`האם לאפס את כל ההתקדמות של ${dayData.he}?`)) return;
 
     // Remove all done entries for this date
     const done = getDone();
@@ -1096,7 +1105,7 @@ function handleDayAction(event) {
     // Refresh the display
     renderDays();
   } else if (action === 'complete') {
-    if (!confirm(`האם לסמן את כל ${dayData.he} כהושלם?`)) return;
+    if (!await showConfirm(`האם לסמן את כל ${dayData.he} כהושלם?`)) return;
 
     // Mark all halakhot as done
     const done = getDone();
@@ -1137,6 +1146,56 @@ async function handleDetailsToggle(event) {
 
       // Check if this is the last chapter of a book
       const bookInfo = window.checkIfLastChapter && window.checkIfLastChapter(ref, currentChapterNum);
+
+      // Add book introduction before chapter 1 of a book (regardless of which day it falls on)
+      if (currentChapterNum === 1) {
+        const bookName = window.extractBookName ? window.extractBookName(ref) : null;
+        if (bookName) {
+          const introArray = window.getBookIntro ? window.getBookIntro(bookName) : [];
+          if (introArray.length > 0) {
+            let introCardIndex = 0; // Track card indices for swipeable intro cards
+            introArray.forEach((text, idx) => {
+              const isFirst = idx === 0;
+              const isLast = idx === introArray.length - 1;
+              const isDivider = text === 'וזה הוא פרטן:' || isLast;
+
+              if (isFirst) {
+                // First item is the title
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'chapter-divider book-title';
+                titleDiv.innerHTML = `<span>${text}</span>`;
+                container.appendChild(titleDiv);
+              } else if (isDivider) {
+                // Last item or "וזה הוא פרטן:" are dividers
+                const divider = document.createElement('div');
+                divider.className = 'chapter-divider';
+                divider.innerHTML = `<span>${text}</span>`;
+                container.appendChild(divider);
+              } else {
+                // Everything else is a card - make it swipeable
+                const introCard = document.createElement('div');
+                introCard.className = 'halakha-card book-intro-card';
+
+                // Add dataset for swipe functionality (use negative indices to avoid conflict)
+                const cardIndex = -1 - introCardIndex;
+                introCard.dataset.date = date;
+                introCard.dataset.index = cardIndex;
+
+                const isDone = done[`${date}:${cardIndex}`];
+                if (isDone) {
+                  introCard.classList.add('completed');
+                }
+
+                introCard.innerHTML = `<div class="book-intro-text">${text}</div>`;
+                attachSwipeHandler(introCard);
+                container.appendChild(introCard);
+
+                introCardIndex++;
+              }
+            });
+          }
+        }
+      }
 
       // Add chapter divider only if there are multiple chapters
       if (showChapterDividers) {
@@ -1970,7 +2029,7 @@ if ('serviceWorker' in navigator) {
         // Listen for new service worker waiting to activate
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
-          newWorker.addEventListener('statechange', () => {
+          newWorker.addEventListener('statechange', async () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               // New version available - show notification
               showNotification('עדכון זמין', {
@@ -1986,7 +2045,7 @@ if ('serviceWorker' in navigator) {
               });
 
               // Also show confirm dialog as fallback
-              if (confirm('גרסה חדשה של האפליקציה זמינה! האם לרענן את הדף?')) {
+              if (await showConfirm('גרסה חדשה של האפליקציה זמינה! האם לרענן את הדף?')) {
                 newWorker.postMessage({ type: 'SKIP_WAITING' });
                 window.location.reload();
               }
@@ -2077,6 +2136,11 @@ async function init() {
       if (getLargeFontSize()) {
         container.classList.add('large-font');
       }
+    }
+
+    // Apply dark mode if enabled
+    if (getDarkMode()) {
+      document.body.classList.add('dark');
     }
 
     // Load days first for fast initial render

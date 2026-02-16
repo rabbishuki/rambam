@@ -5,15 +5,16 @@
 // ============================================================================
 // Toggle Settings Configuration
 // ============================================================================
-const TOGGLE_SETTINGS = [
-  {
-    id: 'daily-reminder',
-    label: 'תזכורת יומית',
-    trueLabel: 'פעיל',
-    falseLabel: 'כבוי',
-    getter: getDailyReminderEnabled,
-    setter: setDailyReminderEnabled,
-    sideEffect: async (newValue) => {
+function getToggleSettings() {
+  return [
+    {
+      id: 'daily-reminder',
+      label: 'תזכורת יומית',
+      trueLabel: 'פעיל',
+      falseLabel: 'כבוי',
+      getter: getDailyReminderEnabled,
+      setter: setDailyReminderEnabled,
+      sideEffect: async (newValue) => {
       if (newValue) {
         const hasPermission = await requestNotificationPermission();
         if (!hasPermission) {
@@ -91,12 +92,28 @@ const TOGGLE_SETTINGS = [
         }
       }
     }
+  },
+  {
+    id: 'dark-mode',
+    label: 'מצב כהה',
+    trueLabel: 'כן',
+    falseLabel: 'לא',
+    getter: getDarkMode,
+    setter: setDarkMode,
+    sideEffect: (newValue) => {
+      if (newValue) {
+        document.body.classList.add('dark');
+      } else {
+        document.body.classList.remove('dark');
+      }
+    }
   }
-];
+  ];
+}
 
 // Generate toggle settings HTML
 function generateToggleSettings() {
-  return TOGGLE_SETTINGS.map(setting => `
+  return getToggleSettings().map(setting => `
     <div class="settings-section toggle">
       <label class="settings-label">${setting.label}</label>
       <div class="toggle-container">
@@ -109,7 +126,7 @@ function generateToggleSettings() {
 
 // Generic toggle settings event listeners
 function attachToggleListeners() {
-  TOGGLE_SETTINGS.forEach(setting => {
+  getToggleSettings().forEach(setting => {
     const currentValue = setting.getter();
     const buttons = document.querySelectorAll(`[data-setting-id="${setting.id}"]`);
 
@@ -145,7 +162,7 @@ function attachToggleListeners() {
   });
 
   // Apply initial side effects
-  TOGGLE_SETTINGS.forEach(setting => {
+  getToggleSettings().forEach(setting => {
     if (setting.sideEffect) {
       setting.sideEffect(setting.getter());
     }
@@ -259,6 +276,21 @@ function initShell() {
   notificationDialog.querySelector('.notification-close').addEventListener('click', () => {
     notificationDialog.close();
   });
+
+  // Add confirm dialog
+  const confirmDialog = document.createElement('dialog');
+  confirmDialog.id = 'confirmDialog';
+  confirmDialog.className = 'confirm-dialog';
+  confirmDialog.innerHTML = `
+    <div class="confirm-content">
+      <div class="confirm-message"></div>
+      <div class="confirm-actions">
+        <button class="btn btn-secondary confirm-cancel">ביטול</button>
+        <button class="btn btn-primary confirm-ok">אישור</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(confirmDialog);
 
   // Add install prompt
   const installPrompt = document.createElement('div');
@@ -395,8 +427,8 @@ function attachSettingsListeners() {
   attachToggleListeners();
 
   // Refresh data button
-  document.getElementById('refreshDataBtn').addEventListener('click', () => {
-    if (confirm('האם לרענן את הנתונים? ההתקדמות שלך תישמר.')) {
+  document.getElementById('refreshDataBtn').addEventListener('click', async () => {
+    if (await showConfirm('האם לרענן את הנתונים? ההתקדמות שלך תישמר.')) {
       localStorage.removeItem(`${window.PLAN.storagePrefix}_days`);
       // Reset day transition settings to defaults
       localStorage.removeItem(`${window.PLAN.storagePrefix}_day_transition_mode`);
@@ -406,8 +438,8 @@ function attachSettingsListeners() {
   });
 
   // Reset button
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    if (confirm('האם אתה בטוח? כל ההתקדמות תימחק.')) {
+  document.getElementById('resetBtn').addEventListener('click', async () => {
+    if (await showConfirm('האם אתה בטוח? כל ההתקדמות תימחק.')) {
       // Only remove plan-specific data, not shared settings or other apps
       localStorage.removeItem(`${window.PLAN.storagePrefix}_days`);
       localStorage.removeItem(`${window.PLAN.storagePrefix}_done`);
@@ -444,9 +476,9 @@ function attachSettingsListeners() {
   });
 
   // Date input change
-  startDateInput.addEventListener('change', (e) => {
+  startDateInput.addEventListener('change', async (e) => {
     const newStart = e.target.value;
-    if (confirm(`האם לשנות את תאריך ההתחלה ל-${newStart}? זה עלול לאפס את ההתקדמות.`)) {
+    if (await showConfirm(`האם לשנות את תאריך ההתחלה ל-${newStart}? זה עלול לאפס את ההתקדמות.`)) {
       setStart(newStart);
       location.reload();
     } else {
@@ -455,8 +487,8 @@ function attachSettingsListeners() {
   });
 
   // Cycle button click
-  setCycleBtn.addEventListener('click', () => {
-    if (confirm('האם לקבוע את תאריך ההתחלה לט״ו שבט ה׳תשפ״ו (3 בפברואר 2026)?')) {
+  setCycleBtn.addEventListener('click', async () => {
+    if (await showConfirm('האם לקבוע את תאריך ההתחלה לט״ו שבט ה׳תשפ״ו (3 בפברואר 2026)?')) {
       setStart(CYCLE_START);
       location.reload();
     }
@@ -713,6 +745,51 @@ window.showNotification = function(message, type = 'success') {
   }
 };
 
+// Global confirm function - returns a Promise
+window.showConfirm = function(message) {
+  return new Promise((resolve) => {
+    const dialog = document.getElementById('confirmDialog');
+    if (!dialog) {
+      resolve(false);
+      return;
+    }
+
+    const messageEl = dialog.querySelector('.confirm-message');
+    const okBtn = dialog.querySelector('.confirm-ok');
+    const cancelBtn = dialog.querySelector('.confirm-cancel');
+
+    // Set message
+    messageEl.textContent = message;
+
+    // Remove old listeners and add new ones
+    const newOkBtn = okBtn.cloneNode(true);
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+    newOkBtn.addEventListener('click', () => {
+      dialog.close();
+      resolve(true);
+    });
+
+    newCancelBtn.addEventListener('click', () => {
+      dialog.close();
+      resolve(false);
+    });
+
+    // Close on backdrop click
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) {
+        dialog.close();
+        resolve(false);
+      }
+    }, { once: true });
+
+    // Show dialog
+    dialog.showModal();
+  });
+};
+
 // ============================================================================
 // Scroll Banner - Shows current day when scrolling
 // ============================================================================
@@ -727,6 +804,7 @@ function initScrollBanner() {
   let currentDisplayedDate = null;
   let lastScrollY = 0;
   let scrollDirection = 'down';
+  let lastCollapseToggleY = 0; // Track where we last toggled collapse state
 
   function updateBannerContent() {
     // Find the current day in viewport
@@ -792,21 +870,35 @@ function initScrollBanner() {
       scrollBanner.classList.remove('visible');
     }
 
-    // Header and Dedication: hide on scroll down, show on scroll up (after initial scroll past 20px)
+    // Header and Dedication: hide on scroll down, show on scroll up (with delta threshold)
     // Don't add scrolled class on celebration page
     if (!isCelebrationPage) {
-      if (scrollY > 20) {
+      const SCROLL_UP_THRESHOLD = 50; // Need to scroll up 100px to expand header
+      const SCROLL_DOWN_THRESHOLD = 20; // Need to scroll down 50px to collapse header
+
+      if (scrollY > 200) {
+        const isCurrentlyCollapsed = document.body.classList.contains('scrolled');
+
         if (scrollDirection === 'down') {
-          document.body.classList.add('scrolled');
-          mainHeader.classList.add('scrolled');
+          // Collapse header if scrolled down enough from last toggle point
+          if (!isCurrentlyCollapsed && scrollY - lastCollapseToggleY > SCROLL_DOWN_THRESHOLD) {
+            document.body.classList.add('scrolled');
+            mainHeader.classList.add('scrolled');
+            lastCollapseToggleY = scrollY;
+          }
         } else {
-          document.body.classList.remove('scrolled');
-          mainHeader.classList.remove('scrolled');
+          // Expand header only if scrolled up significantly from last toggle point
+          if (isCurrentlyCollapsed && lastCollapseToggleY - scrollY > SCROLL_UP_THRESHOLD) {
+            document.body.classList.remove('scrolled');
+            mainHeader.classList.remove('scrolled');
+            lastCollapseToggleY = scrollY;
+          }
         }
       } else {
         // Always show full version at the very top
         document.body.classList.remove('scrolled');
         mainHeader.classList.remove('scrolled');
+        lastCollapseToggleY = 0;
       }
     } else {
       // Always show full version on celebration page

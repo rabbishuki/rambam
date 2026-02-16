@@ -169,6 +169,19 @@ function initAboutPanel() {
           </p>
         </div>
 
+        <div class="info-setting-row">
+          <div class="info-setting-header">
+            <h4>מצב כהה</h4>
+            <div class="toggle-container" id="infoDarkModeToggle">
+              <button class="toggle-btn" data-value="true">כן</button>
+              <button class="toggle-btn" data-value="false">לא</button>
+            </div>
+          </div>
+          <p class="info-setting-description">
+            הצג את האפליקציה במצב כהה לנוחות בסביבות עם תאורה מעומעמת.
+          </p>
+        </div>
+
         <div class="info-more-settings">
           להגדרות נוספות ולראות מה חדש, לחץ על <strong>⚙</strong> במסך הראשי.
         </div>
@@ -262,15 +275,22 @@ function populateOtherFlavors() {
     link.href = flavor.url;
     link.target = '_blank';
     link.rel = 'noopener';
+    link.className = 'flavor-link';
+
+    const isDark = document.body.classList.contains('dark');
+    const bgColor = isDark ? '#1e293b' : 'white';
+    const borderColor = '#6366f1';
+    const textColor = '#6366f1';
+
     link.style.cssText = `
       display: inline-flex;
       align-items: center;
       gap: 0.25rem;
       padding: 0.5rem 0.75rem;
-      background: white;
-      border: 2px solid #6366f1;
+      background: ${bgColor};
+      border: 2px solid ${borderColor};
       border-radius: 8px;
-      color: #6366f1;
+      color: ${textColor};
       font-weight: 600;
       text-size: 0.85rem
       text-decoration: none;
@@ -296,7 +316,8 @@ function populateOtherFlavors() {
       link.style.boxShadow = '0 4px 6px rgba(99, 102, 241, 0.3)';
     });
     link.addEventListener('mouseleave', () => {
-      link.style.background = 'white';
+      const isDark = document.body.classList.contains('dark');
+      link.style.background = isDark ? '#1e293b' : 'white';
       link.style.color = '#6366f1';
       link.style.transform = 'translateY(0)';
       link.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
@@ -359,6 +380,12 @@ function initInfoSettingsToggles() {
     if (container) {
       container.classList.toggle('large-font', value);
     }
+  });
+
+  // Dark Mode
+  initToggle('infoDarkModeToggle', getDarkMode, (value) => {
+    setDarkMode(value);
+    document.body.classList.toggle('dark', value);
   });
 }
 
@@ -426,9 +453,9 @@ function initStartDateSetting() {
   });
 
   // Date input change
-  startDateInput.addEventListener('change', (e) => {
+  startDateInput.addEventListener('change', async (e) => {
     const newStart = e.target.value;
-    if (confirm(`האם לשנות את תאריך ההתחלה ל-${newStart}? זה עלול לאפס את ההתקדמות.`)) {
+    if (await showConfirm(`האם לשנות את תאריך ההתחלה ל-${newStart}? זה עלול לאפס את ההתקדמות.`)) {
       setStart(newStart);
       location.reload();
     } else {
@@ -437,8 +464,8 @@ function initStartDateSetting() {
   });
 
   // Cycle button click
-  setCycleBtn.addEventListener('click', () => {
-    if (confirm('האם לקבוע את תאריך ההתחלה לט״ו שבט ה׳תשפ״ו (3 בפברואר 2026)?')) {
+  setCycleBtn.addEventListener('click', async () => {
+    if (await showConfirm('האם לקבוע את תאריך ההתחלה לט״ו שבט ה׳תשפ״ו (3 בפברואר 2026)?')) {
       setStart(CYCLE_START);
       location.reload();
     }
