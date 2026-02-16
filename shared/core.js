@@ -172,6 +172,15 @@ function markDone(date, index) {
   saveDone(done);
 }
 
+// Count done items for a date, excluding intro cards (negative indices)
+function countDoneForDate(done, date) {
+  return Object.keys(done).filter(key => {
+    if (!key.startsWith(`${date}:`)) return false;
+    const index = parseInt(key.split(':')[1]);
+    return index >= 0; // Exclude negative indices (intro cards)
+  }).length;
+}
+
 // ============================================================================
 // Reading Time Tracking
 // ============================================================================
@@ -546,9 +555,7 @@ function computeStats() {
     if (date <= today) {
       totalDays++;
       const dayData = days[date];
-      const doneCount = Object.keys(done).filter(key =>
-        key.startsWith(`${date}:`)
-      ).length;
+      const doneCount = countDoneForDate(done, date);
 
       if (doneCount >= dayData.count) {
         completedDays++;
@@ -561,9 +568,7 @@ function computeStats() {
   Object.keys(days).forEach(date => {
     if (date < today) {
       const dayData = days[date];
-      const doneCount = Object.keys(done).filter(key =>
-        key.startsWith(`${date}:`)
-      ).length;
+      const doneCount = countDoneForDate(done, date);
       const remaining = dayData.count - doneCount;
       if (remaining > 0) {
         backlog += remaining;
@@ -577,9 +582,7 @@ function computeStats() {
   Object.keys(days).forEach(date => {
     if (date <= today) {
       const dayData = days[date];
-      const doneCount = Object.keys(done).filter(key =>
-        key.startsWith(`${date}:`)
-      ).length;
+      const doneCount = countDoneForDate(done, date);
 
       // For completed days, count chapters (assuming 3 chapters per day for rambam3)
       if (doneCount >= dayData.count) {
@@ -599,9 +602,7 @@ function updateDayHeader(date) {
   const dayData = days[date];
   if (!dayData) return;
 
-  const doneCount = Object.keys(done).filter(key =>
-    key.startsWith(`${date}:`)
-  ).length;
+  const doneCount = countDoneForDate(done, date);
   const isComplete = doneCount >= dayData.count;
 
   // Find the details element for this date
@@ -759,7 +760,7 @@ function renderBookCelebration(bookName, totalBookChapters, totalBookHalakhot) {
       for (const date of allDates) {
         const dayData = days[date];
         if (dayData) {
-          const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
+          const doneCount = countDoneForDate(done, date);
           if (doneCount < dayData.count) {
             // Found incomplete day, open it
             const details = document.querySelector(`details[data-date="${date}"]`);
@@ -1008,9 +1009,7 @@ function renderDays() {
     const dayData = days[date];
     if (!dayData) return;
 
-    const doneCount = Object.keys(done).filter(key =>
-      key.startsWith(`${date}:`)
-    ).length;
+    const doneCount = countDoneForDate(done, date);
     const isComplete = doneCount >= dayData.count;
 
     if (isComplete) {
@@ -1445,7 +1444,7 @@ function attachSwipeHandler(card) {
     let dayJustCompleted = false;
     if (dayData) {
       const done = getDone();
-      const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
+      const doneCount = countDoneForDate(done, date);
       if (doneCount >= dayData.count) {
         const dayGroup = card.closest('.day-group');
         if (dayGroup) {
@@ -1484,7 +1483,7 @@ function attachSwipeHandler(card) {
         if (foundCurrent) {
           const checkDayData = days[checkDate];
           if (checkDayData) {
-            const checkDoneCount = Object.keys(done).filter(key => key.startsWith(`${checkDate}:`)).length;
+            const checkDoneCount = countDoneForDate(done, checkDate);
             if (checkDoneCount < checkDayData.count) {
               // Found next incomplete day, open it
               const nextDayDetails = document.querySelector(`details[data-date="${checkDate}"]`);
@@ -1525,7 +1524,7 @@ function attachSwipeHandler(card) {
     const days = getDays();
     const dayData = days[date];
     if (dayData) {
-      const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
+      const doneCount = countDoneForDate(done, date);
       if (doneCount < dayData.count) {
         const dayGroup = card.closest('.day-group');
         if (dayGroup) {
@@ -1712,9 +1711,7 @@ async function renderSingleDay(date) {
     }
   }
 
-  const doneCount = Object.keys(done).filter(key =>
-    key.startsWith(`${date}:`)
-  ).length;
+  const doneCount = countDoneForDate(done, date);
   const isComplete = doneCount >= dayData.count;
 
   mainContent.innerHTML = '';
@@ -2177,9 +2174,7 @@ async function init() {
       for (const date of allDates) {
         const dayData = days[date];
         if (dayData) {
-          const dayDone = Object.keys(done).filter(key =>
-            key.startsWith(`${date}:`)
-          ).length;
+          const dayDone = countDoneForDate(done, date);
 
           if (dayDone < dayData.count) {
             firstIncompleteDay = date;

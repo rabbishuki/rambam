@@ -836,7 +836,7 @@ function initScrollBanner() {
 
         scrollBannerTitle.textContent = dayData.he;
         scrollBannerDate.textContent = displayLabel;
-        const doneCount = Object.keys(done).filter(key => key.startsWith(`${date}:`)).length;
+        const doneCount = countDoneForDate(done, date);
         scrollBannerProgress.textContent = `${doneCount}/${dayData.count}`;
 
         // Update progress bar and percentage
