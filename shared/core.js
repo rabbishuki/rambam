@@ -1148,7 +1148,8 @@ async function handleDetailsToggle(event) {
 
       // Add book introduction before chapter 1 of a book (regardless of which day it falls on)
       if (currentChapterNum === 1) {
-        const bookName = window.extractBookName ? window.extractBookName(ref) : null;
+        const lastRef = ref.split(';').pop().trim();
+        const bookName = window.extractBookName ? window.extractBookName(lastRef) : null;
         if (bookName) {
           const introArray = window.getBookIntro ? window.getBookIntro(bookName) : [];
           if (introArray.length > 0) {
