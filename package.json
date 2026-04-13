@@ -11,6 +11,10 @@
     "unlink:rambam1": "rm -rf rambam1/shared rambam1/assets",
     "build:mitzvot": "mkdir -p mitzvot/shared mitzvot/assets && cp -r shared/* mitzvot/shared/ && cp -r assets/* mitzvot/assets/",
     "link:mitzvot": "cd mitzvot && ln -sf ../shared shared && ln -sf ../assets assets",
-    "unlink:mitzvot": "rm -rf mitzvot/shared mitzvot/assets"
+    "unlink:mitzvot": "rm -rf mitzvot/shared mitzvot/assets",
+    "build:chasidus": "mkdir -p chasidus/shared chasidus/assets && cp -r shared/* chasidus/shared/ && cp -r assets/* chasidus/assets/",
+    "setup:chasidus": "cd chasidus && ln -sf ../shared shared && ln -sf ../assets assets",
+    "link:chasidus": "cd chasidus && ln -sf ../shared shared && ln -sf ../assets assets",
+    "unlink:chasidus": "rm -rf chasidus/shared chasidus/assets"
   }
 }
