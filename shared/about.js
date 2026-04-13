@@ -256,6 +256,11 @@ function populateOtherFlavors() {
       url: 'https://sefer-mitzvot.pages.dev',
       name: 'ספר המצוות',
       key: 'mitzvot'
+    },
+    {
+      url: 'https://cp.pages.dev',
+      name: 'א חסידישע פרשה',
+      key: 'chasidishe'
     }
   ];
 
