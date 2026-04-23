@@ -2480,3 +2480,141 @@
         transform: translateY(0) scale(1);
       }
     }
+
+/* ============================================================
+   Sync Section
+   ============================================================ */
+
+.sync-code-display {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-align: center;
+  color: var(--color-primary-bright);
+  background: var(--color-bg-muted);
+  border: 2px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.sync-meta {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.sync-connect-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sync-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.sync-divider::before,
+.sync-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border-light);
+}
+
+.sync-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.sync-input-row input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: white;
+  color: var(--color-text-primary);
+  min-width: 0;
+  text-align: center;
+  letter-spacing: 0.1em;
+}
+
+.sync-input-row input:focus {
+  outline: none;
+  border-color: var(--color-primary-bright);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.sync-input-row .btn {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.sync-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.sync-actions .btn {
+  min-width: 7rem;
+}
+
+.sync-dirty-note {
+  margin: 0.25rem 0 0.75rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+.sync-reminder-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: 5.5rem;
+  z-index: 120;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 0.9rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--gradient-primary);
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+}
+
+.sync-reminder-fab:hover {
+  transform: translateY(-1px);
+}
+
+.sync-reminder-icon {
+  font-size: 1rem;
+}
+
+body.dark .sync-code-display {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+body.dark .sync-input-row input {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+body.dark .sync-input-row input:focus {
+  border-color: var(--color-primary-bright);
+}

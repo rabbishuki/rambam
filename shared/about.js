@@ -188,6 +188,22 @@ function initAboutPanel() {
       </section>
 
       <section class="info-section">
+        <h3>לימוד בכמה מכשירים</h3>
+        <p>
+          אפשר להמשיך את אותו לימוד גם בטלפון וגם במחשב, בלי להתחיל מחדש בכל פעם.
+        </p>
+        <p>
+          כשפותחים את האפליקציה שוב, היא בודקת אם יש התקדמות חדשה ושואבת אותה אוטומטית.
+        </p>
+        <p>
+          אם סימנת הלכות במכשיר הזה ורוצה להעביר אותן למכשירים האחרים, לחץ על <strong>עדכן התקדמות</strong> בראש מסך ההגדרות.
+        </p>
+        <p>
+          אם לא עדכנת זמן רב, יופיע כפתור קטן בתחתית המסך כדי להזכיר לך לעדכן את ההתקדמות.
+        </p>
+      </section>
+
+      <section class="info-section">
         <h3>קישורים</h3>
         <div class="info-links">
           <a href="https://www.sefaria.org" target="_blank" rel="noopener" class="info-link">

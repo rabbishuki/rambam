@@ -1,0 +1,12 @@
+name = "rambam-sync"
+main = "index.js"
+compatibility_date = "2026-03-10"
+
+# TODO: Set your Cloudflare account_id here
+# account_id = "YOUR_ACCOUNT_ID_HERE"
+
+[[kv_namespaces]]
+binding = "SYNC_STORE"
+# TODO: Replace with your actual KV namespace ID after running:
+#   npx wrangler kv:namespace create SYNC_STORE
+id = "YOUR_KV_NAMESPACE_ID_HERE"
