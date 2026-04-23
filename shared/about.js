@@ -258,7 +258,7 @@ function populateOtherFlavors() {
       key: 'mitzvot'
     },
     {
-      url: 'https://cp.pages.dev',
+      url: 'https://chasidishe.pages.dev',
       name: 'א חסידישע פרשה',
       key: 'chasidishe'
     }
