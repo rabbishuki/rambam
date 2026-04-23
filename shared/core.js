@@ -23,6 +23,215 @@ function setSetting(key, value) {
   localStorage.setItem(key, value.toString());
 }
 
+// ============================================================================
+// Sync Configuration
+// ============================================================================
+const SYNC_API_URL = 'https://rambam-sync.rabbishuki.workers.dev';
+
+// ============================================================================
+// Sync — localStorage Helpers
+// ============================================================================
+function getSyncCode() {
+  return localStorage.getItem('rambam_sync_code');
+}
+
+function setSyncCode(code) {
+  localStorage.setItem('rambam_sync_code', code);
+}
+
+function getSyncLastUpdated() {
+  return localStorage.getItem('rambam_sync_lastUpdated');
+}
+
+function setSyncLastUpdated(ts) {
+  localStorage.setItem('rambam_sync_lastUpdated', ts);
+}
+
+function getSyncedAt() {
+  return localStorage.getItem('rambam_synced_at');
+}
+
+function setSyncedAt(ts) {
+  localStorage.setItem('rambam_synced_at', ts);
+}
+
+function getSyncDirty() {
+  return localStorage.getItem('rambam_sync_dirty') === 'true';
+}
+
+function setSyncDirty(value) {
+  if (value) {
+    localStorage.setItem('rambam_sync_dirty', 'true');
+    if (!localStorage.getItem('rambam_sync_dirty_since')) {
+      localStorage.setItem('rambam_sync_dirty_since', new Date().toISOString());
+    }
+  } else {
+    localStorage.removeItem('rambam_sync_dirty');
+    localStorage.removeItem('rambam_sync_dirty_since');
+  }
+}
+
+function getSyncDirtySince() {
+  return localStorage.getItem('rambam_sync_dirty_since');
+}
+
+// ============================================================================
+// Sync — Snapshot
+// ============================================================================
+
+const SYNC_SHARED_KEYS = [
+  'rambam_start',
+  'rambam_auto_mark',
+  'rambam_hide_completed',
+  'rambam_large_font',
+  'rambam_daily_reminder',
+  'rambam_hide_completed_days',
+  'rambam_dark_mode',
+  'rambam_last_shabbat_prompt',
+  'install_prompt_shown',
+];
+
+// Suffixes appended to window.PLAN.storagePrefix
+const SYNC_PLAN_KEY_SUFFIXES = [
+  '_days',
+  '_done',
+  '_day_transition_mode',
+  '_day_transition_time',
+  '_current_book',
+  '_book_times',
+  '_daily_reminder',
+];
+
+function exportSnapshot() {
+  const snapshot = {};
+  const prefix = window.PLAN.storagePrefix;
+
+  SYNC_SHARED_KEYS.forEach(key => {
+    const val = localStorage.getItem(key);
+    if (val !== null) snapshot[key] = val;
+  });
+
+  SYNC_PLAN_KEY_SUFFIXES.forEach(suffix => {
+    const key = `${prefix}${suffix}`;
+    const val = localStorage.getItem(key);
+    if (val !== null) snapshot[key] = val;
+  });
+
+  snapshot.lastUpdated = new Date().toISOString();
+  return snapshot;
+}
+
+function importSnapshot(snapshot) {
+  const prefix = window.PLAN.storagePrefix;
+  const localLastUpdated = getSyncLastUpdated();
+  const remoteLastUpdated = snapshot.lastUpdated;
+
+  // Remote is newer if we have no local timestamp, or remote timestamp is later
+  const remoteIsNewer = !localLastUpdated || remoteLastUpdated > localLastUpdated;
+
+  const doneKey = `${prefix}_done`;
+
+  Object.keys(snapshot).forEach(key => {
+    if (key === 'lastUpdated') return;
+
+    if (key === doneKey) {
+      // Merge: union of both, first completion timestamp wins
+      let localDone = {};
+      const localRaw = localStorage.getItem(doneKey);
+      if (localRaw) {
+        try { localDone = JSON.parse(localRaw); } catch { }
+      }
+
+      let remoteDone = {};
+      try { remoteDone = JSON.parse(snapshot[key]); } catch { }
+
+      // Start with remote, overlay local (local wins on conflict)
+      const merged = Object.assign({}, remoteDone, localDone);
+      // For keys present in both: keep the earlier timestamp
+      Object.keys(remoteDone).forEach(k => {
+        if (localDone[k]) {
+          merged[k] = localDone[k] < remoteDone[k] ? localDone[k] : remoteDone[k];
+        }
+      });
+
+      localStorage.setItem(doneKey, JSON.stringify(merged));
+    } else {
+      if (remoteIsNewer) {
+        localStorage.setItem(key, snapshot[key]);
+      }
+    }
+  });
+
+  setSyncLastUpdated(remoteLastUpdated);
+}
+
+// ============================================================================
+// Sync — Push / Pull / Auto
+// ============================================================================
+
+async function pushSync() {
+  const snapshot = exportSnapshot();
+  const existingCode = getSyncCode();
+
+  const body = { data: snapshot, lastUpdated: snapshot.lastUpdated };
+  if (existingCode) body.existingCode = existingCode;
+
+  const res = await fetch(`${SYNC_API_URL}/sync`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) throw new Error(`Push failed: ${res.status}`);
+
+  const { code } = await res.json();
+  setSyncCode(code);
+  setSyncLastUpdated(snapshot.lastUpdated);
+  setSyncDirty(false);
+  return code;
+}
+
+// applySync: applies a resolved strategy given already-fetched remote data
+function applySync(data, lastUpdated, strategy) {
+  if (strategy === 'theirs') {
+    Object.keys(data).forEach(key => {
+      if (key !== 'lastUpdated') localStorage.setItem(key, data[key]);
+    });
+    setSyncLastUpdated(lastUpdated);
+  } else if (strategy === 'mine') {
+    // Keep local as-is; push will overwrite remote
+    setSyncLastUpdated(getSyncLastUpdated() || new Date().toISOString());
+  } else {
+    // merge
+    importSnapshot(Object.assign({}, data, { lastUpdated }));
+  }
+  setSyncedAt(new Date().toISOString());
+}
+
+async function pullSync(code, strategy = 'merge') {
+  const res = await fetch(`${SYNC_API_URL}/sync/${code}`);
+
+  if (res.status === 404) return { error: 'not_found' };
+  if (!res.ok) throw new Error(`Pull failed: ${res.status}`);
+
+  const { data, lastUpdated } = await res.json();
+  applySync(data, lastUpdated, strategy);
+
+  if (strategy === 'mine') {
+    // Push local data over the remote code
+    await pushSync();
+  }
+
+  return { success: true };
+}
+
+function markSyncDirty() {
+  // Sync is now explicit via the Settings button.
+  if (getSyncCode()) {
+    setSyncDirty(true);
+  }
+}
+
 // Specific setting functions (backward compatibility wrappers)
 function getAutoMark() {
   return getSetting('rambam_auto_mark', true);
@@ -128,7 +337,7 @@ function getJewishToday() {
 
   // Jewish day starts at transition time
   const isPastTransition = (hour > transitionHour) ||
-                           (hour === transitionHour && minute >= transitionMinute);
+    (hour === transitionHour && minute >= transitionMinute);
 
   let jewishDate = new Date(now);
 
@@ -170,6 +379,7 @@ function markDone(date, index) {
   const done = getDone();
   done[`${date}:${index}`] = new Date().toISOString();
   saveDone(done);
+  markSyncDirty();
 }
 
 // Count done items for a date, excluding intro cards (negative indices)
@@ -385,7 +595,7 @@ function checkShabbatLearning() {
 }
 
 // Test function - call from console: window.testShabbatPrompt()
-window.testShabbatPrompt = function() {
+window.testShabbatPrompt = function () {
   const now = new Date();
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
@@ -433,6 +643,7 @@ function showShabbatPrompt(shabbatDate, shabbatData) {
       }
     }
     saveDone(done);
+    markSyncDirty();
     dialog.close();
     dialog.remove();
 
@@ -484,6 +695,75 @@ function toHebrewLetter(num) {
   }
 
   return result || num.toString();
+}
+
+// ============================================================================
+// Sync Feature Announcement
+// ============================================================================
+function checkSyncAnnouncement() {
+  if (localStorage.getItem('rambam_sync_announced')) return;
+  if (getSyncCode()) return; // already syncing
+  if (document.getElementById('settingsPanel')?.classList.contains('open')) return;
+
+  localStorage.setItem('rambam_sync_announced', 'true');
+
+  const dialog = document.createElement('dialog');
+  dialog.className = 'notification-dialog shabbat-dialog';
+  dialog.innerHTML = `
+    <div class="notification-content">
+      <div class="notification-icon">🔄</div>
+      <div class="notification-message" style="font-weight: 600; font-size: 1.1rem;">חדש! לימוד בכמה מכשירים</div>
+      <div class="notification-message" style="font-size: 0.95rem;">עכשיו אפשר לעדכן את ההתקדמות שלך בין מכשירים שונים. פתח את ההגדרות ולחץ על <b>עדכן התקדמות</b> כדי לשלוח את הנתונים לענן.</div>
+      <div class="shabbat-actions">
+        <button class="shabbat-btn shabbat-yes" id="syncAnnouncementOpenBtn">פתח הגדרות</button>
+        <button class="shabbat-btn shabbat-no" id="syncAnnouncementDismissBtn">סגור</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(dialog);
+  dialog.showModal();
+
+  dialog.querySelector('#syncAnnouncementOpenBtn').addEventListener('click', () => {
+    dialog.close();
+    dialog.remove();
+    openSettings();
+  });
+
+  dialog.querySelector('#syncAnnouncementDismissBtn').addEventListener('click', () => {
+    dialog.close();
+    dialog.remove();
+  });
+}
+
+function maybeShowSyncReminder() {
+  if (!getSyncCode() || !getSyncDirty()) return;
+  const dirtySince = getSyncDirtySince();
+  if (!dirtySince) return;
+
+  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  if (dirtySince > oneWeekAgo) return;
+
+  if (document.getElementById('syncReminderBtn')) return;
+
+  const btn = document.createElement('button');
+  btn.id = 'syncReminderBtn';
+  btn.className = 'sync-reminder-fab';
+  btn.type = 'button';
+  btn.title = 'עדכן התקדמות';
+  btn.innerHTML = `
+    <span class="sync-reminder-icon">🔄</span>
+    <span class="sync-reminder-text">עדכן התקדמות</span>
+  `;
+
+  btn.addEventListener('click', () => {
+    openSettings();
+    const syncBtn = document.getElementById('syncPushNowBtn');
+    syncBtn?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    syncBtn?.focus();
+  });
+
+  document.body.appendChild(btn);
 }
 
 // ============================================================================
@@ -737,7 +1017,7 @@ function renderBookCelebration(bookName, totalBookChapters, totalBookHalakhot) {
   setTimeout(() => initCelebrationEffects(bookName, totalBookChapters, totalBookHalakhot), 100);
 
   // Exit celebration mode
-  window.exitCelebration = function() {
+  window.exitCelebration = function () {
     mainContent.classList.remove('celebration-page');
 
     // Restore scroll banner
@@ -790,8 +1070,8 @@ function renderBookCelebration(bookName, totalBookChapters, totalBookHalakhot) {
 }
 
 function initCelebrationEffects() {
-  const confettiColors = ['#ffc107','#ffe082','#ff6f00','#ffffff','#64b5f6','#e1f5fe','#ffd54f','#ffab00','#7c4dff','#ff4081'];
-  const confettiShapes = ['■','●','▲','★','◆'];
+  const confettiColors = ['#ffc107', '#ffe082', '#ff6f00', '#ffffff', '#64b5f6', '#e1f5fe', '#ffd54f', '#ffab00', '#7c4dff', '#ff4081'];
+  const confettiShapes = ['■', '●', '▲', '★', '◆'];
   const container = document.getElementById('confetti');
 
   function burst(count, delayBase) {
@@ -818,13 +1098,13 @@ function initCelebrationEffects() {
   // Parameters:
   // - text: The full text to share (used as fallback if image fails)
   // - image: Optional Blob/File object for image sharing
-  window.shareContent = async function(text, image = null) {
+  window.shareContent = async function (text, image = null) {
     const planId = window.PLAN?.id || 'rambam3';
     const shareUrl = `https://${planId}.pages.dev`;
 
     // Check if running as PWA
     const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
-                        window.navigator.standalone === true;
+      window.navigator.standalone === true;
 
     // Try sharing with image first if provided
     if (image && navigator.canShare) {
@@ -893,14 +1173,14 @@ function initCelebrationEffects() {
   }
 
   // Global share function for book celebration with confetti
-  window.celebrationShare = async function(bookName, totalChapters, totalHalakhot) {
+  window.celebrationShare = async function (bookName, totalChapters, totalHalakhot) {
     // Trigger confetti burst
     burst(60, 0);
     setTimeout(() => burst(40, 0), 1500);
 
     // Check if running as installed PWA
     const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
-                        window.navigator.standalone === true;
+      window.navigator.standalone === true;
 
     // Build share URL
     const planId = window.PLAN?.id || 'rambam3';
@@ -1112,6 +1392,7 @@ async function handleDayAction(event) {
       done[`${date}:${i}`] = new Date().toISOString();
     }
     saveDone(done);
+    markSyncDirty();
 
     // Refresh the display
     renderDays();
@@ -2016,7 +2297,7 @@ window.addEventListener('appinstalled', () => {
 // Service Worker Registration
 // ============================================================================
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
+window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
       .then(reg => {
         console.log('Service Worker registered:', reg.scope);
@@ -2029,6 +2310,12 @@ if ('serviceWorker' in navigator) {
           const newWorker = reg.installing;
           newWorker.addEventListener('statechange', async () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              const updateNoticeKey = 'rambam_sw_update_notice_at';
+              const lastNotice = localStorage.getItem(updateNoticeKey);
+              const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+              if (lastNotice && lastNotice > dayAgo) return;
+              localStorage.setItem(updateNoticeKey, new Date().toISOString());
+
               // New version available - show notification
               showNotification('עדכון זמין', {
                 body: 'גרסה חדשה של האפליקציה זמינה!',
@@ -2143,6 +2430,17 @@ async function init() {
 
     // Load days first for fast initial render
     await loadMissingDays();
+
+    // Auto-pull sync if connected and stale (> 1 hour since last pull)
+    const syncCode = getSyncCode();
+    if (syncCode) {
+      try {
+        await pullSync(syncCode);
+      } catch (err) {
+        console.debug('Auto pull sync failed (non-critical):', err);
+      }
+    }
+
     renderDays();
 
     // Load changelog
@@ -2157,6 +2455,8 @@ async function init() {
     // Check for Shabbat learning prompt (on Sunday mornings)
     if (!firstVisit) {
       checkShabbatLearning();
+      checkSyncAnnouncement();
+      maybeShowSyncReminder();
     }
 
     // Open settings on first visit
@@ -2254,7 +2554,7 @@ document.addEventListener('visibilitychange', () => {
 // ============================================================================
 
 // Test notification - call from console: window.testNotification()
-window.testNotification = function() {
+window.testNotification = function () {
   console.log('Testing notification...');
   showNotification('בדיקת התראה', {
     body: 'זו הודעת בדיקה - אם אתה רואה אותה, ההתראות עובדות!',
@@ -2266,7 +2566,7 @@ window.testNotification = function() {
 };
 
 // Check periodic sync status - call from console: window.checkPeriodicSync()
-window.checkPeriodicSync = async function() {
+window.checkPeriodicSync = async function () {
   if (!('serviceWorker' in navigator)) {
     console.log('❌ Service Worker not supported');
     return;

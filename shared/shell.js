@@ -320,6 +320,11 @@ function initShell() {
     </div>
     <div class="settings-content">
       <div class="settings-scrollable">
+        <div class="settings-section" id="syncSection">
+          <label class="settings-label">לימוד בכמה מכשירים</label>
+          <div id="syncContent"></div>
+        </div>
+
         <div class="settings-section toggle">
           <label class="settings-label">תאריך התחלה</label>
           <div class="toggle-container">
@@ -393,6 +398,201 @@ function initShell() {
 }
 
 // ============================================================================
+// Sync Conflict Dialog
+// ============================================================================
+function showSyncConflictDialog(localCount, remoteCount) {
+  return new Promise((resolve) => {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'notification-dialog shabbat-dialog';
+    dialog.innerHTML = `
+      <div class="notification-content">
+        <div class="notification-icon">⚠️</div>
+        <div class="notification-message" style="font-weight: 600; font-size: 1.05rem;">נמצא מידע בשני הצדדים</div>
+        <div class="notification-message" style="font-size: 0.9rem;">
+          במכשיר זה: <b>${localCount}</b> הלכות הושלמו<br>
+          במכשיר האחר: <b>${remoteCount}</b> הלכות הושלמו
+        </div>
+        <div class="notification-message" style="font-size: 0.85rem; color: var(--color-text-secondary);">מה לעשות?</div>
+        <div class="shabbat-actions" style="flex-direction: column; gap: 0.5rem;">
+          <button class="shabbat-btn shabbat-yes" id="syncConflictMerge">מזג את שניהם</button>
+          <button class="shabbat-btn" id="syncConflictMine" style="background: var(--color-bg-muted); color: var(--color-text-primary);">שמור את שלי, העבר למכשיר האחר</button>
+          <button class="shabbat-btn" id="syncConflictTheirs" style="background: var(--color-bg-muted); color: var(--color-text-primary);">החלף בנתונים מהמכשיר האחר</button>
+          <button class="shabbat-btn shabbat-no" id="syncConflictCancel">ביטול</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(dialog);
+    dialog.showModal();
+
+    const cleanup = (result) => {
+      dialog.close();
+      dialog.remove();
+      resolve(result);
+    };
+
+    dialog.querySelector('#syncConflictMerge').addEventListener('click', () => cleanup('merge'));
+    dialog.querySelector('#syncConflictMine').addEventListener('click', () => cleanup('mine'));
+    dialog.querySelector('#syncConflictTheirs').addEventListener('click', () => cleanup('theirs'));
+    dialog.querySelector('#syncConflictCancel').addEventListener('click', () => cleanup(null));
+  });
+}
+
+// ============================================================================
+// Sync Section Rendering
+// ============================================================================
+function renderSyncSection() {
+  const container = document.getElementById('syncContent');
+  if (!container) return;
+
+  const code = getSyncCode();
+
+  if (code) {
+    const formatted = code.slice(0, 3) + '-' + code.slice(3);
+    const lastUpdated = getSyncLastUpdated();
+    const lastUpdatedDisplay = lastUpdated
+      ? new Date(lastUpdated).toLocaleString('he-IL')
+      : 'לא ידוע';
+    const dirtyNote = getSyncDirty()
+      ? '<div class="sync-dirty-note">יש התקדמות חדשה שלא סונכרנה עדיין.</div>'
+      : '';
+    const canPush = getSyncDirty();
+
+    container.innerHTML = `
+      <div class="sync-code-display">${formatted}</div>
+      <div class="sync-meta">עדכון אחרון: <time datetime="${lastUpdated || ''}">${lastUpdatedDisplay}</time></div>
+      ${dirtyNote}
+      <div class="sync-actions">
+        <button class="btn btn-primary" id="syncPushNowBtn" ${canPush ? '' : 'disabled'}>↻ עדכן התקדמות</button>
+        <button class="btn btn-secondary" id="syncDisconnectBtn">נתק</button>
+      </div>
+    `;
+
+    document.getElementById('syncPushNowBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('syncPushNowBtn');
+      if (btn.disabled) return;
+      btn.disabled = true;
+      btn.textContent = 'מעדכן...';
+      try {
+        await pushSync();
+        renderSyncSection();
+        renderDays();
+      } catch (err) {
+        console.error('Manual sync push failed:', err);
+        window.showNotification('שגיאה בסנכרון. נסה שוב.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '↻ עדכן התקדמות';
+      }
+    });
+
+    document.getElementById('syncDisconnectBtn').addEventListener('click', () => {
+      showConfirm('האם לנתק את החיבור למכשירים האחרים?').then((ok) => {
+        if (!ok) return;
+        localStorage.removeItem('rambam_sync_code');
+        localStorage.removeItem('rambam_sync_lastUpdated');
+        localStorage.removeItem('rambam_synced_at');
+        renderSyncSection();
+      });
+    });
+  } else {
+    container.innerHTML = `
+      <div class="sync-connect-form">
+        <button class="btn btn-primary" id="syncPushBtn">צור מספר למכשיר אחר</button>
+        <div class="sync-divider">או</div>
+        <div class="sync-input-row">
+          <input type="number" id="syncCodeInput" placeholder="הכנס מספר מהמכשיר האחר" inputmode="numeric" min="100000" max="999999">
+          <button class="btn btn-secondary" id="syncPullBtn">חבר</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('syncPushBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('syncPushBtn');
+      btn.disabled = true;
+      btn.textContent = 'יוצר...';
+      try {
+        await pushSync();
+        renderSyncSection();
+      } catch (err) {
+        console.error('Push sync failed:', err);
+        window.showNotification('שגיאה בחיבור למכשיר אחר. נסה שוב.');
+        btn.disabled = false;
+        btn.textContent = 'צור מספר למכשיר אחר';
+      }
+    });
+
+    document.getElementById('syncPullBtn').addEventListener('click', async () => {
+      const input = document.getElementById('syncCodeInput');
+      const codeVal = String(input.value).replace(/\D/g, '');
+      if (codeVal.length !== 6) {
+        window.showNotification('יש להכניס מספר של 6 ספרות מהמכשיר האחר.');
+        return;
+      }
+
+      const btn = document.getElementById('syncPullBtn');
+      btn.disabled = true;
+      btn.textContent = 'מחבר...';
+
+      try {
+        // First, fetch remote data to check for conflict
+        const res = await fetch(`${SYNC_API_URL}/sync/${codeVal}`);
+        if (res.status === 404) {
+          window.showNotification('המכשיר האחר לא נמצא. בדוק את המספר ונסה שוב.');
+          btn.disabled = false;
+          btn.textContent = 'חבר';
+          return;
+        }
+        if (!res.ok) throw new Error(`Pull failed: ${res.status}`);
+
+        const { data: remoteData, lastUpdated: remoteLastUpdated } = await res.json();
+
+        // Count local vs remote done items
+        const prefix = window.PLAN.storagePrefix;
+        const localDone = getDone();
+        const localCount = Object.keys(localDone).filter(k => parseInt(k.split(':')[1]) >= 0).length;
+
+        let remoteDone = {};
+        try { remoteDone = JSON.parse(remoteData[`${prefix}_done`] || '{}'); } catch {}
+        const remoteCount = Object.keys(remoteDone).filter(k => parseInt(k.split(':')[1]) >= 0).length;
+
+        // Conflict: both sides have meaningful progress
+        let strategy = 'merge';
+        if (localCount > 0 && remoteCount > 0) {
+          strategy = await showSyncConflictDialog(localCount, remoteCount);
+          if (!strategy) {
+            // User cancelled
+            btn.disabled = false;
+            btn.textContent = 'חבר';
+            return;
+          }
+        } else if (localCount > 0 && remoteCount === 0) {
+          strategy = 'mine';
+        } else {
+          strategy = 'theirs';
+        }
+
+        applySync(remoteData, remoteLastUpdated, strategy);
+        if (strategy === 'mine') {
+          setSyncCode(codeVal);
+          await pushSync();
+        } else {
+          setSyncCode(codeVal);
+        }
+        setSyncedAt(new Date().toISOString());
+        renderSyncSection();
+        renderDays();
+      } catch (err) {
+        console.error('Pull sync failed:', err);
+        window.showNotification('שגיאה בחיבור. נסה שוב.');
+        btn.disabled = false;
+        btn.textContent = 'חבר';
+      }
+    });
+  }
+}
+
+// ============================================================================
 // Settings Event Listeners
 // ============================================================================
 function openSettings() {
@@ -404,6 +604,8 @@ function openSettings() {
   document.getElementById('settingsPanel').classList.add('open');
   document.getElementById('overlay').classList.add('visible');
   document.body.classList.add('no-scroll');
+
+  renderSyncSection();
 }
 
 function closeSettings() {

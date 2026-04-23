@@ -65,6 +65,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Never cache non-GET requests like sync POSTs
+  if (request.method !== 'GET') {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   // Sefaria API: network-first (with cache fallback)
   if (url.origin === SEFARIA_API) {
     event.respondWith(
@@ -84,6 +90,12 @@ self.addEventListener('fetch', (event) => {
           return caches.match(request);
         })
     );
+    return;
+  }
+
+  // Sync Worker API: always go to network, never cache
+  if (url.origin.includes('workers.dev')) {
+    event.respondWith(fetch(request));
     return;
   }
 
