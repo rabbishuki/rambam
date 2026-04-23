@@ -3,6 +3,13 @@
 // ============================================================================
 
 function initAboutPanel() {
+  const about = window.APP_CONFIG?.about || {};
+  const heading = about.heading || 'מידע על האתר';
+  const introSection = about.introSection || defaultIntroSection();
+  const bodySection = about.bodySection || defaultBodySection();
+  const sponsorSection = about.sponsorSection || defaultSponsorSection();
+  const closingSection = about.closingSection || defaultClosingSection();
+
   // Create info panel element
   const infoPanel = document.createElement('div');
   infoPanel.className = 'info-panel';
@@ -10,48 +17,13 @@ function initAboutPanel() {
 
   infoPanel.innerHTML = `
     <div class="info-header">
-      <h2>מידע על האתר</h2>
+      <h2>${heading}</h2>
       <button class="close-btn" id="closeInfoBtn" aria-label="סגור">×</button>
     </div>
     <div class="info-content">
-      <section class="info-section">
-        <h3>למה בניתי את האפליקציה</h3>
-        <p>
-          בתחילת המחזור הנוכחי התחלתי ללמוד רמב״ם, אבל מהר מאוד הבנתי שקשה לי למצוא זמן מספיק בשביל ללמוד כמו שצריך מתוך ספר.
-          אז חשבתי, מה אם אוכל לנצל את כל הרגעים הקטנים במהלך היום?
-         </p>
-        <p> בתור לקופה, בדרך לפגישה, בהפסקת קפה, כל רגע כזה הוא הזדמנות ללמוד כמה הלכות. </p>
-        <p>
-          וככה נולדה האפליקציה הזו: פותחים, קוראים, מחליקים ימינה כדי לסמן, וממשיכים הלאה. בלי להתעסק, בלי הרשמה, בלי שרת, ובלי לבזבז זמן. פשוט ללמוד.
-        </p>
-        <p>
-        כמובן שאם יש לכם קצת יותר זמן ממני, ואתם רוצים גם ללמוד עם ביאורים אני ממליץ על האתר של 
-        <a href="https://yomi.org.il?affId=2bcbbdd2" target="_blank" rel="noopener">
-            <img src="https://yomi.org.il/assets/icons/svg/yomi-logo-welcome.svg" alt="Yomi" style="width: 25px; height: 18px">
-           yomi.org.il
-        </a>
-        </p>
-        <p>ולמי שבמסלול אחר יש גם אפליקציה המתאימה</p>
-        <div class="flavor-links" id="otherFlavorsLinks">
-          <!-- Links will be injected by JavaScript -->
-        </div>
-      </section>
-
-      <section class="info-section">
-        <h3>אודות לימוד הרמב״ם</h3>
-        <p>
-תקנת לימוד הרמב״ם היא יוזמה ללימוד יומי קבוע בספר משנה תורה לרמב״ם, שנוסדה על־ידי הרבי מליובאוויטש מלך המשיח שליט״א באחרון של פסח בשנת תשד״מ.
-        </p>
-        <p> 
-מטרת התקנה היא לאחד את עם ישראל באמצעות לימוד משותף של חיבור הלכתי המקיף את כל התורה שבעל־פה, כולל הלכות שאינן נוהגות בפועל בימינו. 
-        </p>
-        <p>
-לשם כך נקבעו שלושה מסלולי לימוד, המאפשרים לכל אחד להשתתף על־פי יכולתו: מסלול העיקרי של שלושה פרקים ביום, המאפשר סיום משנה תורה כולו בתוך שנה; מסלול של פרק אחד ביום, שבו מסיימים את הספר בשלוש שנים; ומסלול לימוד יומי בספר המצוות לרמב״ם, המקביל ללימוד ההלכות. 
-        </p>
-        <p>
-לימוד זה מבטא את שלמות התורה ואת ההכנה הרוחנית לגאולה, שבה יתגלו ויתקיימו כל דיני התורה במלואם. האחדות הנוצרת סביב לימוד יומי זה מחזקת את האמונה, הציפייה וההכנה המעשית לגאולה האמיתית והשלמה.
-        </p>
-      </section>
+      ${introSection}
+      ${bodySection}
+      ${sponsorSection}
 
       <section class="info-section">
         <h3>איך משתמשים באתר</h3>
@@ -212,14 +184,7 @@ function initAboutPanel() {
         </div>
       </section>
     </div>
-    <div class="dedication">
-       <div class="dedication-label">האתר לעילוי נשמת</div>
-       <div class="dedication-names"><b>ישראל שאול</b> בן <b>משה אהרון</b> ו<b>מלכה</b> בת <b>נתן</b></div>
-    </div>
-
-    <div class="dedication yechi">
-      יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד
-    </div>
+    ${closingSection}
   `;
 
   // Append to body
@@ -233,6 +198,73 @@ function initAboutPanel() {
 
   // Populate other flavors links
   populateOtherFlavors();
+}
+
+function defaultIntroSection() {
+  return `
+    <section class="info-section">
+      <h3>למה בניתי את האפליקציה</h3>
+      <p>
+        בתחילת המחזור הנוכחי התחלתי ללמוד רמב״ם, אבל מהר מאוד הבנתי שקשה לי למצוא זמן מספיק בשביל ללמוד כמו שצריך מתוך ספר.
+        אז חשבתי, מה אם אוכל לנצל את כל הרגעים הקטנים במהלך היום?
+      </p>
+      <p>בתור לקופה, בדרך לפגישה, בהפסקת קפה, כל רגע כזה הוא הזדמנות ללמוד כמה הלכות.</p>
+      <p>
+        וככה נולדה האפליקציה הזו: פותחים, קוראים, מחליקים ימינה כדי לסמן, וממשיכים הלאה. בלי להתעסק, בלי הרשמה, בלי שרת, ובלי לבזבז זמן. פשוט ללמוד.
+      </p>
+    </section>
+  `;
+}
+
+function defaultBodySection() {
+  return `
+    <section class="info-section">
+      <h3>אודות לימוד הרמב״ם</h3>
+      <p>
+        תקנת לימוד הרמב״ם היא יוזמה ללימוד יומי קבוע בספר משנה תורה לרמב״ם, שנוסדה על־ידי הרבי מליובאוויטש מלך המשיח שליט״א באחרון של פסח בשנת תשד״מ.
+      </p>
+      <p>
+        מטרת התקנה היא לאחד את עם ישראל באמצעות לימוד משותף של חיבור הלכתי המקיף את כל התורה שבעל־פה, כולל הלכות שאינן נוהגות בפועל בימינו.
+      </p>
+      <p>
+        לשם כך נקבעו שלושה מסלולי לימוד, המאפשרים לכל אחד להשתתף על־פי יכולתו: מסלול העיקרי של שלושה פרקים ביום, המאפשר סיום משנה תורה כולו בתוך שנה; מסלול של פרק אחד ביום, שבו מסיימים את הספר בשלוש שנים; ומסלול לימוד יומי בספר המצוות לרמב״ם, המקביל ללימוד ההלכות.
+      </p>
+      <p>
+        לימוד זה מבטא את שלמות התורה ואת ההכנה הרוחנית לגאולה, שבה יתגלו ויתקיימו כל דיני התורה במלואם. האחדות הנוצרת סביב לימוד יומי זה מחזקת את האמונה, הציפייה וההכנה המעשית לגאולה האמיתית והשלמה.
+      </p>
+    </section>
+  `;
+}
+
+function defaultSponsorSection() {
+  return `
+    <section class="info-section">
+      <h3>קישורים</h3>
+      <p>
+        כמובן שאם יש לכם קצת יותר זמן ממני, ואתם רוצים גם ללמוד עם ביאורים אני ממליץ על האתר של
+        <a href="https://yomi.org.il?affId=2bcbbdd2" target="_blank" rel="noopener">
+          <img src="https://yomi.org.il/assets/icons/svg/yomi-logo-welcome.svg" alt="Yomi" style="width: 25px; height: 18px">
+          yomi.org.il
+        </a>
+      </p>
+      <p>ולמי שבמסלול אחר יש גם אפליקציה המתאימה</p>
+      <div class="flavor-links" id="otherFlavorsLinks">
+        <!-- Links will be injected by JavaScript -->
+      </div>
+    </section>
+  `;
+}
+
+function defaultClosingSection() {
+  return `
+    <div class="dedication">
+      <div class="dedication-label">האתר לעילוי נשמת</div>
+      <div class="dedication-names"><b>ישראל שאול</b> בן <b>משה אהרון</b> ו<b>מלכה</b> בת <b>נתן</b></div>
+    </div>
+    <div class="dedication yechi">
+      יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד
+    </div>
+  `;
 }
 
 // Populate links to other app flavors

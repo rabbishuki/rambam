@@ -14,6 +14,6 @@
     "unlink:mitzvot": "rm -rf mitzvot/shared mitzvot/assets",
     "build:chasidus": "mkdir -p chasidishe/shared chasidishe/assets && cp -r shared/* chasidishe/shared/ && cp -r assets/* chasidishe/assets/",
     "link:chasidus": "cd chasidishe && ln -sf ../shared shared && ln -sf ../assets assets",
-    "unlink:chasidus": "rm -rf chasidus/shared chasidus/assets"
+    "unlink:chasidus": "rm -rf chasidishe/shared chasidishe/assets"
   }
 }

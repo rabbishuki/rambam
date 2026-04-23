@@ -20,8 +20,39 @@
     })(window, document, "clarity", "script", "vhiz64qdo7");
   </script>
 </head>
-<body>
+  <body>
   <div class="container" id="app"></div>
+  <script>
+    window.APP_CONFIG = {
+      about: {
+        bodySection: `
+          <section class="info-section">
+            <h3>אודות לימוד תורה אור ולקוטי תורה</h3>
+            <p>
+              האפליקציה מנגישה מסלול לימוד יומי בספרי ה'תורה אור' ו'לקוטי תורה', במטרה לאחד את עם ישראל סביב לימוד ה"תורה שבכתב" של החסידות כהכנה מעשית לגאולה.
+            </p>
+            <p>
+              כפי שהורה הרבי מליובאוויטש מלך המשיח שליט״א:
+            </p>
+            <blockquote class="info-quote">
+              <p>
+                יש לעורר, שכמו הקביעות בלימוד כל ספר משנה תורה להרמב"ם להיותו כולל את כל התורה כולה, עד"ז יש ללמוד בתורת החסידות את כל הספר תורה אור ולקוטי תורה, המהוים תורה שבכתב דתורת החסידות.. מקור והתחלת ענין הגאולה צ"ל בתורה, ובנדו"ד - ע"י חיבור הספרים תורה אור ולקוטי תורה.
+              </p>
+              <p class="info-quote-source">משיחת ש"פ חיי שרה תשנ"ב - כינוס השלוחים העולמי - בלתי מוגה</p>
+            </blockquote>
+          </section>
+          <section class="info-section">
+            <h3>מה באפליקציה?</h3>
+            <ul class="info-bullets">
+              <li><strong>מסלול לימוד מקיף:</strong> סיום הספרים המהווים את התשתית לפנימיות התורה תוך שנה.</li>
+              <li><strong>כלי עזר ללמידה:</strong> הנגשת ה״תורה שבכתב״ של החסידות לכל יהודי.</li>
+              <li><strong>מביאים גאולה:</strong> חיבור מעשי להוראת הרבי כהכנה להתגלות הקרובה.</li>
+            </ul>
+          </section>
+        `,
+      }
+    };
+  </script>
   <script src="./shared/changelog.js"></script>
   <script src="./shared/screenshot.js"></script>
   <script src="schedule.js"></script>
