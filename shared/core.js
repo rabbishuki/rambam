@@ -703,6 +703,7 @@ function toHebrewLetter(num) {
 function checkSyncAnnouncement() {
   if (localStorage.getItem('rambam_sync_announced')) return;
   if (getSyncCode()) return; // already syncing
+  if (document.getElementById('settingsPanel')?.classList.contains('open')) return;
 
   localStorage.setItem('rambam_sync_announced', 'true');
 
@@ -2296,7 +2297,7 @@ window.addEventListener('appinstalled', () => {
 // Service Worker Registration
 // ============================================================================
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
+window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
       .then(reg => {
         console.log('Service Worker registered:', reg.scope);
@@ -2309,6 +2310,12 @@ if ('serviceWorker' in navigator) {
           const newWorker = reg.installing;
           newWorker.addEventListener('statechange', async () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              const updateNoticeKey = 'rambam_sw_update_notice_at';
+              const lastNotice = localStorage.getItem(updateNoticeKey);
+              const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+              if (lastNotice && lastNotice > dayAgo) return;
+              localStorage.setItem(updateNoticeKey, new Date().toISOString());
+
               // New version available - show notification
               showNotification('עדכון זמין', {
                 body: 'גרסה חדשה של האפליקציה זמינה!',
