@@ -57,7 +57,7 @@ function setLargeFontSize(enabled) {
   setSetting('rambam_large_font', enabled);
 }
 
-// Torani font settings (Drugulin for halakha text) - default on
+// Torani font settings (Frank Ruhl Libre for halakha text) - default on
 function getToraniFont() {
   return getSetting('rambam_torani_font', true);
 }
@@ -1361,7 +1361,7 @@ async function handleDetailsToggle(event) {
         const hebrewNum = toHebrewLetter(halakhaIdx + 1);
         card.innerHTML = hasOwnNumbering
           ? `<div class="halakha-text">${text}</div>`
-          : `<div class="halakha-text"><b class="halakha-num">${hebrewNum}.</b> ${text}</div>`;
+          : `<div class="halakha-text"><b>${hebrewNum}.</b> ${text}</div>`;
 
         attachSwipeHandler(card);
         container.appendChild(card);

@@ -23,8 +23,7 @@ self.addEventListener('install', (event) => {
         './shared/changelog.js',
         './assets/logo.png',
         './assets/icon-192.png',
-        './assets/icon-512.png',
-        './assets/fonts/drugulinclm-bold-webfont.woff'
+        './assets/icon-512.png'
       ]);
     })
   );

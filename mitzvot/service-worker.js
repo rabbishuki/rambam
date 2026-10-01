@@ -25,7 +25,6 @@ self.addEventListener('install', (event) => {
         './assets/logo.png',
         './assets/icon-192.png',
         './assets/icon-512.png',
-        './assets/fonts/drugulinclm-bold-webfont.woff',
         './assets/celebration-bg.png'
       ]);
     })

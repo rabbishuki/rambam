@@ -520,24 +520,6 @@
       background: rgba(51, 65, 85, 0.9);
     }
 
-    /* Drugulin CLM (Culmus, GPL) - only Bold/BoldItalic exist, so the bold file
-       covers every weight to stop browsers from synthesizing a fake bold on top. */
-    @font-face {
-      font-family: 'Drugulin CLM';
-      src: url('../assets/fonts/drugulinclm-bold-webfont.woff') format('woff');
-      font-weight: 100 900;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: 'Drugulin CLM';
-      src: url('../assets/fonts/drugulinclm-bolditalic-webfont.woff') format('woff');
-      font-weight: 100 900;
-      font-style: italic;
-      font-display: swap;
-    }
-
     * {
       margin: 0;
       padding: 0;
@@ -1036,12 +1018,7 @@
 
     /* Torani font (תורני) */
     .torani-font .halakha-text {
-      font-family: 'Drugulin CLM', 'Noto Sans Hebrew', serif;
-    }
-
-    /* Drugulin is bold-only, so the number stands out in the regular font */
-    .torani-font .halakha-num {
-      font-family: 'Noto Sans Hebrew', sans-serif;
+      font-family: 'Frank Ruhl Libre', 'Noto Sans Hebrew', serif;
     }
 
     .halakha-text b {
