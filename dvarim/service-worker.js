@@ -2,7 +2,7 @@ importScripts('./shared/changelog.js');
 
 const SEFARIA_API = 'https://www.sefaria.org';
 const LATEST_VERSION = Math.max(...Object.keys(CHANGELOG).map(Number));
-let CACHE_NAME = `chumash-v${LATEST_VERSION}`;
+let CACHE_NAME = `dvarim-v${LATEST_VERSION}`;
 
 // Install: cache static assets
 self.addEventListener('install', (event) => {
@@ -14,8 +14,6 @@ self.addEventListener('install', (event) => {
         './plan.js',
         './manifest.json',
         './shared/styles.css',
-        './shared/rambam-books.js',
-        './shared/rambam-intros.js',
         './shared/screenshot.js',
         './shared/api.js',
         './shared/core.js',

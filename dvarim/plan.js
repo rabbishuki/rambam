@@ -26,7 +26,7 @@ const DVARIM_REF = 'Deuteronomy.1-34';
 window.PLAN = {
   id: 'dvarim',          // must match the Cloudflare Pages project name (used for share URL)
   name: 'חומש דברים',
-  storagePrefix: 'chumash',
+  storagePrefix: 'dvarim',
 
   async loadDay(date) {
     if (!HOSHANA_RABBA.includes(date)) {
