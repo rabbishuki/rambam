@@ -13,6 +13,22 @@ if (localStorage.getItem('rambam_large_font') === null) localStorage.setItem('ra
 const parashaFor = date => PARASHOT[Math.round((Date.parse(DATE) - Date.parse(date)) / 864e5)];
 const refFor = ([, c1, v1, c2, v2]) => `Deuteronomy.${c1}.${v1}-${c2}.${v2}`;
 
+// Fetch the whole book once and keep it in localStorage, so it works offline after the first load
+let bookPromise;
+function loadBook() {
+  const saved = localStorage.getItem('dvarim_book');
+  if (saved) return Promise.resolve(JSON.parse(saved));
+  return bookPromise ||= fetchText('Deuteronomy.1-34').then(({ chapters }) => {
+    try { localStorage.setItem('dvarim_book', JSON.stringify(chapters)); } catch (e) {}
+    return chapters;
+  }).catch(e => { bookPromise = null; throw e; });
+}
+
+async function parashaChapters([, c1, v1, c2, v2]) {
+  const book = await loadBook();
+  return book.slice(c1 - 1, c2).map((ch, i) => ch.slice(i ? 0 : v1 - 1, c1 + i === c2 ? v2 : undefined));
+}
+
 window.PLAN = {
   id: 'dvarim',
   name: 'חומש דברים',
@@ -22,7 +38,7 @@ window.PLAN = {
   async loadDay(date) {
     const parasha = parashaFor(date);
     if (!parasha) throw new Error(`${date} is not a parasha date`);
-    const { chapters } = await fetchText(refFor(parasha));
+    const chapters = await parashaChapters(parasha);
     const count = chapters.reduce((sum, ch) => sum + ch.length, 0);
     return { he: `פרשת ${parasha[0]}`, ref: refFor(parasha), count, heDate: parasha[0] };
   },
@@ -30,8 +46,9 @@ window.PLAN = {
   // Number pesukim ourselves (core skips its numbering when text starts with <b>),
   // since a parasha can start mid-chapter
   async loadContent(date, ref) {
-    const [, c1, v1] = parashaFor(date);
-    const { chapters } = await fetchText(ref);
+    const parasha = parashaFor(date);
+    const [, c1, v1] = parasha;
+    const chapters = await parashaChapters(parasha);
     return {
       chapters: chapters.map((ch, i) => ch.map((text, j) => `<b>${toHebrewLetter((i ? 1 : v1) + j)}.</b> ${text}`)),
       chapterNumbers: chapters.map((_, i) => c1 + i)
