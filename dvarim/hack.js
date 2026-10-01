@@ -13,13 +13,13 @@ if (cachedDays[DATE] && cachedDays[DATE].ref === 'Deuteronomy.1-34') {
 }
 
 // "יום ה׳ • כ׳ תשרי • 3/105" -> "3/105", and Rambam wording -> Chumash wording
-const WORDING = [['ימים הושלמו', 'פרשיות הושלמו'], ['הלכות קודמות', 'פסוקים קודמים'], ['הלכות', 'פסוקים'], ['להלכה הבאה', 'לפסוק הבא']];
+const WORDING = [['ימים הושלמו', 'פרשיות הושלמו'], ['סיימת את הלכות', 'סיימת את'], ['הלכות קודמות', 'פסוקים קודמים'], ['הלכות', 'פסוקים'], ['להלכה הבאה', 'לפסוק הבא']];
 const fixWording = text => WORDING.reduce((t, [from, to]) => t.replace(from, to), text);
 new MutationObserver(() => {
   document.querySelectorAll('.day-meta').forEach(el => {
     if (el.textContent.includes(' • ')) el.textContent = el.textContent.split(' • ').pop();
   });
-  document.querySelectorAll('.completed-counter, .loading, .settings-label').forEach(el => {
+  document.querySelectorAll('.completed-counter, .loading, .settings-label, .celebration-subtitle, .celebration-stat-label').forEach(el => {
     const text = fixWording(el.textContent);
     if (text !== el.textContent) el.textContent = text;
   });
@@ -38,9 +38,22 @@ function reportProgress() {
   const done = getDone();
   const count = Object.keys(days).filter(date => parashaFor(date) && countDoneForDate(done, date) >= days[date].count).length;
   if (count !== reportedDone && typeof clarity === 'function') clarity('set', 'parashiyot_done', String(count));
+  if (reportedDone !== undefined && reportedDone < count && count === PARASHOT.length) {
+    const pesukim = Object.values(days).reduce((sum, day) => sum + day.count, 0);
+    setTimeout(() => renderBookCelebration('ספר דברים', 34, pesukim), 600);
+  }
   reportedDone = count;
 }
 const coreRenderDays = renderDays;
 renderDays = (...args) => { coreRenderDays(...args); reportProgress(); };
 const coreUpdateDayHeader = updateDayHeader;
 updateDayHeader = (...args) => { coreUpdateDayHeader(...args); reportProgress(); };
+
+// Celebration share: text + link (core's image share needs screenshot.js, which dvarim doesn't load)
+const coreInitCelebrationEffects = initCelebrationEffects;
+initCelebrationEffects = (...args) => {
+  coreInitCelebrationEffects(...args);
+  window.celebrationShare = (bookName, chapters, pesukim) => window.shareContent(
+    `סיימתי את כל ספר דברים בליל הושענא רבה! 🎉\n\n${chapters} פרקים, ${pesukim} פסוקים\n\nhttps://${window.PLAN.id}.pages.dev`
+  );
+};
