@@ -21,3 +21,14 @@ new MutationObserver(() => {
     if (el.textContent.includes('ימים')) el.textContent = el.textContent.replace('ימים', 'פרשיות');
   });
 }).observe(document.body, { childList: true, subtree: true, characterData: true });
+
+// Save all parashiyot for offline use on first load (the SW isn't active yet then, so it misses them).
+// Same cache name and URLs as service-worker.js and fetchText, so the SW's offline fallback finds them.
+if ('caches' in window) {
+  caches.open(`dvarim-v${Math.max(...Object.keys(CHANGELOG).map(Number))}`).then(cache =>
+    PARASHOT.forEach(async parasha => {
+      const url = `${SEFARIA_API}/api/v3/texts/${refFor(parasha)}`;
+      if (!(await cache.match(url))) cache.add(url).catch(() => {});
+    })
+  );
+}
