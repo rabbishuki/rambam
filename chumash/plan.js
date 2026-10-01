@@ -23,18 +23,6 @@ const DVARIM_REF = 'Deuteronomy.1-34';
   localStorage.setItem('rambam_start', past.length ? past[past.length - 1] : HOSHANA_RABBA[0]);
 })();
 
-// Strip HTML (pe/samekh markers, footnotes) and te'amim, keep nikud
-function cleanPasuk(text) {
-  return String(text || '')
-    .replace(/<sup[^>]*>.*?<\/sup>/g, '')
-    .replace(/<i class="footnote">.*?<\/i>/g, '')
-    .replace(/<[^>]+>/g, '')
-    .replace(/\{[פס]\}/g, '')
-    .replace(/[\u0591-\u05AF]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 window.PLAN = {
   id: 'dvarim',          // must match the Cloudflare Pages project name (used for share URL)
   name: 'חומש דברים',
@@ -52,9 +40,6 @@ window.PLAN = {
 
   async loadContent(date, ref) {
     const { chapters, chapterNumbers } = await fetchText(ref);
-    return {
-      chapters: chapters.map(ch => ch.map(cleanPasuk)),
-      chapterNumbers
-    };
+    return { chapters, chapterNumbers };
   }
 };
