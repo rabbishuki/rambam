@@ -94,6 +94,20 @@ function getToggleSettings() {
     }
   },
   {
+    id: 'torani-font',
+    label: 'סוג גופן',
+    trueLabel: 'תורני',
+    falseLabel: 'רגיל',
+    getter: getToraniFont,
+    setter: setToraniFont,
+    sideEffect: (newValue) => {
+      const container = document.querySelector('.container');
+      if (container) {
+        container.classList.toggle('torani-font', newValue);
+      }
+    }
+  },
+  {
     id: 'dark-mode',
     label: 'מצב כהה',
     trueLabel: 'כן',
@@ -540,14 +554,8 @@ function attachSettingsListeners() {
 
     try {
       const coords = await getUserCoords();
-      const now = new Date();
-      const israelTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
-      const israelTime = new Date(israelTimeStr);
-      const year = israelTime.getFullYear();
-      const month = String(israelTime.getMonth() + 1).padStart(2, '0');
-      const day = String(israelTime.getDate()).padStart(2, '0');
-      const rawDateStr = `${year}-${month}-${day}`;
-      await fetchSunset(rawDateStr, coords);
+      // Sunset for the local date at the user's location (not Israel's date)
+      await fetchSunset(toLocalDateStr(new Date()), coords);
 
       // Get the updated sunset time from cachedSunsetHour/Minute (set by fetchSunset)
       const hourStr = String(cachedSunsetHour).padStart(2, '0');

@@ -171,6 +171,19 @@ function initAboutPanel() {
 
         <div class="info-setting-row">
           <div class="info-setting-header">
+            <h4>סוג גופן</h4>
+            <div class="toggle-container" id="infoToraniFontToggle">
+              <button class="toggle-btn" data-value="true">תורני</button>
+              <button class="toggle-btn" data-value="false">רגיל</button>
+            </div>
+          </div>
+          <p class="info-setting-description">
+            גופן תורני (דרוגולין) כמו בספרי קודש, או גופן רגיל לקריאה על המסך.
+          </p>
+        </div>
+
+        <div class="info-setting-row">
+          <div class="info-setting-header">
             <h4>מצב כהה</h4>
             <div class="toggle-container" id="infoDarkModeToggle">
               <button class="toggle-btn" data-value="true">כן</button>
@@ -387,6 +400,15 @@ function initInfoSettingsToggles() {
     }
   });
 
+  // Torani Font
+  initToggle('infoToraniFontToggle', getToraniFont, (value) => {
+    setToraniFont(value);
+    const container = document.querySelector('.container');
+    if (container) {
+      container.classList.toggle('torani-font', value);
+    }
+  });
+
   // Dark Mode
   initToggle('infoDarkModeToggle', getDarkMode, (value) => {
     setDarkMode(value);
@@ -524,14 +546,8 @@ function initDayTransitionSetting() {
 
     try {
       const coords = await getUserCoords();
-      const now = new Date();
-      const israelTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' });
-      const israelTime = new Date(israelTimeStr);
-      const year = israelTime.getFullYear();
-      const month = String(israelTime.getMonth() + 1).padStart(2, '0');
-      const day = String(israelTime.getDate()).padStart(2, '0');
-      const rawDateStr = `${year}-${month}-${day}`;
-      await fetchSunset(rawDateStr, coords);
+      // Sunset for the local date at the user's location (not Israel's date)
+      await fetchSunset(toLocalDateStr(new Date()), coords);
 
       // Get the updated sunset time from cachedSunsetHour/Minute (set by fetchSunset)
       const hourStr = String(cachedSunsetHour).padStart(2, '0');
