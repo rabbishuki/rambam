@@ -198,7 +198,7 @@ function initAboutPanel() {
             <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="link-icon">
             <span>קבוצת WhatsApp לתמיכה ועדכונים</span>
           </a>
-          <a href="https://wa.me/972586030770?text=אהבתי%20את%20האפליקציה%20של%20הרמבם" target="_blank" rel="noopener" class="info-link">
+          <a href="https://wa.me/972586030770?text=${encodeURIComponent(`אהבתי את האפליקציה של ${window.PLAN?.appName || 'הרמבם'}`)}" target="_blank" rel="noopener" class="info-link">
               <img src="assets/rabbi.jpeg" alt="הרב שוקי" class="footer-avatar">
               <span>הודעה ישירה לרב שוקי</span>
               <svg class="whatsapp-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

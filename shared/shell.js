@@ -363,7 +363,7 @@ function initShell() {
             <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Claude Code</span>
           </div>
           <span>בנה,</span>
-          <a href="https://wa.me/972586030770?text=אהבתי%20את%20האפליקציה%20של%20הרמבם" class="footer-link" target="_blank" rel="noopener" aria-label="שלח הודעה בוואטסאפ">
+          <a href="https://wa.me/972586030770?text=${encodeURIComponent(`אהבתי את האפליקציה של ${window.PLAN?.appName || 'הרמבם'}`)}" class="footer-link" target="_blank" rel="noopener" aria-label="שלח הודעה בוואטסאפ">
             <div class="footer-badge">
               <img src="./assets/rabbi.jpeg" alt="הרב שוקי" class="footer-avatar">
               <span>הרב שוקי</span>

@@ -1,10 +1,12 @@
 const DATE = '2026-10-01';
 const REF = 'Deuteronomy.1-34';
 localStorage.setItem('rambam_start', DATE);
+if (localStorage.getItem('rambam_large_font') === null) localStorage.setItem('rambam_large_font', 'true');
 
 window.PLAN = {
   id: 'dvarim',
   name: 'חומש דברים',
+  appName: 'חומש דברים',
   storagePrefix: 'dvarim',
 
   async loadDay(date) {
