@@ -2,7 +2,8 @@ importScripts('./shared/changelog.js');
 
 const SEFARIA_API = 'https://www.sefaria.org';
 const LATEST_VERSION = Math.max(...Object.keys(CHANGELOG).map(Number));
-let CACHE_NAME = `dvarim-v${LATEST_VERSION}`;
+const DVARIM_REVISION = 2; // bump on every dvarim-only change, so browsers drop the old cached files
+let CACHE_NAME = `dvarim-v${LATEST_VERSION}.${DVARIM_REVISION}`;
 
 // Install: cache static assets
 self.addEventListener('install', (event) => {
