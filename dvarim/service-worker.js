@@ -12,6 +12,7 @@ self.addEventListener('install', (event) => {
         './',
         './index.html',
         './plan.js',
+        './hack.js',
         './manifest.json',
         './shared/styles.css',
         './shared/api.js',
