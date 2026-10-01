@@ -52,11 +52,15 @@ renderDays = (...args) => { coreRenderDays(...args); reportProgress(); };
 const coreUpdateDayHeader = updateDayHeader;
 updateDayHeader = (...args) => { coreUpdateDayHeader(...args); reportProgress(); };
 
-// Celebration share: text + link (core's image share needs screenshot.js, which dvarim doesn't load)
+// Celebration: hide the time stat when nothing was tracked; share text + link
+// (core's image share needs screenshot.js, which dvarim doesn't load)
 const coreInitCelebrationEffects = initCelebrationEffects;
 initCelebrationEffects = (...args) => {
   coreInitCelebrationEffects(...args);
+  const minutes = getBookTime('ספר דברים');
+  const time = minutes ? formatLearningTime(minutes) : '';
+  if (!time) document.querySelectorAll('.celebration-stat')[2]?.remove();
   window.celebrationShare = (bookName, chapters, pesukim) => window.shareContent(
-    `סיימתי את כל ספר דברים בליל הושענא רבה! 🎉\n\n${chapters} פרקים, ${pesukim} פסוקים, ${formatLearningTime(getBookTime(bookName))} שעות לימוד\n\nhttps://${window.PLAN.id}.pages.dev`
+    `סיימתי את כל ספר דברים בליל הושענא רבה! 🎉\n\n${chapters} פרקים, ${pesukim} פסוקים${time ? `, ${time} שעות לימוד` : ''}\n\nhttps://${window.PLAN.id}.pages.dev`
   );
 };
