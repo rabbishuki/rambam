@@ -24,3 +24,17 @@ new MutationObserver(() => {
 
 // Make sure the book is saved for offline use even when the day list was already cached
 loadBook().catch(() => {});
+
+// Report completed parashiyot to Clarity (session tag, filterable in the dashboard) whenever progress changes
+let reportedDone;
+function reportProgress() {
+  const days = getDays();
+  const done = getDone();
+  const count = Object.keys(days).filter(date => parashaFor(date) && countDoneForDate(done, date) >= days[date].count).length;
+  if (count !== reportedDone && typeof clarity === 'function') clarity('set', 'parashiyot_done', String(count));
+  reportedDone = count;
+}
+const coreRenderDays = renderDays;
+renderDays = (...args) => { coreRenderDays(...args); reportProgress(); };
+const coreUpdateDayHeader = updateDayHeader;
+updateDayHeader = (...args) => { coreUpdateDayHeader(...args); reportProgress(); };
