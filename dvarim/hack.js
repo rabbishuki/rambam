@@ -12,13 +12,19 @@ if (cachedDays[DATE] && cachedDays[DATE].ref === 'Deuteronomy.1-34') {
   saveDone(done);
 }
 
-// "יום ה׳ • כ׳ תשרי • 3/105" -> "3/105", "✓ 2 ימים הושלמו" -> "✓ 2 פרשיות הושלמו"
+// "יום ה׳ • כ׳ תשרי • 3/105" -> "3/105", and Rambam wording -> Chumash wording
+const WORDING = [['ימים הושלמו', 'פרשיות הושלמו'], ['הלכות קודמות', 'פסוקים קודמים'], ['הלכות', 'פסוקים'], ['להלכה הבאה', 'לפסוק הבא']];
+const fixWording = text => WORDING.reduce((t, [from, to]) => t.replace(from, to), text);
 new MutationObserver(() => {
   document.querySelectorAll('.day-meta').forEach(el => {
     if (el.textContent.includes(' • ')) el.textContent = el.textContent.split(' • ').pop();
   });
-  document.querySelectorAll('.completed-days-counter').forEach(el => {
-    if (el.textContent.includes('ימים')) el.textContent = el.textContent.replace('ימים', 'פרשיות');
+  document.querySelectorAll('.completed-counter, .loading, .settings-label').forEach(el => {
+    const text = fixWording(el.textContent);
+    if (text !== el.textContent) el.textContent = text;
+  });
+  document.querySelectorAll('#scrollToNext').forEach(el => {
+    el.title = el.ariaLabel = fixWording(el.title);
   });
 }).observe(document.body, { childList: true, subtree: true, characterData: true });
 
