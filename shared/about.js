@@ -256,6 +256,11 @@ function populateOtherFlavors() {
       url: 'https://sefer-mitzvot.pages.dev',
       name: 'ספר המצוות',
       key: 'mitzvot'
+    },
+    {
+      url: 'https://dvarim.pages.dev',
+      name: 'חומש דברים',
+      key: 'dvarim'
     }
   ];
 
