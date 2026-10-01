@@ -343,6 +343,16 @@ function initShell() {
         ${generateToggleSettings()}
 
         <div class="settings-section toggle">
+          <label class="settings-label">סימון הכל כנקרא עד תאריך</label>
+          <div class="toggle-container">
+            <button class="toggle-btn">
+              <input type="date" id="markUntilInput" class="date-input-inline">
+            </button>
+            <button class="toggle-btn" id="markUntilBtn">סמן</button>
+          </div>
+        </div>
+
+        <div class="settings-section toggle">
           <label class="settings-label">איפוס</label>
           <div class="date-row">
             <button class="btn btn-warning" id="refreshDataBtn">שמור התקדמות</button>
@@ -439,10 +449,30 @@ function attachSettingsListeners() {
 
   // Reset button
   document.getElementById('resetBtn').addEventListener('click', async () => {
-    if (await showConfirm('האם אתה בטוח? כל ההתקדמות תימחק.')) {
+    if (await showConfirm(`האם אתה בטוח? כל ההתקדמות של ${window.PLAN.name} תימחק.`)) {
       // Only remove plan-specific data, not shared settings or other apps
       localStorage.removeItem(`${window.PLAN.storagePrefix}_days`);
       localStorage.removeItem(`${window.PLAN.storagePrefix}_done`);
+      location.reload();
+    }
+  });
+
+  // Mark everything from the start date up to a chosen date as done (e.g. to rebuild progress after a reset)
+  document.getElementById('markUntilBtn').addEventListener('click', async () => {
+    const until = document.getElementById('markUntilInput').value;
+    if (!until) {
+      window.showNotification('יש לבחור תאריך', 'error');
+      return;
+    }
+    const [y, m, d] = until.split('-').map(Number);
+    if (await showConfirm(`לסמן את כל הלימוד עד ${d}/${m}/${y} (כולל) כנקרא?`)) {
+      const days = getDays();
+      const done = getDone();
+      const now = new Date().toISOString();
+      dateRange(getStart(), until).forEach(date => {
+        for (let i = 0; i < (days[date]?.count || 0); i++) done[`${date}:${i}`] ||= now;
+      });
+      saveDone(done);
       location.reload();
     }
   });

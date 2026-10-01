@@ -2114,6 +2114,9 @@ function loadChangelog() {
 // ============================================================================
 async function init() {
   try {
+    // Ask the browser not to evict our storage (progress lives only in localStorage)
+    navigator.storage?.persist?.();
+
     // Check if this is the first visit BEFORE any other operations
     const firstVisit = isFirstVisit();
 
