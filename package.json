@@ -11,6 +11,9 @@
     "unlink:rambam1": "rm -rf rambam1/shared rambam1/assets",
     "build:mitzvot": "mkdir -p mitzvot/shared mitzvot/assets && cp -r shared/* mitzvot/shared/ && cp -r assets/* mitzvot/assets/",
     "link:mitzvot": "cd mitzvot && ln -sf ../shared shared && ln -sf ../assets assets",
-    "unlink:mitzvot": "rm -rf mitzvot/shared mitzvot/assets"
+    "unlink:mitzvot": "rm -rf mitzvot/shared mitzvot/assets",
+    "build:dvarim": "mkdir -p dvarim/shared dvarim/assets && cp -r shared/* dvarim/shared/ && cp -r assets/* dvarim/assets/",
+    "link:dvarim": "cd dvarim && ln -sf ../shared shared && ln -sf ../assets assets",
+    "unlink:dvarim": "rm -rf dvarim/shared dvarim/assets"
   }
 }
