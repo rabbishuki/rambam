@@ -57,6 +57,15 @@ function setLargeFontSize(enabled) {
   setSetting('rambam_large_font', enabled);
 }
 
+// Torani font settings (Frank Ruhl Libre for halakha text) - default on
+function getToraniFont() {
+  return getSetting('rambam_torani_font', true);
+}
+
+function setToraniFont(enabled) {
+  setSetting('rambam_torani_font', enabled);
+}
+
 // Dark mode settings
 function getDarkMode() {
   return getSetting('rambam_dark_mode', false);
@@ -140,11 +149,36 @@ function getJewishToday() {
     jewishDate.setDate(jewishDate.getDate() + 1);
   }
 
-  const year = jewishDate.getFullYear();
-  const month = String(jewishDate.getMonth() + 1).padStart(2, '0');
-  const day = String(jewishDate.getDate()).padStart(2, '0');
+  return toLocalDateStr(jewishDate);
+}
 
-  return `${year}-${month}-${day}`;
+// Sunset mode keeps the sunset only in memory, so seed it from the last saved
+// value on load instead of silently falling back to 18:00.
+function restoreSunsetTime() {
+  if (getDayTransitionMode() !== 'sunset') return;
+  const [h, m] = getDayTransitionTime().split(':').map(Number);
+  cachedSunsetHour = h;
+  cachedSunsetMinute = m;
+}
+
+// Re-fetch sunset for the current location and local date (e.g. after travel).
+// Only when geolocation is already granted, so loading never shows a prompt.
+async function refreshSunsetForLocation() {
+  if (getDayTransitionMode() !== 'sunset') return false;
+  try {
+    const permission = await navigator.permissions?.query({ name: 'geolocation' });
+    if (permission?.state !== 'granted') return false;
+
+    const coords = await getUserCoords();
+    await fetchSunset(toLocalDateStr(new Date()), coords);
+    const hourStr = String(cachedSunsetHour).padStart(2, '0');
+    const minStr = String(cachedSunsetMinute).padStart(2, '0');
+    await setDayTransitionTime(`${hourStr}:${minStr}`);
+    return true;
+  } catch (error) {
+    console.warn('Failed to refresh sunset time:', error);
+    return false;
+  }
 }
 
 // Plan-specific storage functions - read from window.PLAN.storagePrefix
@@ -281,15 +315,25 @@ function formatLearningTime(minutes) {
 // ============================================================================
 // Date Utilities
 // ============================================================================
+// Iterate purely in UTC: mixing UTC parsing with local setDate() repeats/skips a
+// day across DST changes in negative-offset timezones (e.g. US), dropping today.
 function dateRange(start, end) {
   const dates = [];
-  const current = new Date(start);
-  const endDate = new Date(end);
+  const current = new Date(start + 'T00:00:00Z');
+  const endDate = new Date(end + 'T00:00:00Z');
   while (current <= endDate) {
     dates.push(current.toISOString().split('T')[0]);
-    current.setDate(current.getDate() + 1);
+    current.setUTCDate(current.getUTCDate() + 1);
   }
   return dates;
+}
+
+// YYYY-MM-DD of a Date in the device's local timezone
+function toLocalDateStr(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function getHebrewDayOfWeek(dateStr) {
@@ -389,7 +433,7 @@ window.testShabbatPrompt = function() {
   const now = new Date();
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
-  const shabbatDate = yesterday.toISOString().split('T')[0];
+  const shabbatDate = toLocalDateStr(yesterday);
 
   const days = getDays();
   const shabbatData = days[shabbatDate];
@@ -489,51 +533,73 @@ function toHebrewLetter(num) {
 // ============================================================================
 // Data Loading
 // ============================================================================
+const LOAD_BATCH_SIZE = 10;
+
+// Run `task` over `items` in batches of LOAD_BATCH_SIZE. Stops after the first batch
+// that hits a rate limit; whatever was not reached is picked up on the next load.
+async function runInBatches(items, task, onResult) {
+  for (let i = 0; i < items.length; i += LOAD_BATCH_SIZE) {
+    const batch = items.slice(i, i + LOAD_BATCH_SIZE);
+    const results = await Promise.allSettled(batch.map(task));
+
+    let rateLimited = false;
+    results.forEach((result, j) => {
+      if (result.status === 'rejected' && isRateLimitError(result.reason)) {
+        rateLimited = true;
+      }
+      onResult(batch[j], result);
+    });
+
+    if (rateLimited) {
+      const remaining = items.length - (i + batch.length);
+      console.warn(`Rate limited, stopping. ${remaining} more will load on next visit.`);
+      return false;
+    }
+  }
+  return true;
+}
+
 async function loadMissingDays() {
   const start = getStart();
   const today = getJewishToday();
-  const allDates = dateRange(start, today);
+  // Newest first, so today is loaded even if we get rate limited early
+  const allDates = dateRange(start, today).reverse();
   const days = getDays();
 
   const missing = allDates.filter(date => !days[date]);
   const needHeDate = allDates.filter(date => days[date] && !days[date].heDate);
 
-  // Fetch all missing dates in parallel
-  if (missing.length > 0) {
-    const results = await Promise.allSettled(
-      missing.map(async (date) => {
-        return await window.PLAN.loadDay(date);
-      })
-    );
+  let completed = true;
 
-    results.forEach((result, i) => {
-      if (result.status === 'fulfilled') {
-        days[missing[i]] = result.value;
-      } else {
-        console.error(`Failed to load ${missing[i]}:`, result.reason);
+  if (missing.length > 0) {
+    completed = await runInBatches(
+      missing,
+      (date) => window.PLAN.loadDay(date),
+      (date, result) => {
+        if (result.status === 'fulfilled') {
+          days[date] = result.value;
+        } else {
+          console.error(`Failed to load ${date}:`, result.reason);
+        }
       }
-    });
+    );
   }
 
-  // Backfill Hebrew dates for existing days
-  if (needHeDate.length > 0) {
-    const results = await Promise.allSettled(
-      needHeDate.map(async (date) => {
-        const heDate = await fetchHebrewDate(date);
-        return { date, heDate };
-      })
-    );
-
-    results.forEach((result, i) => {
-      if (result.status === 'fulfilled') {
-        const { date, heDate } = result.value;
-        if (heDate && days[date]) {
-          days[date].heDate = heDate;
+  // Backfill Hebrew dates for existing days (skip if already rate limited)
+  if (completed && needHeDate.length > 0) {
+    await runInBatches(
+      needHeDate,
+      (date) => fetchHebrewDate(date),
+      (date, result) => {
+        if (result.status === 'fulfilled') {
+          if (result.value && days[date]) {
+            days[date].heDate = result.value;
+          }
+        } else {
+          console.error(`Failed to fetch Hebrew date for ${date}:`, result.reason);
         }
-      } else {
-        console.error(`Failed to fetch Hebrew date for ${needHeDate[i]}:`, result.reason);
       }
-    });
+    );
   }
 
   saveDays(days);
@@ -2134,6 +2200,9 @@ async function init() {
       if (getLargeFontSize()) {
         container.classList.add('large-font');
       }
+      if (getToraniFont()) {
+        container.classList.add('torani-font');
+      }
     }
 
     // Apply dark mode if enabled
@@ -2142,8 +2211,18 @@ async function init() {
     }
 
     // Load days first for fast initial render
+    restoreSunsetTime();
     await loadMissingDays();
     renderDays();
+
+    // Sunset may have moved (new location); re-render if that changed today
+    const renderedToday = getJewishToday();
+    refreshSunsetForLocation().then(async (updated) => {
+      if (updated && getJewishToday() !== renderedToday) {
+        await loadMissingDays();
+        renderDays();
+      }
+    });
 
     // Load changelog
     loadChangelog();

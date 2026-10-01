@@ -7,6 +7,30 @@ const textCache = new Map(); // In-memory cache for halakha texts
 let cachedSunsetHour = 18;   // fallback
 let cachedSunsetMinute = 0;
 
+// fetch() that throws on non-2xx, tagging errors so callers can tell a rate limit
+// from other failures
+async function apiFetch(name, url) {
+  let res;
+  try {
+    res = await fetch(url);
+  } catch (error) {
+    error.network = true;
+    throw error;
+  }
+  if (!res.ok) {
+    const error = new Error(`${name} API failed: ${res.status}`);
+    error.status = res.status;
+    throw error;
+  }
+  return res;
+}
+
+// 429, or a request that never got a response. A 429 served without CORS headers
+// surfaces as a network error, and offline is the same "stop for now" situation.
+function isRateLimitError(error) {
+  return error?.status === 429 || error?.network === true;
+}
+
 // ============================================================================
 // Geolocation
 // ============================================================================
@@ -34,8 +58,7 @@ function getUserCoords() {
 async function fetchCalendar(dateStr, sefariaTitle) {
   const [y, m, d] = dateStr.split('-').map(Number);
   const url = `${SEFARIA_API}/api/calendars?day=${d}&month=${m}&year=${y}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Calendar API failed: ${res.status}`);
+  const res = await apiFetch('Calendar', url);
   const data = await res.json();
 
   // Filter ALL matching Rambam entries (there can be multiple)
@@ -69,8 +92,7 @@ async function fetchText(ref) {
   const results = await Promise.all(
     refs.map(async (singleRef) => {
       const url = `${SEFARIA_API}/api/v3/texts/${singleRef.trim()}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Text API failed: ${res.status}`);
+      const res = await apiFetch('Text', url);
       return res.json();
     })
   );
@@ -116,9 +138,7 @@ async function fetchText(ref) {
 // Location & Sunset
 // ============================================================================
 async function fetchSunset(dateStr, coords) {
-  const sunsetRes = await fetch(`${HEBCAL_API}/zmanim?cfg=json&latitude=${coords.latitude}&longitude=${coords.longitude}&date=${dateStr}`);
-
-  if (!sunsetRes.ok) throw new Error(`Zmanim API failed: ${sunsetRes.status}`);
+  const sunsetRes = await apiFetch('Zmanim', `${HEBCAL_API}/zmanim?cfg=json&latitude=${coords.latitude}&longitude=${coords.longitude}&date=${dateStr}`);
   const data = await sunsetRes.json();
 
   if (!data.times || !data.times.sunset) {
@@ -136,8 +156,7 @@ async function fetchSunset(dateStr, coords) {
 async function fetchHebrewDate(dateStr) {
   try {
     const url = `${HEBCAL_API}/converter?cfg=json&date=${dateStr}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Converter API failed: ${res.status}`);
+    const res = await apiFetch('Converter', url);
     const data = await res.json();
 
     if (data.heDateParts && data.heDateParts.d && data.heDateParts.m) {
@@ -145,6 +164,8 @@ async function fetchHebrewDate(dateStr) {
     }
     return null;
   } catch (error) {
+    // Let rate limits through so batch loading can stop; anything else is non-fatal
+    if (isRateLimitError(error)) throw error;
     console.error('Failed to fetch Hebrew date:', error);
     return null;
   }

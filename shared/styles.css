@@ -1016,6 +1016,11 @@
       text-align: justify;
     }
 
+    /* Torani font (תורני) */
+    .torani-font .halakha-text {
+      font-family: 'Frank Ruhl Libre', 'Noto Sans Hebrew', serif;
+    }
+
     .halakha-text b {
       font-weight: 700;
       color: var(--color-text-heading);
