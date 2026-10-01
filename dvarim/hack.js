@@ -2,6 +2,9 @@
 
 checkShabbatLearning = () => {};
 
+// Core's learning timer only runs for a recognised book; count every parasha as one book
+window.extractBookName = window.extractHebrewBookName = () => 'ספר דברים';
+
 // Migrate from the single-day version: drop the cached whole book, keep progress inside פרשת דברים (105 pesukim)
 const cachedDays = getDays();
 if (cachedDays[DATE] && cachedDays[DATE].ref === 'Deuteronomy.1-34') {
@@ -54,6 +57,6 @@ const coreInitCelebrationEffects = initCelebrationEffects;
 initCelebrationEffects = (...args) => {
   coreInitCelebrationEffects(...args);
   window.celebrationShare = (bookName, chapters, pesukim) => window.shareContent(
-    `סיימתי את כל ספר דברים בליל הושענא רבה! 🎉\n\n${chapters} פרקים, ${pesukim} פסוקים\n\nhttps://${window.PLAN.id}.pages.dev`
+    `סיימתי את כל ספר דברים בליל הושענא רבה! 🎉\n\n${chapters} פרקים, ${pesukim} פסוקים, ${formatLearningTime(getBookTime(bookName))} שעות לימוד\n\nhttps://${window.PLAN.id}.pages.dev`
   );
 };
