@@ -1039,6 +1039,11 @@
       font-family: 'Drugulin CLM', 'Noto Sans Hebrew', serif;
     }
 
+    /* Drugulin is bold-only, so the number stands out in the regular font */
+    .torani-font .halakha-num {
+      font-family: 'Noto Sans Hebrew', sans-serif;
+    }
+
     .halakha-text b {
       font-weight: 700;
       color: var(--color-text-heading);
