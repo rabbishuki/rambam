@@ -287,7 +287,7 @@ function dateRange(start, end) {
   const endDate = new Date(end);
   while (current <= endDate) {
     dates.push(current.toISOString().split('T')[0]);
-    current.setDate(current.getDate() + 1);
+    current.setUTCDate(current.getUTCDate() + 1);
   }
   return dates;
 }
