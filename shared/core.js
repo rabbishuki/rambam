@@ -287,7 +287,7 @@ function dateRange(start, end) {
   const endDate = new Date(end);
   while (current <= endDate) {
     dates.push(current.toISOString().split('T')[0]);
-    current.setDate(current.getDate() + 1);
+    current.setUTCDate(current.getUTCDate() + 1);
   }
   return dates;
 }
@@ -489,54 +489,71 @@ function toHebrewLetter(num) {
 // ============================================================================
 // Data Loading
 // ============================================================================
-async function loadMissingDays() {
-  const start = getStart();
-  const today = getJewishToday();
-  const allDates = dateRange(start, today);
-  const days = getDays();
+const INITIAL_LOAD_COUNT = 10;
+const BACKGROUND_DELAY_MS = 1000;
 
+async function loadDayBatch(dates) {
+  const results = await Promise.allSettled(dates.map(date => window.PLAN.loadDay(date)));
+  const days = getDays();
+  let loaded = 0;
+  let networkFailed = false;
+
+  results.forEach((result, i) => {
+    if (result.status === 'fulfilled') {
+      days[dates[i]] = result.value;
+      loaded++;
+    } else {
+      if (result.reason instanceof NetworkError) networkFailed = true;
+      console.error(`Failed to load ${dates[i]}:`, result.reason);
+    }
+  });
+
+  saveDays(days);
+  return { loaded, networkFailed };
+}
+
+// Loads one screen of the newest missing days, then leaves the rest to loadRemainingDays
+async function loadMissingDays() {
+  const allDates = dateRange(getStart(), getJewishToday()).reverse(); // Newest first
+  const days = getDays();
   const missing = allDates.filter(date => !days[date]);
   const needHeDate = allDates.filter(date => days[date] && !days[date].heDate);
 
-  // Fetch all missing dates in parallel
-  if (missing.length > 0) {
-    const results = await Promise.allSettled(
-      missing.map(async (date) => {
-        return await window.PLAN.loadDay(date);
-      })
-    );
-
-    results.forEach((result, i) => {
-      if (result.status === 'fulfilled') {
-        days[missing[i]] = result.value;
-      } else {
-        console.error(`Failed to load ${missing[i]}:`, result.reason);
-      }
-    });
+  // Keep going past dates that fail on their own (e.g. dvarim's non-parasha dates) until a screen is loaded
+  let next = 0;
+  let loaded = 0;
+  while (loaded < INITIAL_LOAD_COUNT && next < missing.length) {
+    const batch = await loadDayBatch(missing.slice(next, next + INITIAL_LOAD_COUNT));
+    next += INITIAL_LOAD_COUNT;
+    loaded += batch.loaded;
+    if (batch.networkFailed) return;
   }
 
-  // Backfill Hebrew dates for existing days
-  if (needHeDate.length > 0) {
-    const results = await Promise.allSettled(
-      needHeDate.map(async (date) => {
-        const heDate = await fetchHebrewDate(date);
-        return { date, heDate };
-      })
-    );
+  loadRemainingDays(missing.slice(next), needHeDate);
+}
 
-    results.forEach((result, i) => {
-      if (result.status === 'fulfilled') {
-        const { date, heDate } = result.value;
-        if (heDate && days[date]) {
-          days[date].heDate = heDate;
-        }
-      } else {
-        console.error(`Failed to fetch Hebrew date for ${needHeDate[i]}:`, result.reason);
-      }
-    });
+// One day at a time, and stop at the first network failure: retrying during a rate-limit block extends it
+async function loadRemainingDays(dates, needHeDate) {
+  let loaded = 0;
+
+  for (const date of dates) {
+    await new Promise(resolve => setTimeout(resolve, BACKGROUND_DELAY_MS));
+    const batch = await loadDayBatch([date]);
+    loaded += batch.loaded;
+    if (batch.networkFailed) break;
   }
 
-  saveDays(days);
+  for (const date of needHeDate) {
+    const heDate = await fetchHebrewDate(date);
+    const days = getDays();
+    if (heDate && days[date]) {
+      days[date].heDate = heDate;
+      saveDays(days);
+      loaded++;
+    }
+  }
+
+  if (loaded > 0 && viewingDate === null) renderDays();
 }
 
 // ============================================================================
