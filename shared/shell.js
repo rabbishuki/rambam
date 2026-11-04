@@ -653,14 +653,16 @@ function attachShareListener() {
     shareBtn.style.display = '';
 
     shareBtn.addEventListener('click', async () => {
-      const shareText = `תראה איזה אפליקציה מגניבה מצאתי ללימוד רמב״ם!\n\n${window.location.href}`;
+      const appName = window.PLAN?.appName || window.PLAN?.name || 'רמב״ם יומי';
+      const message = `תראה איזה אפליקציה מגניבה מצאתי: ${appName}!`;
+      const shareText = `${message}\n\n${window.location.href}`;
 
       // Use unified share function
       if (window.shareContent) {
         await window.shareContent(shareText, null);
       } else {
         // Fallback if shareContent not loaded yet
-        fallbackCopyToClipboard('תראה איזה אפליקציה מגניבה מצאתי ללימוד רמב״ם!', window.location.href);
+        fallbackCopyToClipboard(message, window.location.href);
       }
     });
   }

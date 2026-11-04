@@ -1160,6 +1160,25 @@
       margin-bottom: 0;
     }
 
+    .info-quote {
+      margin: 0.75rem 0 0.9rem;
+      padding-right: 1rem;
+      border-right: 3px solid var(--color-primary-bright);
+    }
+
+    .info-quote p {
+      margin-bottom: 0.5rem;
+      font-style: italic;
+    }
+
+    .info-quote-source {
+      text-align: left;
+      font-size: 0.88rem;
+      font-style: italic;
+      color: var(--color-text-secondary);
+      margin-top: 0.25rem;
+    }
+
     .info-section ul {
       list-style: none;
       padding-right: 0;

@@ -3,6 +3,18 @@
 // ============================================================================
 
 function initAboutPanel() {
+  const about = window.APP_CONFIG?.about || {};
+  const heading = about.heading || 'מידע על האתר';
+  const introSection = about.introSection ?? defaultIntroSection();
+  const bodySection = about.bodySection ?? defaultBodySection();
+  const sponsorSection = about.sponsorSection ?? defaultSponsorSection();
+  const closingSection = about.closingSection ?? defaultClosingSection();
+  const studyUnitSingular = about.studyUnitSingular || 'הלכה';
+  const studyUnitPlural = about.studyUnitPlural || 'הלכות';
+  const previousUnitsLabel = about.previousUnitsLabel || 'הלכות קודמות';
+  const completedUnitsLabel = about.completedUnitsLabel || 'הלכות שהושלמו';
+  const startDateDescription = about.startDateDescription || 'בחר מתי להתחיל את הלימוד: מתחילת המחזור (ט״ו בשבט תשפ״ו) או מתאריך מותאם אישית.';
+
   // Create info panel element
   const infoPanel = document.createElement('div');
   infoPanel.className = 'info-panel';
@@ -10,61 +22,26 @@ function initAboutPanel() {
 
   infoPanel.innerHTML = `
     <div class="info-header">
-      <h2>מידע על האתר</h2>
+      <h2>${heading}</h2>
       <button class="close-btn" id="closeInfoBtn" aria-label="סגור">×</button>
     </div>
     <div class="info-content">
-      <section class="info-section">
-        <h3>למה בניתי את האפליקציה</h3>
-        <p>
-          בתחילת המחזור הנוכחי התחלתי ללמוד רמב״ם, אבל מהר מאוד הבנתי שקשה לי למצוא זמן מספיק בשביל ללמוד כמו שצריך מתוך ספר.
-          אז חשבתי, מה אם אוכל לנצל את כל הרגעים הקטנים במהלך היום?
-         </p>
-        <p> בתור לקופה, בדרך לפגישה, בהפסקת קפה, כל רגע כזה הוא הזדמנות ללמוד כמה הלכות. </p>
-        <p>
-          וככה נולדה האפליקציה הזו: פותחים, קוראים, מחליקים ימינה כדי לסמן, וממשיכים הלאה. בלי להתעסק, בלי הרשמה, בלי שרת, ובלי לבזבז זמן. פשוט ללמוד.
-        </p>
-        <p>
-        כמובן שאם יש לכם קצת יותר זמן ממני, ואתם רוצים גם ללמוד עם ביאורים אני ממליץ על האתר של 
-        <a href="https://yomi.org.il?affId=2bcbbdd2" target="_blank" rel="noopener">
-            <img src="https://yomi.org.il/assets/icons/svg/yomi-logo-welcome.svg" alt="Yomi" style="width: 25px; height: 18px">
-           yomi.org.il
-        </a>
-        </p>
-        <p>ולמי שבמסלול אחר יש גם אפליקציה המתאימה</p>
-        <div class="flavor-links" id="otherFlavorsLinks">
-          <!-- Links will be injected by JavaScript -->
-        </div>
-      </section>
-
-      <section class="info-section">
-        <h3>אודות לימוד הרמב״ם</h3>
-        <p>
-תקנת לימוד הרמב״ם היא יוזמה ללימוד יומי קבוע בספר משנה תורה לרמב״ם, שנוסדה על־ידי הרבי מליובאוויטש מלך המשיח שליט״א באחרון של פסח בשנת תשד״מ.
-        </p>
-        <p> 
-מטרת התקנה היא לאחד את עם ישראל באמצעות לימוד משותף של חיבור הלכתי המקיף את כל התורה שבעל־פה, כולל הלכות שאינן נוהגות בפועל בימינו. 
-        </p>
-        <p>
-לשם כך נקבעו שלושה מסלולי לימוד, המאפשרים לכל אחד להשתתף על־פי יכולתו: מסלול העיקרי של שלושה פרקים ביום, המאפשר סיום משנה תורה כולו בתוך שנה; מסלול של פרק אחד ביום, שבו מסיימים את הספר בשלוש שנים; ומסלול לימוד יומי בספר המצוות לרמב״ם, המקביל ללימוד ההלכות. 
-        </p>
-        <p>
-לימוד זה מבטא את שלמות התורה ואת ההכנה הרוחנית לגאולה, שבה יתגלו ויתקיימו כל דיני התורה במלואם. האחדות הנוצרת סביב לימוד יומי זה מחזקת את האמונה, הציפייה וההכנה המעשית לגאולה האמיתית והשלמה.
-        </p>
-      </section>
+      ${introSection}
+      ${bodySection}
+      ${sponsorSection}
 
       <section class="info-section">
         <h3>איך משתמשים באתר</h3>
         <div class="info-demo-row">
           <div class="info-demo-image">
-            <img src="./assets/swipe.gif" alt="הדגמת החלקת הלכה" class="demo-gif">
+            <img src="./assets/swipe.gif" alt="הדגמת החלקת ${studyUnitSingular}" class="demo-gif">
           </div>
           <div class="info-demo-text">
-            <h4>סימון הלכה כנקראה</h4>
+            <h4>סימון ${studyUnitSingular} כנקרא</h4>
             <p>
-              כל הלכה באפליקציה היא כרטיס שאפשר להחליק עליו.
-              החלקה ימינה מסמנת את ההלכה כנקראה ומעבירה אותה למצב "הושלם" (עם רקע אפור).
-              החלקה שמאלה מבטלת את הסימון ומחזירה את ההלכה למצב הרגיל.
+              כל ${studyUnitSingular} באפליקציה הוא כרטיס שאפשר להחליק עליו.
+              החלקה ימינה מסמנת את ${studyUnitSingular} כנקרא ומעבירה אותו למצב "הושלם" (עם רקע אפור).
+              החלקה שמאלה מבטלת את הסימון ומחזירה את ${studyUnitSingular} למצב הרגיל.
             </p>
           </div>
         </div>
@@ -76,7 +53,7 @@ function initAboutPanel() {
             <h4>פס התקדמות חכם</h4>
             <p>
               כשאתה גולל למטה בעמוד, יופיע פס צהוב בראש המסך המציג את היום הנוכחי ואת אחוז ההתקדמות שלך בו.
-              הפס כולל שני כפתורים: חץ למעלה לחזרה לראש העמוד, וחץ למטה שמקפיץ אותך להלכה הבאה שטרם קראת.
+              הפס כולל שני כפתורים: חץ למעלה לחזרה לראש העמוד, וחץ למטה שמקפיץ אותך ל${studyUnitSingular} הבא שטרם קראת.
             </p>
           </div>
         </div>
@@ -96,7 +73,7 @@ function initAboutPanel() {
             </div>
           </div>
           <p class="info-setting-description">
-            בחר מתי להתחיל את הלימוד: מתחילת המחזור (ט״ו בשבט תשפ״ו) או מתאריך מותאם אישית.
+            ${startDateDescription}
           </p>
         </div>
 
@@ -117,28 +94,28 @@ function initAboutPanel() {
 
         <div class="info-setting-row">
           <div class="info-setting-header">
-            <h4>סימון הלכות קודמות כנקראו</h4>
+            <h4>סימון ${previousUnitsLabel} כנקראו</h4>
             <div class="toggle-container" id="infoAutoMarkToggle">
               <button class="toggle-btn" data-value="true">כן</button>
               <button class="toggle-btn" data-value="false">לא</button>
             </div>
           </div>
           <p class="info-setting-description">
-            כשמסמנים הלכה, כל ההלכות הקודמות לה באותו היום מסומנות אוטומטית.
-            אם כבוי, צריך לסמן כל הלכה בנפרד.
+            כשמסמנים ${studyUnitSingular}, כל ה${studyUnitPlural} הקודמים לו באותו היום מסומנים אוטומטית.
+            אם כבוי, צריך לסמן כל ${studyUnitSingular} בנפרד.
           </p>
         </div>
 
         <div class="info-setting-row">
           <div class="info-setting-header">
-            <h4>הלכות שהושלמו</h4>
+            <h4>${completedUnitsLabel}</h4>
             <div class="toggle-container" id="infoHideCompletedToggle">
               <button class="toggle-btn" data-value="true">הסתר</button>
               <button class="toggle-btn" data-value="false">הצג</button>
             </div>
           </div>
           <p class="info-setting-description">
-            הסתר הלכות שכבר סימנת כדי להתמקד במה שנשאר ללמוד.
+            הסתר ${studyUnitPlural} שכבר סימנת כדי להתמקד במה שנשאר ללמוד.
             שומר על הממשק נקי וממוקד.
           </p>
         </div>
@@ -205,21 +182,15 @@ function initAboutPanel() {
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" fill="#25D366"/>
               </svg>
           </a>
+          ${about.showYomiLink === false ? '' : `
           <a href="https://yomi.org.il?affId=2bcbbdd2" target="_blank" rel="noopener" class="info-link">
             <img src="https://yomi.org.il/assets/icons/svg/yomi-logo-welcome.svg" alt="Yomi" class="link-icon">
             <span>yomi.org.il - לימוד מעמיק</span>
-          </a>
+          </a>`}
         </div>
       </section>
     </div>
-    <div class="dedication">
-       <div class="dedication-label">האתר לעילוי נשמת</div>
-       <div class="dedication-names"><b>ישראל שאול</b> בן <b>משה אהרון</b> ו<b>מלכה</b> בת <b>נתן</b></div>
-    </div>
-
-    <div class="dedication yechi">
-      יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד
-    </div>
+    ${closingSection}
   `;
 
   // Append to body
@@ -233,6 +204,73 @@ function initAboutPanel() {
 
   // Populate other flavors links
   populateOtherFlavors();
+}
+
+function defaultIntroSection() {
+  return `
+    <section class="info-section">
+      <h3>למה בניתי את האפליקציה</h3>
+      <p>
+        בתחילת המחזור הנוכחי התחלתי ללמוד רמב״ם, אבל מהר מאוד הבנתי שקשה לי למצוא זמן מספיק בשביל ללמוד כמו שצריך מתוך ספר.
+        אז חשבתי, מה אם אוכל לנצל את כל הרגעים הקטנים במהלך היום?
+      </p>
+      <p>בתור לקופה, בדרך לפגישה, בהפסקת קפה, כל רגע כזה הוא הזדמנות ללמוד כמה הלכות.</p>
+      <p>
+        וככה נולדה האפליקציה הזו: פותחים, קוראים, מחליקים ימינה כדי לסמן, וממשיכים הלאה. בלי להתעסק, בלי הרשמה, בלי שרת, ובלי לבזבז זמן. פשוט ללמוד.
+      </p>
+    </section>
+  `;
+}
+
+function defaultBodySection() {
+  return `
+    <section class="info-section">
+      <h3>אודות לימוד הרמב״ם</h3>
+      <p>
+        תקנת לימוד הרמב״ם היא יוזמה ללימוד יומי קבוע בספר משנה תורה לרמב״ם, שנוסדה על־ידי הרבי מליובאוויטש מלך המשיח שליט״א באחרון של פסח בשנת תשד״מ.
+      </p>
+      <p>
+        מטרת התקנה היא לאחד את עם ישראל באמצעות לימוד משותף של חיבור הלכתי המקיף את כל התורה שבעל־פה, כולל הלכות שאינן נוהגות בפועל בימינו.
+      </p>
+      <p>
+        לשם כך נקבעו שלושה מסלולי לימוד, המאפשרים לכל אחד להשתתף על־פי יכולתו: מסלול העיקרי של שלושה פרקים ביום, המאפשר סיום משנה תורה כולו בתוך שנה; מסלול של פרק אחד ביום, שבו מסיימים את הספר בשלוש שנים; ומסלול לימוד יומי בספר המצוות לרמב״ם, המקביל ללימוד ההלכות.
+      </p>
+      <p>
+        לימוד זה מבטא את שלמות התורה ואת ההכנה הרוחנית לגאולה, שבה יתגלו ויתקיימו כל דיני התורה במלואם. האחדות הנוצרת סביב לימוד יומי זה מחזקת את האמונה, הציפייה וההכנה המעשית לגאולה האמיתית והשלמה.
+      </p>
+    </section>
+  `;
+}
+
+function defaultSponsorSection() {
+  return `
+    <section class="info-section">
+      <h3>קישורים</h3>
+      <p>
+        כמובן שאם יש לכם קצת יותר זמן ממני, ואתם רוצים גם ללמוד עם ביאורים אני ממליץ על האתר של
+        <a href="https://yomi.org.il?affId=2bcbbdd2" target="_blank" rel="noopener">
+          <img src="https://yomi.org.il/assets/icons/svg/yomi-logo-welcome.svg" alt="Yomi" style="width: 25px; height: 18px">
+          yomi.org.il
+        </a>
+      </p>
+      <p>ולמי שבמסלול אחר יש גם אפליקציה המתאימה</p>
+      <div class="flavor-links" id="otherFlavorsLinks">
+        <!-- Links will be injected by JavaScript -->
+      </div>
+    </section>
+  `;
+}
+
+function defaultClosingSection() {
+  return `
+    <div class="dedication">
+      <div class="dedication-label">האתר לעילוי נשמת</div>
+      <div class="dedication-names"><b>ישראל שאול</b> בן <b>משה אהרון</b> ו<b>מלכה</b> בת <b>נתן</b></div>
+    </div>
+    <div class="dedication yechi">
+      יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד
+    </div>
+  `;
 }
 
 // Populate links to other app flavors
@@ -261,6 +299,11 @@ function populateOtherFlavors() {
       url: 'https://dvarim.pages.dev',
       name: 'חומש דברים',
       key: 'dvarim'
+    },
+    {
+      url: 'https://chasidishe.pages.dev',
+      name: 'א חסידישע פרשה',
+      key: 'chasidishe'
     }
   ];
 
