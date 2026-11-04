@@ -2,7 +2,8 @@ importScripts('./shared/changelog.js');
 
 const SEFARIA_API = 'https://www.sefaria.org';
 const LATEST_VERSION = Math.max(...Object.keys(CHANGELOG).map(Number));
-const CACHE_NAME = `chasidus-v${LATEST_VERSION}`;
+const CACHE_REVISION = 2;
+const CACHE_NAME = `chasidus-v${LATEST_VERSION}-${CACHE_REVISION}`;
 
 // Install: cache static assets
 self.addEventListener('install', (event) => {
@@ -60,6 +61,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   if (!url.protocol.startsWith('http')) return;
+
+  if (request.method !== 'GET') {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   // Sefaria API: network-first with cache fallback (offline support)
   if (url.origin === SEFARIA_API) {

@@ -1176,7 +1176,6 @@ async function handleDetailsToggle(event) {
         days[date].countIsExact = true;
         saveDays(days);
         updateDayHeader(date);
-        renderStats();
       }
     }
 
