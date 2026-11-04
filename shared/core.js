@@ -1247,7 +1247,8 @@ async function handleDetailsToggle(event) {
       if (showChapterDividers) {
         const divider = document.createElement('div');
         divider.className = 'chapter-divider';
-        divider.innerHTML = `<span>פרק ${toHebrewLetter(currentChapterNum)}</span>`;
+        const chapterLabel = window.PLAN?.chapterLabel || 'פרק';
+        divider.innerHTML = `<span>${chapterLabel} ${toHebrewLetter(currentChapterNum)}</span>`;
         container.appendChild(divider);
       }
 

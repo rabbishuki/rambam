@@ -22,6 +22,7 @@ assert.equal(window.PLAN.settingsPrefix, 'chasidus', 'Chasidus settings prefix c
 assert.equal(window.PLAN.startStorageKey, 'chasidus_start', 'Chasidus start-date storage key changed');
 assert.equal(window.PLAN.installPromptStorageKey, 'chasidus_install_prompt_shown', 'Chasidus install key changed');
 assert.equal(window.PLAN.showCardNumbers, false, 'Chasidus must use Sefaria chapter markers instead of generated numbers');
+assert.equal(window.PLAN.chapterLabel, 'אות', 'Chasidus chapter divider label changed');
 assert.equal(window.PLAN.updateCountFromContent, true, 'Chasidus must refresh counts after sentence splitting');
 assert.equal(window.CHASIDUS_CONTENT_COUNTS['Torah_Ohr,_Bereshit.1'], 14, 'Sefaria paragraph counts changed');
 assert.equal(window.CHASIDUS_CONTENT_COUNTS['Likkutei_Torah,_Shir_HaShirim.16'], 15, 'Title-only lines must not count as cards');

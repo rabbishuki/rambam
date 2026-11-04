@@ -14,6 +14,7 @@ window.PLAN = {
   startStorageKey: 'chasidus_start',
   installPromptStorageKey: 'chasidus_install_prompt_shown',
   showCardNumbers: false,
+  chapterLabel: 'אות',
   updateCountFromContent: true,
   CYCLE_START: '2026-10-04',
 
