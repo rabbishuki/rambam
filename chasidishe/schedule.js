@@ -1,6 +1,6 @@
 // schedule.js - Torah Ohr + Likkutei Torah daily schedule
-// Index 0 = Oct 12, 2025 (א' בראשית) | Cycle length: 365 days
-// Index 183 = Apr 13, 2026 (ב' תזריע - שוש תשיש) ← current start
+// Index 0 = Oct 4, 2026 (א' בראשית) | Cycle length: 365 days
+// Index 364 = Oct 3, 2027
 // Each entry: { he, books: [{ book, chapter }, ...] }
 // NOTE: Some weeks have approximate chapter mapping for ShirHashirim interleaving.
 //       Verify and correct as you go through the cycle.
@@ -13,7 +13,7 @@ const day = (he, ...books) => ({ he, books });
 
 window.SCHEDULE = [
   // ═══════════════════════════════════════
-  // BERESHIT  Oct 12-18 2025  [idx 0-6]
+  // BERESHIT  Oct 4, 2026 – Oct 10, 2026  [idx 0-6]
   // ═══════════════════════════════════════
   day('בראשית - השמים כסאי',             TO('Bereshit', 1)),
   day('בראשית - כי כאשר',                TO('Bereshit', 2)),
@@ -24,7 +24,7 @@ window.SCHEDULE = [
   day('בראשית - יבל הוא',                TO('Bereshit', 8)),
 
   // ═══════════════════════════════════════
-  // NOACH  Oct 19-25  [idx 7-13]
+  // NOACH  Oct 11, 2026 – Oct 17, 2026  [idx 7-13]
   // LT ShirHashirim pt1 (ch1-5) + TO Noach
   // ═══════════════════════════════════════
   day('שה"ש א - שיר השירים',             LT('Shir_HaShirim', 1)),
@@ -36,7 +36,7 @@ window.SCHEDULE = [
   day('נח - ויאמר ה\'',                   TO('Noach', 4)),
 
   // ═══════════════════════════════════════
-  // LECH LECHA  Oct 26 - Nov 1  [idx 14-20]
+  // LECH LECHA  Oct 18, 2026 – Oct 24, 2026  [idx 14-20]
   // LT ShirHashirim pt2 (ch6-10) + TO Lech Lecha
   // ═══════════════════════════════════════
   day('שה"ש ב - וזהו שהשרפים',           LT('Shir_HaShirim', 6)),
@@ -48,7 +48,7 @@ window.SCHEDULE = [
   day('לך לך - והבדילה הפרוכת',          TO('Lech_Lecha', 4)),
 
   // ═══════════════════════════════════════
-  // VAYERA  Nov 2-8  [idx 21-27]
+  // VAYERA  Oct 25, 2026 – Oct 31, 2026  [idx 21-27]
   // LT ShirHashirim pt3 (ch9-13) + TO Vayera
   // ═══════════════════════════════════════
   day('שה"ש ג - ד ולבאר הטעם',           LT('Shir_HaShirim', 9)),
@@ -60,7 +60,7 @@ window.SCHEDULE = [
   day('וירא - ארדה נא',                  TO('Vayera', 2)),
 
   // ═══════════════════════════════════════
-  // CHAYEI SARA  Nov 9-15  [idx 28-34]
+  // CHAYEI SARA  Nov 1, 2026 – Nov 7, 2026  [idx 28-34]
   // LT ShirHashirim pt4 (ch13-17) + TO Chayei Sara
   // ═══════════════════════════════════════
   day('שה"ש ד - קול דודי',              LT('Shir_HaShirim', 13)),
@@ -72,7 +72,7 @@ window.SCHEDULE = [
   day('חיי שרה - לשון אדמו"ר',          TO('Chayei_Sara', 2)),
 
   // ═══════════════════════════════════════
-  // TOLDOT  Nov 16-22  [idx 35-41]
+  // TOLDOT  Nov 8, 2026 – Nov 14, 2026  [idx 35-41]
   // LT ShirHashirim pt5 (ch18-21) + TO Toldot
   // ═══════════════════════════════════════
   day('שה"ש ה - וזהו ותורה',            LT('Shir_HaShirim', 19)),
@@ -84,7 +84,7 @@ window.SCHEDULE = [
   day('תולדות - ראה ריח',               TO('Toldot', 5)),
 
   // ═══════════════════════════════════════
-  // VAYETZEI  Nov 23-29  [idx 42-48]
+  // VAYETZEI  Nov 15, 2026 – Nov 21, 2026  [idx 42-48]
   // LT ShirHashirim pt6 (ch18-23) + TO Vayetzei
   // ═══════════════════════════════════════
   day('שה"ש ו - צאינה וראינה',          LT('Shir_HaShirim', 18)),
@@ -96,7 +96,7 @@ window.SCHEDULE = [
   day('ויצא - וללבן שתי בנות',          TO('Vayetzei', 3)),
 
   // ═══════════════════════════════════════
-  // VAYISHLACH  Nov 30 - Dec 6  [idx 49-55]
+  // VAYISHLACH  Nov 22, 2026 – Nov 28, 2026  [idx 49-55]
   // LT ShirHashirim pt7 (ch18-23) + TO Vayishlach
   // ═══════════════════════════════════════
   day('שה"ש ז - צאינה וראינה ב',        LT('Shir_HaShirim', 18)),
@@ -108,7 +108,7 @@ window.SCHEDULE = [
   day('וישלח - ויקח מן הבא',            TO('Vayishlach', 4)),
 
   // ═══════════════════════════════════════
-  // VAYESHEV  Dec 7-13  [idx 56-62]
+  // VAYESHEV  Nov 29, 2026 – Dec 5, 2026  [idx 56-62]
   // LT ShirHashirim pt8 (ch24-25) + TO Vayeshev
   // ═══════════════════════════════════════
   day('שה"ש ח - ועתה התפלה',            LT('Shir_HaShirim', 24)),
@@ -120,7 +120,7 @@ window.SCHEDULE = [
   day('וישב - וביאור ענין זה',          TO('Vayeshev', 5)),
 
   // ═══════════════════════════════════════
-  // MIKETZ  Dec 14-20  [idx 63-69]
+  // MIKETZ  Dec 6, 2026 – Dec 12, 2026  [idx 63-69]
   // TO Miketz ch1-8
   // ═══════════════════════════════════════
   day('מקץ - ויהי מקץ',                 TO('Miketz', 1)),
@@ -132,7 +132,7 @@ window.SCHEDULE = [
   day('מקץ - רני ושמחי ב',              TO('Miketz', 8), TO('Miketz', 9)),
 
   // ═══════════════════════════════════════
-  // VAYIGASH  Dec 21-27  [idx 70-76]
+  // VAYIGASH  Dec 13, 2026 – Dec 19, 2026  [idx 70-76]
   // Continuation Chanukah drushim (Miketz ch10-15) + TO Vayigash
   // ═══════════════════════════════════════
   day('מקץ - מי כה\'',                  TO('Miketz', 10)),
@@ -144,7 +144,7 @@ window.SCHEDULE = [
   day('ויגש - וילקט יוסף',              TO('Vayigash', 2)),
 
   // ═══════════════════════════════════════
-  // VAYECHI  Dec 28 - Jan 3 2026  [idx 77-83]
+  // VAYECHI  Dec 20, 2026 – Dec 26, 2026  [idx 77-83]
   // TO Vayechi + Supplements
   // ═══════════════════════════════════════
   day('ויחי - יהודה אתה',               TO('Vayechi', 1)),
@@ -156,7 +156,7 @@ window.SCHEDULE = [
   day('ויחי הוס\' - בן פורת',            TOS('Vayechi', 2)),
 
   // ═══════════════════════════════════════
-  // SHEMOT  Jan 4-10  [idx 84-90]
+  // SHEMOT  Dec 27, 2026 – Jan 2, 2027  [idx 84-90]
   // TO Shemot + Supplements
   // ═══════════════════════════════════════
   day('שמות - ואלה שמות',               TO('Shemot', 1)),
@@ -168,7 +168,7 @@ window.SCHEDULE = [
   day('שמות הוס\' - להבין שרש כל',       TO('Shemot', 7)),
 
   // ═══════════════════════════════════════
-  // VAERA  Jan 11-17  [idx 91-97]
+  // VAERA  Jan 3, 2027 – Jan 9, 2027  [idx 91-97]
   // LT ShirHashirim pt9 (ch26-27) + TO Vaera
   // ═══════════════════════════════════════
   day('שה"ש ט - אני ישנה',              LT('Shir_HaShirim', 26)),
@@ -180,7 +180,7 @@ window.SCHEDULE = [
   day('וארא - והנה נתבאר לעיל',         TO('Vaera', 5)),
 
   // ═══════════════════════════════════════
-  // BO  Jan 18-24  [idx 98-104]
+  // BO  Jan 10, 2027 – Jan 16, 2027  [idx 98-104]
   // LT ShirHashirim pt10 (ch28-32) + TO Bo
   // ═══════════════════════════════════════
   day('שה"ש י - הסבי עיניך',             LT('Shir_HaShirim', 28)),
@@ -192,7 +192,7 @@ window.SCHEDULE = [
   day('בא - למען תהיה',                  TO('Bo', 2)),
 
   // ═══════════════════════════════════════
-  // BESHALACH  Jan 25-31  [idx 105-111]
+  // BESHALACH  Jan 17, 2027 – Jan 23, 2027  [idx 105-111]
   // TO Beshalach + LT Beshalach
   // ═══════════════════════════════════════
   day('בשלח - ויהי בשלח פרעה',           TO('Beshalach', 1)),
@@ -204,7 +204,7 @@ window.SCHEDULE = [
   day('לקו"ת בשלח - והנה כתיב',          LT('Beshalach', 1)),
 
   // ═══════════════════════════════════════
-  // YITRO  Feb 1-7  [idx 112-118]
+  // YITRO  Jan 24, 2027 – Jan 30, 2027  [idx 112-118]
   // TO Yitro + Supplement
   // ═══════════════════════════════════════
   day('יתרו - בחדש השלישי',             TO('Yitro', 1)),
@@ -216,7 +216,7 @@ window.SCHEDULE = [
   day('יתרו הוס\' - להבין שרש',         TO('Yitro', 7)),
 
   // ═══════════════════════════════════════
-  // MISHPATIM  Feb 8-14  [idx 119-125]
+  // MISHPATIM  Jan 31, 2027 – Feb 6, 2027  [idx 119-125]
   // Megillat Esther pt1 + TO Mishpatim
   // ═══════════════════════════════════════
   day('מג"א - יביאו לבוש מלכות',        TO('Megillat_Esther', 1)),
@@ -228,7 +228,7 @@ window.SCHEDULE = [
   day('משפטים - ביאור ע"פ ותחת רגליו', TO('Mishpatim', 5)),
 
   // ═══════════════════════════════════════
-  // TERUMAH  Feb 15-21  [idx 126-132]
+  // TERUMAH  Feb 7, 2027 – Feb 13, 2027  [idx 126-132]
   // Megillat Esther pt2 + TO Terumah
   // ═══════════════════════════════════════
   day('מג"א - ותסף אסתר',               TO('Megillat_Esther', 7)),
@@ -240,7 +240,7 @@ window.SCHEDULE = [
   day('תרומה - ביאור על הנ"ל',          TO('Terumah', 2)),
 
   // ═══════════════════════════════════════
-  // TETZAVEH  Feb 22-28  [idx 133-139]
+  // TETZAVEH  Feb 14, 2027 – Feb 20, 2027  [idx 133-139]
   // Megillat Esther Supplements pt1 + TO Tetzaveh + Zakhor
   // ═══════════════════════════════════════
   day('מג"א הוס\' - להבין למה לעתיד',    TOS('Megillat_Esther', 1)),
@@ -252,7 +252,7 @@ window.SCHEDULE = [
   day('תצוה הוס\' - להבין שרשי',         TO('Tetzaveh', 4)),
 
   // ═══════════════════════════════════════
-  // KI TISA  Mar 1-7  [idx 140-146]
+  // KI TISA  Feb 21, 2027 – Feb 27, 2027  [idx 140-146]
   // Megillat Esther Supplements pt2 + TO Ki Tisa + Supplements
   // ═══════════════════════════════════════
   day('מג"א הוס\' - ויקח המן',            TOS('Megillat_Esther', 2)),
@@ -264,7 +264,7 @@ window.SCHEDULE = [
   day('כי תשא הוס\' - להבין ביאור',      TO('Parashat_Zakhor', 2)),
 
   // ═══════════════════════════════════════
-  // VAYAKHEL  Mar 8-14  [idx 147-153]
+  // VAYAKHEL  Feb 28, 2027 – Mar 6, 2027  [idx 147-153]
   // TO Vayakhel + Supplements
   // ═══════════════════════════════════════
   day('ויקהל - ויקהל משה',               TO('Vayakhel', 1)),
@@ -276,7 +276,7 @@ window.SCHEDULE = [
   day('ויקהל הוס\' - וזהו פי\'',           TO('Vayakhel', 2)),
 
   // ═══════════════════════════════════════
-  // PEKUDEI  Mar 15-21  [idx 154-160]
+  // PEKUDEI  Mar 7, 2027 – Mar 13, 2027  [idx 154-160]
   // LT Pekudei
   // ═══════════════════════════════════════
   day('פקודי - אלה פקודי המשכן',         LT('Pekudei', 1)),
@@ -288,7 +288,7 @@ window.SCHEDULE = [
   day('פקודי - והנה פי\'',                LT('Pekudei', 2)),
 
   // ═══════════════════════════════════════
-  // VAYIKRA  Mar 22-28  [idx 161-167]
+  // VAYIKRA  Mar 14, 2027 – Mar 20, 2027  [idx 161-167]
   // LT Vayikra + Supplements
   // ═══════════════════════════════════════
   day('ויקרא - ויקרא אל משה',            LT('Vayikra', 1)),
@@ -300,7 +300,7 @@ window.SCHEDULE = [
   day('ויקרא הוס\' - ולהבין ביאור',      LTS('Vayikra', 2)),
 
   // ═══════════════════════════════════════
-  // TZAV  Mar 29 - Apr 4  [idx 168-174]
+  // TZAV  Mar 21, 2027 – Mar 27, 2027  [idx 168-174]
   // LT Tzav
   // ═══════════════════════════════════════
   day('צו - ואכלתם אכול ושבוע',          LT('Tzav', 1)),
@@ -312,7 +312,7 @@ window.SCHEDULE = [
   day('צו - הים ראה',                    LT('Tzav', 9)),
 
   // ═══════════════════════════════════════
-  // SHEMINI  Apr 5-11  [idx 175-181]
+  // SHEMINI  Mar 28, 2027 – Apr 3, 2027  [idx 175-181]
   // LT ShirHashirim pt11 (ch30-35) + LT Shmini
   // ═══════════════════════════════════════
   day('שה"ש יא - ששים המה מלכות',        LT('Shir_HaShirim', 30)),
@@ -324,11 +324,11 @@ window.SCHEDULE = [
   day('שמיני - ביאור על לויתן',          LT('Shmini', 2)),
 
   // ═══════════════════════════════════════
-  // TAZRIA  Apr 12-18  [idx 182-188]
+  // TAZRIA  Apr 4, 2027 – Apr 10, 2027  [idx 182-188]
   // LT Tazria                ← Apr 13 = idx 183
   // ═══════════════════════════════════════
   day('תזריע - אשה כי תזריע',            LT('Tazria', 1)),
-  day('תזריע - שוש תשיש',                LT('Tazria', 2)),  // ← Apr 13 2026
+  day('תזריע - שוש תשיש',                LT('Tazria', 2)),
   day('תזריע - וביום השמיני ימול',        LT('Tazria', 3)),
   day('תזריע - וזהו ענין',               LT('Tazria', 4)),
   day('תזריע - אדם כי יהיה',             LT('Tazria', 5)),
@@ -336,7 +336,7 @@ window.SCHEDULE = [
   day('תזריע - ועפ"ז יובן',              LT('Tazria', 6)),
 
   // ═══════════════════════════════════════
-  // METZORA  Apr 19-25  [idx 189-195]
+  // METZORA  Apr 11, 2027 – Apr 17, 2027  [idx 189-195]
   // LT Metzora (flat - 1 Sefaria chapter, many paras)
   // ═══════════════════════════════════════
   day('מצורע - זאת תהיה',                LT('Metzora', 1)),
@@ -348,7 +348,7 @@ window.SCHEDULE = [
   day('מצורע - והנה לזאת עיקר',          LT('Metzora', 1)),
 
   // ═══════════════════════════════════════
-  // ACHAREI  Apr 26 - May 2  [idx 196-202]
+  // ACHAREI  Apr 18, 2027 – Apr 24, 2027  [idx 196-202]
   // LT Achrei Mot
   // ═══════════════════════════════════════
   day('אחרי - כי ביום הזה',              LT('Achrei_Mot', 1)),
@@ -360,7 +360,7 @@ window.SCHEDULE = [
   day('אחרי - והנה להבין',              LT('Achrei_Mot', 4)),
 
   // ═══════════════════════════════════════
-  // KEDOSHIM  May 3-9  [idx 203-209]
+  // KEDOSHIM  Apr 25, 2027 – May 1, 2027  [idx 203-209]
   // LT Kedoshim
   // ═══════════════════════════════════════
   day('קדושים - וכי תבואו אל הארץ',      LT('Kedoshim', 1)),
@@ -372,7 +372,7 @@ window.SCHEDULE = [
   day('קדושים - והדרת פני זקן',          LT('Kedoshim', 2)),
 
   // ═══════════════════════════════════════
-  // EMOR  May 10-16  [idx 210-216]
+  // EMOR  May 2, 2027 – May 8, 2027  [idx 210-216]
   // LT Emor
   // ═══════════════════════════════════════
   day('אמור - ונקדשתי בתוך',             LT('Emor', 1)),
@@ -384,7 +384,7 @@ window.SCHEDULE = [
   day('אמור - ביאור ע"פ והניף',          LT('Emor', 6)),
 
   // ═══════════════════════════════════════
-  // BEHAR  May 17-23  [idx 217-223]
+  // BEHAR  May 9, 2027 – May 15, 2027  [idx 217-223]
   // LT Behar
   // ═══════════════════════════════════════
   day('בהר - כי תבואו אל הארץ',          LT('Behar', 1)),
@@ -396,7 +396,7 @@ window.SCHEDULE = [
   day('בהר - ומכל מקום צ"ע',             LT('Behar', 3)),
 
   // ═══════════════════════════════════════
-  // BECHUKOTAI  May 24-30  [idx 224-230]
+  // BECHUKOTAI  May 16, 2027 – May 22, 2027  [idx 224-230]
   // LT Bechukotai
   // ═══════════════════════════════════════
   day('בחקותי - אם בחקותי',              LT('Bechukotai', 1)),
@@ -408,7 +408,7 @@ window.SCHEDULE = [
   day('בחקותי - וילך ראובן',             LT('Bechukotai', 6)),
 
   // ═══════════════════════════════════════
-  // BAMIDBAR  May 31 - Jun 6  [idx 231-237]
+  // BAMIDBAR  May 23, 2027 – May 29, 2027  [idx 231-237]
   // LT Bamidbar
   // ═══════════════════════════════════════
   day('במדבר - וידבר ה\' אל משה',         LT('Bamidbar', 1)),
@@ -420,7 +420,7 @@ window.SCHEDULE = [
   day('במדבר - ענין שניתנה התורה',        LT('Bamidbar', 12), LT('Bamidbar', 13)),
 
   // ═══════════════════════════════════════
-  // NASSO  Jun 7-13  [idx 238-244]
+  // NASSO  May 30, 2027 – Jun 5, 2027  [idx 238-244]
   // Drush Shavuot + LT Nasso
   // ═══════════════════════════════════════
   day('במדבר - דרוש לשבועות',            LT('Bamidbar', 14), LT('Bamidbar', 15)),
@@ -432,7 +432,7 @@ window.SCHEDULE = [
   day('נשא - זאת חנוכת המזבח',           LT('Nasso', 6)),
 
   // ═══════════════════════════════════════
-  // BEHAALOTECHA  Jun 14-20  [idx 245-251]
+  // BEHAALOTECHA  Jun 6, 2027 – Jun 12, 2027  [idx 245-251]
   // LT Behaalotcha
   // ═══════════════════════════════════════
   day('בהעלותך - בהעלותך',               LT("Beha'alotcha", 1)),
@@ -444,7 +444,7 @@ window.SCHEDULE = [
   day('בהעלותך - והנה בחי\' כתישה',       LT("Beha'alotcha", 7)),
 
   // ═══════════════════════════════════════
-  // SHELACH  Jun 21-27  [idx 252-258]
+  // SHELACH  Jun 13, 2027 – Jun 19, 2027  [idx 252-258]
   // LT Shelach
   // ═══════════════════════════════════════
   day('שלח - שלח לך',                    LT("Sh'lach", 1), LT("Sh'lach", 2)),
@@ -456,7 +456,7 @@ window.SCHEDULE = [
   day('שלח - ביאור הדברים',              LT("Sh'lach", 13), LT("Sh'lach", 14)),
 
   // ═══════════════════════════════════════
-  // KORACH  Jun 28 - Jul 4  [idx 259-265]
+  // KORACH  Jun 20, 2027 – Jun 26, 2027  [idx 259-265]
   // LT ShirHashirim pt12 (ch36-37) + LT Korach
   // ═══════════════════════════════════════
   day('שה"ש יב - שימני כחותם',            LT('Shir_HaShirim', 36)),
@@ -468,7 +468,7 @@ window.SCHEDULE = [
   day('קרח - ועבד הלוי הוא',             LT('Korach', 3)),
 
   // ═══════════════════════════════════════
-  // CHUKAT  Jul 5-11  [idx 266-272]
+  // CHUKAT  Jun 27, 2027 – Jul 3, 2027  [idx 266-272]
   // LT Chukat
   // ═══════════════════════════════════════
   day('חקת - וידבר הוי\'',                LT('Chukat', 1)),
@@ -480,7 +480,7 @@ window.SCHEDULE = [
   day('חקת - תבנה ותכונן',               LT('Chukat', 7)),
 
   // ═══════════════════════════════════════
-  // BALAK  Jul 12-18  [idx 273-279]
+  // BALAK  Jul 4, 2027 – Jul 10, 2027  [idx 273-279]
   // LT Balak
   // ═══════════════════════════════════════
   day('בלק - מי מנה',                    LT('Balak', 1)),
@@ -492,7 +492,7 @@ window.SCHEDULE = [
   day('בלק - והנה כל הג\'',               LT('Balak', 5)),
 
   // ═══════════════════════════════════════
-  // PINCHAS  Jul 19-25  [idx 280-286]
+  // PINCHAS  Jul 11, 2027 – Jul 17, 2027  [idx 280-286]
   // LT Pinchas
   // ═══════════════════════════════════════
   day('פינחס - צו את בני ישראל',         LT('Pinchas', 1)),
@@ -504,7 +504,7 @@ window.SCHEDULE = [
   day('פינחס - אבל כתיב',                LT('Pinchas', 4)),
 
   // ═══════════════════════════════════════
-  // MATOT  Jul 26 - Aug 1  [idx 287-293]
+  // MATOT  Jul 18, 2027 – Jul 24, 2027  [idx 287-293]
   // LT Matot
   // ═══════════════════════════════════════
   day('מטות - וידבר משה',                LT('Matot', 1)),
@@ -516,7 +516,7 @@ window.SCHEDULE = [
   day('מטות - ביאור ענין החלצו',         LT('Matot', 7)),
 
   // ═══════════════════════════════════════
-  // MASEI  Aug 2-8  [idx 294-300]
+  // MASEI  Jul 25, 2027 – Jul 31, 2027  [idx 294-300]
   // LT Masei
   // ═══════════════════════════════════════
   day('מסעי - אלה מסעי',                 LT('Masei', 1)),
@@ -528,7 +528,7 @@ window.SCHEDULE = [
   day('מסעי - ביאור עוד לענין',          LT('Masei', 7)),
 
   // ═══════════════════════════════════════
-  // DEVARIM  Aug 9-15  [idx 301-307]
+  // DEVARIM  Aug 1, 2027 – Aug 7, 2027  [idx 301-307]
   // LT ShirHashirim pt13 (ch38-41) + LT Devarim
   // ═══════════════════════════════════════
   day('שה"ש יג - כי על כל',              LT('Shir_HaShirim', 38)),
@@ -540,7 +540,7 @@ window.SCHEDULE = [
   day('דברים - ברבות פ\' עקב',            LT('Devarim', 2)),
 
   // ═══════════════════════════════════════
-  // VAETCHANAN  Aug 16-22  [idx 308-314]
+  // VAETCHANAN  Aug 8, 2027 – Aug 14, 2027  [idx 308-314]
   // LT Vaetchanan
   // ═══════════════════════════════════════
   day('ואתחנן - ואתחנן',                 LT('Vaetchanan', 1)),
@@ -552,7 +552,7 @@ window.SCHEDULE = [
   day('ואתחנן - ענין ק"ש',               LT('Vaetchanan', 7)),
 
   // ═══════════════════════════════════════
-  // EIKEV  Aug 23-29  [idx 315-321]
+  // EIKEV  Aug 15, 2027 – Aug 21, 2027  [idx 315-321]
   // LT Eikev
   // ═══════════════════════════════════════
   day('עקב - ויאכילך את המן',            LT('Eikev', 1)),
@@ -564,7 +564,7 @@ window.SCHEDULE = [
   day('עקב - ארץ הרים ובקעות',           LT('Eikev', 4)),
 
   // ═══════════════════════════════════════
-  // REEH  Aug 30 - Sep 5  [idx 322-328]
+  // REEH  Aug 22, 2027 – Aug 28, 2027  [idx 322-328]
   // LT Re'eh
   // ═══════════════════════════════════════
   day('ראה - ראה אנכי',                  LT("Re'eh", 1)),
@@ -576,7 +576,7 @@ window.SCHEDULE = [
   day('ראה - אני לדודי',                 LT("Re'eh", 7), LT("Re'eh", 8)),
 
   // ═══════════════════════════════════════
-  // ROSH HASHANA (Shoftim missing)  Sep 6-12  [idx 329-335]
+  // ROSH HASHANA (Shoftim missing)  Aug 29, 2027 – Sep 4, 2027  [idx 329-335]
   // LT Rosh Hashanah pt1
   // ═══════════════════════════════════════
   day('דרושים לר"ה - תקעו בחדש שופר',   LT('Rosh_Hashanah', 1)),
@@ -588,7 +588,7 @@ window.SCHEDULE = [
   day('דרושים לר"ה - ואזי כתיב ובאו',   LT('Rosh_Hashanah', 7)),
 
   // ═══════════════════════════════════════
-  // KI TEITZEI  Sep 13-19  [idx 336-342]
+  // KI TEITZEI  Sep 5, 2027 – Sep 11, 2027  [idx 336-342]
   // LT Ki Teitzei
   // ═══════════════════════════════════════
   day('תצא - כי תצא',                    LT('Ki_Teitzei', 1)),
@@ -600,7 +600,7 @@ window.SCHEDULE = [
   day('תצא - כי ההרים ימושו',            LT('Ki_Teitzei', 7)),
 
   // ═══════════════════════════════════════
-  // KI TAVO  Sep 20-26  [idx 343-349]
+  // KI TAVO  Sep 12, 2027 – Sep 18, 2027  [idx 343-349]
   // LT Rosh Hashanah pt2 + LT Ki Tavo
   // ═══════════════════════════════════════
   day('דרושים לר"ה - להבין ענין',        LT('Rosh_Hashanah', 1)),
@@ -612,7 +612,7 @@ window.SCHEDULE = [
   day('תבוא - ויקרא משה',               LT('Ki_Tavo', 3)),
 
   // ═══════════════════════════════════════
-  // NITZAVIM  Sep 27 - Oct 3  [idx 350-356]
+  // NITZAVIM  Sep 19, 2027 – Sep 25, 2027  [idx 350-356]
   // LT Nitzavim
   // ═══════════════════════════════════════
   day('נצבים - אתם נצבים',               LT('Nitzavim', 1)),
@@ -624,7 +624,7 @@ window.SCHEDULE = [
   day('נצבים - ביאור ע"פ כי כארץ',      LT('Nitzavim', 7)),
 
   // ═══════════════════════════════════════
-  // SHABBAT SHUVA / YOM KIPPUR  Oct 4-10  [idx 357-363]
+  // SHABBAT SHUVA / YOM KIPPUR  Sep 26, 2027 – Oct 2, 2027  [idx 357-363]
   // (Vayeilech missing in Sefaria)
   // ═══════════════════════════════════════
   day('שבת שובה - שובה ישראל',           LT('Shabbat_Shuvah', 1)),
@@ -636,7 +636,7 @@ window.SCHEDULE = [
   day('דרושים ליוה"כ - ביאור מעט',       LT('Yom_Kippur', 2)),
 
   // ═══════════════════════════════════════
-  // HAAZINU / end of cycle  Oct 11  [idx 364]
+  // HAAZINU / end of cycle  Oct 3, 2027  [idx 364]
   // ═══════════════════════════════════════
   day('דרושים לסוכות - ושאבתם מים',      LT('Sukkot', 1), LT("Ha'Azinu", 1)),
 ];

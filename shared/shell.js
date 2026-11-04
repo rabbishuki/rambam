@@ -454,7 +454,7 @@ function attachSettingsListeners() {
 
   function updateStartDateUI() {
     const currentStart = getStart();
-    const isCycleDate = currentStart === CYCLE_START;
+    const isCycleDate = currentStart === getCycleStart();
 
     startDateInput.value = currentStart;
 
@@ -489,7 +489,7 @@ function attachSettingsListeners() {
   // Cycle button click
   setCycleBtn.addEventListener('click', async () => {
     if (await showConfirm('האם לקבוע את תאריך ההתחלה לט״ו שבט ה׳תשפ״ו (3 בפברואר 2026)?')) {
-      setStart(CYCLE_START);
+      setStart(getCycleStart());
       location.reload();
     }
   });
@@ -630,12 +630,12 @@ function attachInstallListeners() {
     await triggerInstall();
     // Hide the prompt
     document.getElementById('installPrompt').classList.remove('show');
-    localStorage.setItem('install_prompt_shown', 'true');
+    localStorage.setItem(getInstallPromptStorageKey(), 'true');
   });
 
   document.getElementById('dismissInstallBtn').addEventListener('click', () => {
     document.getElementById('installPrompt').classList.remove('show');
-    localStorage.setItem('install_prompt_shown', 'true');
+    localStorage.setItem(getInstallPromptStorageKey(), 'true');
   });
 }
 

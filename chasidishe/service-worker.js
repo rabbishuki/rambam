@@ -14,7 +14,7 @@ self.addEventListener('install', (event) => {
         './about.js',
         './plan.js',
         './schedule.js',
-        './torah-or-catalog.js',
+        './content-counts.js',
         './manifest.json',
         './shared/styles.css',
         './shared/screenshot.js',

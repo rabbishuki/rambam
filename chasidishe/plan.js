@@ -1,12 +1,8 @@
 // Torah Ohr + Likkutei Torah daily plan.
-// Torah Ohr checkpoints come from torah-or-catalog.js; the schedule comes from schedule.js.
+// The schedule selects the daily references; each Sefaria paragraph becomes a card.
 
-function getTorahOrCheckpoints(book, chapter) {
-  return window.TORAH_OR_CATALOG?.[book]?.chapters?.[chapter] || null;
-}
-
-function checkpointCount(item) {
-  return getTorahOrCheckpoints(item.book, item.chapter)?.length || 1;
+function cardCount(item) {
+  return window.CHASIDUS_CONTENT_COUNTS?.[`${item.book}.${item.chapter}`] || 1;
 }
 
 window.PLAN = {
@@ -14,7 +10,10 @@ window.PLAN = {
   name: 'תורה אור ולקוטי תורה',
   appName: 'א חסידישע פרשה',
   storagePrefix: 'chasidus',
-  CYCLE_START: '2025-10-12',
+  settingsPrefix: 'chasidus',
+  startStorageKey: 'chasidus_start',
+  installPromptStorageKey: 'chasidus_install_prompt_shown',
+  CYCLE_START: '2026-10-04',
 
   _getDayIndex(date) {
     const start = new Date(this.CYCLE_START);
@@ -33,7 +32,7 @@ window.PLAN = {
     return {
       he: entry.he,
       ref: `chasidus-day-${idx}`,
-      count: entry.books.reduce((total, item) => total + checkpointCount(item), 0),
+      count: entry.books.reduce((total, item) => total + cardCount(item), 0),
       heDate: await fetchHebrewDate(date),
     };
   },
@@ -54,82 +53,35 @@ window.PLAN = {
   },
 };
 
-const _chapterCache = {};
+function refreshCachedDayCounts() {
+  if (typeof localStorage === 'undefined') return;
 
-function textPointAt(root, requestedOffset) {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  let remaining = Math.max(0, requestedOffset);
-  let node;
+  try {
+    const key = `${window.PLAN.storagePrefix}_days`;
+    const days = JSON.parse(localStorage.getItem(key) || '{}');
+    let changed = false;
 
-  while ((node = walker.nextNode())) {
-    if (remaining <= node.nodeValue.length) return { node, offset: remaining };
-    remaining -= node.nodeValue.length;
-  }
+    Object.values(days).forEach(day => {
+      const match = day.ref?.match(/^chasidus-day-(\d+)$/);
+      const entry = match && window.SCHEDULE?.[Number(match[1])];
+      if (!entry) return;
 
-  return { node: root, offset: root.childNodes.length };
-}
-
-function htmlRange(root, start, end) {
-  const range = document.createRange();
-  const startPoint = textPointAt(root, start);
-  const endPoint = textPointAt(root, end);
-  range.setStart(startPoint.node, startPoint.offset);
-  range.setEnd(endPoint.node, endPoint.offset);
-
-  const holder = document.createElement('div');
-  holder.appendChild(range.cloneContents());
-  return holder.innerHTML;
-}
-
-function appendParagraph(card, html) {
-  if (!html || !html.replace(/<[^>]*>/g, '').trim()) return card;
-  const paragraph = `<p>${html}</p>`;
-  return card ? `${card}${paragraph}` : paragraph;
-}
-
-function splitByCheckpoints(paragraphs, checkpoints) {
-  const byParagraph = new Map();
-  checkpoints.forEach(checkpoint => {
-    const list = byParagraph.get(checkpoint.paragraph) || [];
-    list.push(checkpoint);
-    byParagraph.set(checkpoint.paragraph, list);
-  });
-
-  const cards = [];
-  let current = '';
-
-  paragraphs.forEach((paragraph, index) => {
-    const paragraphNumber = index + 1;
-    const points = (byParagraph.get(paragraphNumber) || [])
-      .slice()
-      .sort((a, b) => a.offset - b.offset);
-
-    if (points.length === 0) {
-      current = appendParagraph(current, paragraph);
-      return;
-    }
-
-    const root = document.createElement('div');
-    root.innerHTML = paragraph;
-    const length = root.textContent.length;
-    const offsets = [...new Set(points.map(point => Math.min(point.offset, length)))];
-
-    const prefix = htmlRange(root, 0, offsets[0]);
-    current = appendParagraph(current, prefix);
-    if (current) cards.push(current);
-
-    offsets.forEach((offset, pointIndex) => {
-      const end = offsets[pointIndex + 1] ?? length;
-      const fragment = htmlRange(root, offset, end);
-      if (fragment.replace(/<[^>]*>/g, '').trim()) cards.push(`<p>${fragment}</p>`);
+      const count = entry.books.reduce((total, item) => total + cardCount(item), 0);
+      if (day.count !== count) {
+        day.count = count;
+        changed = true;
+      }
     });
 
-    current = cards.pop() || '';
-  });
-
-  if (current) cards.push(current);
-  return cards;
+    if (changed) localStorage.setItem(key, JSON.stringify(days));
+  } catch (error) {
+    console.warn('Could not refresh cached Chasidus card counts:', error);
+  }
 }
+
+refreshCachedDayCounts();
+
+const _chapterCache = {};
 
 async function fetchChasidusChapter(book, chapter) {
   const cacheKey = `${book}.${chapter}`;
@@ -145,12 +97,9 @@ async function fetchChasidusChapter(book, chapter) {
       .filter(text => text && text.trim())
       .map(text => text.replace(/<i data-overlay[^>]*><\/i>/g, ''));
 
-    const checkpoints = getTorahOrCheckpoints(book, chapter);
-    const cards = checkpoints
-      ? splitByCheckpoints(paragraphs, checkpoints)
-      : [paragraphs.map(paragraph => `<p>${paragraph}</p>`).join('')];
-
-    const result = cards.filter(card => card.replace(/<[^>]*>/g, '').trim());
+    const result = paragraphs
+      .map(paragraph => `<p>${paragraph}</p>`)
+      .filter(card => card.replace(/<[^>]*>/g, '').trim());
     _chapterCache[cacheKey] = result.length ? result : ['(לא נמצא תוכן)'];
     return _chapterCache[cacheKey];
   } catch (err) {

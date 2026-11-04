@@ -480,7 +480,7 @@ function initStartDateSetting() {
 
   function updateStartDateUI() {
     const currentStart = getStart();
-    const isCycleDate = currentStart === CYCLE_START;
+    const isCycleDate = currentStart === getCycleStart();
 
     startDateInput.value = currentStart;
 
@@ -514,7 +514,7 @@ function initStartDateSetting() {
   // Cycle button click
   setCycleBtn.addEventListener('click', async () => {
     if (await showConfirm('האם לקבוע את תאריך ההתחלה לט״ו שבט ה׳תשפ״ו (3 בפברואר 2026)?')) {
-      setStart(CYCLE_START);
+      setStart(getCycleStart());
       location.reload();
     }
   });

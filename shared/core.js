@@ -3,24 +3,41 @@
 // ============================================================================
 const CYCLE_START = '2026-02-03';
 
+function getCycleStart() {
+  return window.PLAN?.CYCLE_START || CYCLE_START;
+}
+
+function getStartStorageKey() {
+  return window.PLAN?.startStorageKey || 'rambam_start';
+}
+
 function getStart() {
-  const stored = localStorage.getItem('rambam_start');
+  const stored = localStorage.getItem(getStartStorageKey());
   // If not set, return the default but don't save it yet
-  return stored || CYCLE_START;
+  return stored || getCycleStart();
 }
 
 function setStart(dateStr) {
-  localStorage.setItem('rambam_start', dateStr);
+  localStorage.setItem(getStartStorageKey(), dateStr);
 }
 
 // Generic setting utilities
+function getSettingStorageKey(key) {
+  const prefix = window.PLAN?.settingsPrefix;
+  return prefix && key.startsWith('rambam_') ? `${prefix}_${key.slice(7)}` : key;
+}
+
+function getInstallPromptStorageKey() {
+  return window.PLAN?.installPromptStorageKey || 'install_prompt_shown';
+}
+
 function getSetting(key, defaultValue = true) {
-  const stored = localStorage.getItem(key);
+  const stored = localStorage.getItem(getSettingStorageKey(key));
   return stored === null ? defaultValue : stored === 'true';
 }
 
 function setSetting(key, value) {
-  localStorage.setItem(key, value.toString());
+  localStorage.setItem(getSettingStorageKey(key), value.toString());
 }
 
 // Specific setting functions (backward compatibility wrappers)
@@ -102,7 +119,7 @@ async function setDayTransitionTime(time) {
 }
 
 function isFirstVisit() {
-  return !localStorage.getItem('rambam_start');
+  return !localStorage.getItem(getStartStorageKey());
 }
 
 function getJewishToday() {
@@ -317,11 +334,11 @@ function formatHebrewDate(dateStr) {
 // Shabbat Learning Tracking
 // ============================================================================
 function getLastShabbatPrompt() {
-  return localStorage.getItem('rambam_last_shabbat_prompt');
+  return localStorage.getItem(getSettingStorageKey('rambam_last_shabbat_prompt'));
 }
 
 function setLastShabbatPrompt(dateStr) {
-  localStorage.setItem('rambam_last_shabbat_prompt', dateStr);
+  localStorage.setItem(getSettingStorageKey('rambam_last_shabbat_prompt'), dateStr);
 }
 
 function checkShabbatLearning() {
@@ -2014,7 +2031,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   // Show install prompt after user has interacted with the app
   // Don't show on first visit
   if (!isFirstVisit()) {
-    const installPromptShown = localStorage.getItem('install_prompt_shown');
+    const installPromptShown = localStorage.getItem(getInstallPromptStorageKey());
     if (!installPromptShown) {
       setTimeout(() => {
         document.getElementById('installPrompt').classList.add('show');
@@ -2136,7 +2153,7 @@ async function init() {
 
     // If first visit, set the default start date
     if (firstVisit) {
-      localStorage.setItem('rambam_start', CYCLE_START);
+      setStart(getCycleStart());
     }
 
     // Apply initial settings classes
