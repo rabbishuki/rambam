@@ -13,6 +13,7 @@ self.addEventListener('install', (event) => {
         './index.html',
         './plan.js',
         './schedule.js',
+        './torah-or-catalog.js',
         './manifest.json',
         './shared/styles.css',
         './shared/screenshot.js',

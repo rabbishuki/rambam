@@ -1,22 +1,26 @@
-// plan.js - Torah Ohr + Likkutei Torah daily plan
-// Uses window.SCHEDULE from schedule.js
+// Torah Ohr + Likkutei Torah daily plan.
+// Torah Ohr checkpoints come from torah-or-catalog.js; the schedule comes from schedule.js.
+
+function getTorahOrCheckpoints(book, chapter) {
+  return window.TORAH_OR_CATALOG?.[book]?.chapters?.[chapter] || null;
+}
+
+function checkpointCount(item) {
+  return getTorahOrCheckpoints(item.book, item.chapter)?.length || 1;
+}
 
 window.PLAN = {
   id: 'chasidus',
   name: 'תורה אור ולקוטי תורה',
   storagePrefix: 'chasidus',
-
-  // Cycle start: Oct 12, 2025 (index 0 = א' בראשית)
   CYCLE_START: '2025-10-12',
 
   _getDayIndex(date) {
     const start = new Date(this.CYCLE_START);
     const current = new Date(date);
-    // Normalize to midnight UTC to avoid DST issues
     const diffMs = Date.UTC(current.getFullYear(), current.getMonth(), current.getDate())
                  - Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
     const raw = Math.floor(diffMs / 86400000);
-    // Wrap for future cycles
     return ((raw % 365) + 365) % 365;
   },
 
@@ -25,13 +29,11 @@ window.PLAN = {
     const entry = window.SCHEDULE?.[idx];
     if (!entry) throw new Error(`No schedule entry for index ${idx}`);
 
-    const heDate = await fetchHebrewDate(date);
-
     return {
       he: entry.he,
       ref: `chasidus-day-${idx}`,
-      count: entry.books.length,   // one "item" per book/chapter assigned
-      heDate,
+      count: entry.books.reduce((total, item) => total + checkpointCount(item), 0),
+      heDate: await fetchHebrewDate(date),
     };
   },
 
@@ -40,53 +42,116 @@ window.PLAN = {
     const entry = window.SCHEDULE?.[idx];
     if (!entry) return { chapters: [[]], chapterNumbers: [1] };
 
-    const chapters = [];
-    const chapterNumbers = [];
+    const chapters = await Promise.all(entry.books.map(({ book, chapter }) =>
+      fetchChasidusChapter(book, chapter)
+    ));
 
-    for (let i = 0; i < entry.books.length; i++) {
-      const { book, chapter } = entry.books[i];
-      const paras = await fetchChasidusChapter(book, chapter);
-      chapters.push(paras);
-      chapterNumbers.push(i + 1);
-    }
-
-    return { chapters, chapterNumbers };
+    return {
+      chapters,
+      chapterNumbers: chapters.map((_, index) => index + 1),
+    };
   },
 };
 
-// ─────────────────────────────────────────────
-// Fetch a single chapter from Sefaria
-// Returns array of HTML strings (one per paragraph)
-// ─────────────────────────────────────────────
 const _chapterCache = {};
+
+function textPointAt(root, requestedOffset) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let remaining = Math.max(0, requestedOffset);
+  let node;
+
+  while ((node = walker.nextNode())) {
+    if (remaining <= node.nodeValue.length) return { node, offset: remaining };
+    remaining -= node.nodeValue.length;
+  }
+
+  return { node: root, offset: root.childNodes.length };
+}
+
+function htmlRange(root, start, end) {
+  const range = document.createRange();
+  const startPoint = textPointAt(root, start);
+  const endPoint = textPointAt(root, end);
+  range.setStart(startPoint.node, startPoint.offset);
+  range.setEnd(endPoint.node, endPoint.offset);
+
+  const holder = document.createElement('div');
+  holder.appendChild(range.cloneContents());
+  return holder.innerHTML;
+}
+
+function appendParagraph(card, html) {
+  if (!html || !html.replace(/<[^>]*>/g, '').trim()) return card;
+  const paragraph = `<p>${html}</p>`;
+  return card ? `${card}${paragraph}` : paragraph;
+}
+
+function splitByCheckpoints(paragraphs, checkpoints) {
+  const byParagraph = new Map();
+  checkpoints.forEach(checkpoint => {
+    const list = byParagraph.get(checkpoint.paragraph) || [];
+    list.push(checkpoint);
+    byParagraph.set(checkpoint.paragraph, list);
+  });
+
+  const cards = [];
+  let current = '';
+
+  paragraphs.forEach((paragraph, index) => {
+    const paragraphNumber = index + 1;
+    const points = (byParagraph.get(paragraphNumber) || [])
+      .slice()
+      .sort((a, b) => a.offset - b.offset);
+
+    if (points.length === 0) {
+      current = appendParagraph(current, paragraph);
+      return;
+    }
+
+    const root = document.createElement('div');
+    root.innerHTML = paragraph;
+    const length = root.textContent.length;
+    const offsets = [...new Set(points.map(point => Math.min(point.offset, length)))];
+
+    const prefix = htmlRange(root, 0, offsets[0]);
+    current = appendParagraph(current, prefix);
+    if (current) cards.push(current);
+
+    offsets.forEach((offset, pointIndex) => {
+      const end = offsets[pointIndex + 1] ?? length;
+      const fragment = htmlRange(root, offset, end);
+      if (fragment.replace(/<[^>]*>/g, '').trim()) cards.push(`<p>${fragment}</p>`);
+    });
+
+    current = cards.pop() || '';
+  });
+
+  if (current) cards.push(current);
+  return cards;
+}
 
 async function fetchChasidusChapter(book, chapter) {
   const cacheKey = `${book}.${chapter}`;
   if (_chapterCache[cacheKey]) return _chapterCache[cacheKey];
 
   try {
-    const url = `https://www.sefaria.org/api/v3/texts/${encodeURIComponent(book)}.${chapter}`;
+    const url = `https://www.sefaria.org/api/v3/texts/${encodeURIComponent(cacheKey)}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
+    const raw = data.versions?.find(version => version.language === 'he')?.text;
+    const paragraphs = (Array.isArray(raw) ? raw.flat(Infinity) : [raw])
+      .filter(text => text && text.trim())
+      .map(text => text.replace(/<i data-overlay[^>]*><\/i>/g, ''));
 
-    // Primary Hebrew version is always first
-    const version = data.versions?.[0];
-    const raw = version?.text;
-    const paras = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+    const checkpoints = getTorahOrCheckpoints(book, chapter);
+    const cards = checkpoints
+      ? splitByCheckpoints(paragraphs, checkpoints)
+      : [paragraphs.map(paragraph => `<p>${paragraph}</p>`).join('')];
 
-    // Strip Vilna page markers but keep bold ד"ה markers
-    const cleaned = paras
-      .filter(p => p && p.trim())
-      .map(p => p
-        .replace(/<i data-overlay[^>]*><\/i>/g, '')   // strip page markers
-        .trim()
-      )
-      .filter(p => p.length > 0);
-
-    const result = cleaned.length > 0 ? cleaned : ['(לא נמצא תוכן)'];
-    _chapterCache[cacheKey] = result;
-    return result;
+    const result = cards.filter(card => card.replace(/<[^>]*>/g, '').trim());
+    _chapterCache[cacheKey] = result.length ? result : ['(לא נמצא תוכן)'];
+    return _chapterCache[cacheKey];
   } catch (err) {
     console.error(`Failed to load ${cacheKey}:`, err);
     return [`שגיאה בטעינת ${book} פרק ${chapter}`];
