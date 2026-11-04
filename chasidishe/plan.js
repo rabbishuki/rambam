@@ -87,29 +87,12 @@ refreshCachedDayCounts();
 
 const _chapterCache = {};
 
-function textPointAt(root, requestedOffset) {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  let remaining = Math.max(0, requestedOffset);
-  let node;
-
-  while ((node = walker.nextNode())) {
-    if (remaining <= node.nodeValue.length) return { node, offset: remaining };
-    remaining -= node.nodeValue.length;
-  }
-
-  return { node: root, offset: root.childNodes.length };
-}
-
-function htmlRange(root, start, end) {
-  const range = document.createRange();
-  const startPoint = textPointAt(root, start);
-  const endPoint = textPointAt(root, end);
-  range.setStart(startPoint.node, startPoint.offset);
-  range.setEnd(endPoint.node, endPoint.offset);
-
-  const holder = document.createElement('div');
-  holder.appendChild(range.cloneContents());
-  return holder.innerHTML;
+function visibleTextLength(html) {
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&[^;]+;/g, ' ')
+    .trim()
+    .length;
 }
 
 function getCardCharacterLimit() {
@@ -124,27 +107,24 @@ function getCardCharacterLimit() {
 }
 
 function splitAtSentenceEnds(html, limit) {
-  const root = document.createElement('div');
-  root.innerHTML = html;
-  const text = root.textContent;
-  const sentenceEnds = [...text.matchAll(/\.(?:\s+|$)/g)].map(match => match.index + 1);
-  if (sentenceEnds.length === 0 || text.length <= limit) return [html];
-  if (sentenceEnds[sentenceEnds.length - 1] < text.length) sentenceEnds.push(text.length);
+  const sentenceEnds = [...html.matchAll(/\.(?=\s|$)/g)].map(match => match.index + 1);
+  if (sentenceEnds.length === 0 || visibleTextLength(html) <= limit) return [html];
+  if (sentenceEnds[sentenceEnds.length - 1] < html.length) sentenceEnds.push(html.length);
 
-  const ranges = [];
+  const chunks = [];
   let chunkStart = 0;
   let previousEnd = 0;
 
   sentenceEnds.forEach(sentenceEnd => {
-    if (sentenceEnd - chunkStart > limit && previousEnd > chunkStart) {
-      ranges.push([chunkStart, previousEnd]);
+    if (visibleTextLength(html.slice(chunkStart, sentenceEnd)) > limit && previousEnd > chunkStart) {
+      chunks.push(html.slice(chunkStart, previousEnd));
       chunkStart = previousEnd;
     }
     previousEnd = sentenceEnd;
   });
 
-  if (chunkStart < text.length) ranges.push([chunkStart, text.length]);
-  return ranges.map(([start, end]) => htmlRange(root, start, end));
+  if (chunkStart < html.length) chunks.push(html.slice(chunkStart));
+  return chunks;
 }
 
 function splitSefariaChapters(paragraphs) {
