@@ -5,10 +5,15 @@
 function initAboutPanel() {
   const about = window.APP_CONFIG?.about || {};
   const heading = about.heading || 'מידע על האתר';
-  const introSection = about.introSection || defaultIntroSection();
-  const bodySection = about.bodySection || defaultBodySection();
-  const sponsorSection = about.sponsorSection || defaultSponsorSection();
-  const closingSection = about.closingSection || defaultClosingSection();
+  const introSection = about.introSection ?? defaultIntroSection();
+  const bodySection = about.bodySection ?? defaultBodySection();
+  const sponsorSection = about.sponsorSection ?? defaultSponsorSection();
+  const closingSection = about.closingSection ?? defaultClosingSection();
+  const studyUnitSingular = about.studyUnitSingular || 'הלכה';
+  const studyUnitPlural = about.studyUnitPlural || 'הלכות';
+  const previousUnitsLabel = about.previousUnitsLabel || 'הלכות קודמות';
+  const completedUnitsLabel = about.completedUnitsLabel || 'הלכות שהושלמו';
+  const startDateDescription = about.startDateDescription || 'בחר מתי להתחיל את הלימוד: מתחילת המחזור (ט״ו בשבט תשפ״ו) או מתאריך מותאם אישית.';
 
   // Create info panel element
   const infoPanel = document.createElement('div');
@@ -29,14 +34,14 @@ function initAboutPanel() {
         <h3>איך משתמשים באתר</h3>
         <div class="info-demo-row">
           <div class="info-demo-image">
-            <img src="./assets/swipe.gif" alt="הדגמת החלקת הלכה" class="demo-gif">
+            <img src="./assets/swipe.gif" alt="הדגמת החלקת ${studyUnitSingular}" class="demo-gif">
           </div>
           <div class="info-demo-text">
-            <h4>סימון הלכה כנקראה</h4>
+            <h4>סימון ${studyUnitSingular} כנקרא</h4>
             <p>
-              כל הלכה באפליקציה היא כרטיס שאפשר להחליק עליו.
-              החלקה ימינה מסמנת את ההלכה כנקראה ומעבירה אותה למצב "הושלם" (עם רקע אפור).
-              החלקה שמאלה מבטלת את הסימון ומחזירה את ההלכה למצב הרגיל.
+              כל ${studyUnitSingular} באפליקציה הוא כרטיס שאפשר להחליק עליו.
+              החלקה ימינה מסמנת את ${studyUnitSingular} כנקרא ומעבירה אותו למצב "הושלם" (עם רקע אפור).
+              החלקה שמאלה מבטלת את הסימון ומחזירה את ${studyUnitSingular} למצב הרגיל.
             </p>
           </div>
         </div>
@@ -48,7 +53,7 @@ function initAboutPanel() {
             <h4>פס התקדמות חכם</h4>
             <p>
               כשאתה גולל למטה בעמוד, יופיע פס צהוב בראש המסך המציג את היום הנוכחי ואת אחוז ההתקדמות שלך בו.
-              הפס כולל שני כפתורים: חץ למעלה לחזרה לראש העמוד, וחץ למטה שמקפיץ אותך להלכה הבאה שטרם קראת.
+              הפס כולל שני כפתורים: חץ למעלה לחזרה לראש העמוד, וחץ למטה שמקפיץ אותך ל${studyUnitSingular} הבא שטרם קראת.
             </p>
           </div>
         </div>
@@ -68,7 +73,7 @@ function initAboutPanel() {
             </div>
           </div>
           <p class="info-setting-description">
-            בחר מתי להתחיל את הלימוד: מתחילת המחזור (ט״ו בשבט תשפ״ו) או מתאריך מותאם אישית.
+            ${startDateDescription}
           </p>
         </div>
 
@@ -89,28 +94,28 @@ function initAboutPanel() {
 
         <div class="info-setting-row">
           <div class="info-setting-header">
-            <h4>סימון הלכות קודמות כנקראו</h4>
+            <h4>סימון ${previousUnitsLabel} כנקראו</h4>
             <div class="toggle-container" id="infoAutoMarkToggle">
               <button class="toggle-btn" data-value="true">כן</button>
               <button class="toggle-btn" data-value="false">לא</button>
             </div>
           </div>
           <p class="info-setting-description">
-            כשמסמנים הלכה, כל ההלכות הקודמות לה באותו היום מסומנות אוטומטית.
-            אם כבוי, צריך לסמן כל הלכה בנפרד.
+            כשמסמנים ${studyUnitSingular}, כל ה${studyUnitPlural} הקודמים לו באותו היום מסומנים אוטומטית.
+            אם כבוי, צריך לסמן כל ${studyUnitSingular} בנפרד.
           </p>
         </div>
 
         <div class="info-setting-row">
           <div class="info-setting-header">
-            <h4>הלכות שהושלמו</h4>
+            <h4>${completedUnitsLabel}</h4>
             <div class="toggle-container" id="infoHideCompletedToggle">
               <button class="toggle-btn" data-value="true">הסתר</button>
               <button class="toggle-btn" data-value="false">הצג</button>
             </div>
           </div>
           <p class="info-setting-description">
-            הסתר הלכות שכבר סימנת כדי להתמקד במה שנשאר ללמוד.
+            הסתר ${studyUnitPlural} שכבר סימנת כדי להתמקד במה שנשאר ללמוד.
             שומר על הממשק נקי וממוקד.
           </p>
         </div>
@@ -170,17 +175,18 @@ function initAboutPanel() {
             <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="link-icon">
             <span>קבוצת WhatsApp לתמיכה ועדכונים</span>
           </a>
-          <a href="https://wa.me/972586030770?text=אהבתי%20את%20האפליקציה%20של%20הרמבם" target="_blank" rel="noopener" class="info-link">
+          <a href="https://wa.me/972586030770?text=${encodeURIComponent(`אהבתי את האפליקציה של ${window.PLAN?.appName || 'הרמבם'}`)}" target="_blank" rel="noopener" class="info-link">
               <img src="assets/rabbi.jpeg" alt="הרב שוקי" class="footer-avatar">
               <span>הודעה ישירה לרב שוקי</span>
               <svg class="whatsapp-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" fill="#25D366"/>
               </svg>
           </a>
+          ${about.showYomiLink === false ? '' : `
           <a href="https://yomi.org.il?affId=2bcbbdd2" target="_blank" rel="noopener" class="info-link">
             <img src="https://yomi.org.il/assets/icons/svg/yomi-logo-welcome.svg" alt="Yomi" class="link-icon">
             <span>yomi.org.il - לימוד מעמיק</span>
-          </a>
+          </a>`}
         </div>
       </section>
     </div>
@@ -288,6 +294,11 @@ function populateOtherFlavors() {
       url: 'https://sefer-mitzvot.pages.dev',
       name: 'ספר המצוות',
       key: 'mitzvot'
+    },
+    {
+      url: 'https://dvarim.pages.dev',
+      name: 'חומש דברים',
+      key: 'dvarim'
     },
     {
       url: 'https://chasidishe.pages.dev',

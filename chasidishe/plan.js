@@ -12,6 +12,7 @@ function checkpointCount(item) {
 window.PLAN = {
   id: 'chasidus',
   name: 'תורה אור ולקוטי תורה',
+  appName: 'א חסידישע פרשה',
   storagePrefix: 'chasidus',
   CYCLE_START: '2025-10-12',
 

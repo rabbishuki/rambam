@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 
 global.window = global;
+require('../chasidishe/about.js');
 require('../chasidishe/torah-or-catalog.js');
 require('../chasidishe/schedule.js');
 
@@ -13,6 +14,8 @@ assert.equal(catalog.length, 31, 'Torah Or catalog section count changed');
 assert.equal(totalMaamarim, 154, 'Torah Or maamar count changed');
 assert.equal(totalCheckpoints, 683, 'Torah Or checkpoint count changed');
 assert.equal(window.SCHEDULE.length, 365, 'Daily schedule must contain 365 days');
+assert.equal(window.APP_CONFIG.about.showYomiLink, false, 'Chasidus About panel must hide the Rambam Yomi link');
+assert.match(window.APP_CONFIG.about.bodySection, /תורה אור ולקוטי תורה/, 'Chasidus About copy is missing');
 
 const missing = [];
 window.SCHEDULE.forEach((day, dayIndex) => {

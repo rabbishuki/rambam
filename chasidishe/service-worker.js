@@ -11,6 +11,7 @@ self.addEventListener('install', (event) => {
       return cache.addAll([
         './',
         './index.html',
+        './about.js',
         './plan.js',
         './schedule.js',
         './torah-or-catalog.js',
