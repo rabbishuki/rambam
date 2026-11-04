@@ -155,7 +155,6 @@ function splitSefariaChapters(paragraphs) {
     if (/^\s*<small>[^<]+<\/small>\s*$/.test(paragraph)) return;
 
     const marker = paragraph.match(/^\s*<small>\s*([א-ת][א-ת״׳"']*)\s*<\/small>\s*/);
-    const hasRealChapterMarker = Boolean(marker);
     if (marker && chapters[chapters.length - 1].length > 0) {
       chapters.push([]);
       chapterNumbers.push(chapterNumbers.length + 1);
@@ -164,7 +163,8 @@ function splitSefariaChapters(paragraphs) {
       paragraph = paragraph.slice(marker[0].length);
     }
 
-    const chunks = hasRealChapterMarker ? [paragraph] : splitAtSentenceEnds(paragraph, characterLimit);
+    const hasItemNumbering = /^\s*<b>\s*(?:[א-ת]{1,3}|\d+)[.)]\s*<\/b>/.test(paragraph);
+    const chunks = hasItemNumbering ? [paragraph] : splitAtSentenceEnds(paragraph, characterLimit);
     chunks.forEach(chunk => {
       if (chunk.replace(/<[^>]*>/g, '').trim()) {
         chapters[chapters.length - 1].push(`<p>${chunk}</p>`);
