@@ -150,14 +150,12 @@ function splitSefariaChapters(paragraphs) {
   const chapters = [[]];
   const chapterNumbers = [1];
   const characterLimit = getCardCharacterLimit();
-  const hasRealChapterMarkers = paragraphs.some(paragraph =>
-    /^\s*<small>\s*[א-ת][א-ת״׳"']*\s*<\/small>\s*/.test(paragraph)
-  );
 
   paragraphs.forEach(paragraph => {
     if (/^\s*<small>[^<]+<\/small>\s*$/.test(paragraph)) return;
 
     const marker = paragraph.match(/^\s*<small>\s*([א-ת][א-ת״׳"']*)\s*<\/small>\s*/);
+    const hasRealChapterMarker = Boolean(marker);
     if (marker && chapters[chapters.length - 1].length > 0) {
       chapters.push([]);
       chapterNumbers.push(chapterNumbers.length + 1);
@@ -166,7 +164,7 @@ function splitSefariaChapters(paragraphs) {
       paragraph = paragraph.slice(marker[0].length);
     }
 
-    const chunks = hasRealChapterMarkers ? [paragraph] : splitAtSentenceEnds(paragraph, characterLimit);
+    const chunks = hasRealChapterMarker ? [paragraph] : splitAtSentenceEnds(paragraph, characterLimit);
     chunks.forEach(chunk => {
       if (chunk.replace(/<[^>]*>/g, '').trim()) {
         chapters[chapters.length - 1].push(`<p>${chunk}</p>`);
