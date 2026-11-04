@@ -1326,8 +1326,9 @@ async function handleDetailsToggle(event) {
         // Number within chapter (1, 2, 3...) - but skip if text already has numbering
         // (e.g., mitzvot already have their number in the title)
         const hasOwnNumbering = text.trim().startsWith('<b>');
+        const showCardNumbers = window.PLAN?.showCardNumbers !== false;
         const hebrewNum = toHebrewLetter(halakhaIdx + 1);
-        card.innerHTML = hasOwnNumbering
+        card.innerHTML = hasOwnNumbering || !showCardNumbers
           ? `<div class="halakha-text">${text}</div>`
           : `<div class="halakha-text"><b>${hebrewNum}.</b> ${text}</div>`;
 

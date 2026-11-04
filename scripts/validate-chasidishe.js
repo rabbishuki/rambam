@@ -21,7 +21,9 @@ assert.equal(window.PLAN.storagePrefix, 'chasidus', 'Chasidus data prefix change
 assert.equal(window.PLAN.settingsPrefix, 'chasidus', 'Chasidus settings prefix changed');
 assert.equal(window.PLAN.startStorageKey, 'chasidus_start', 'Chasidus start-date storage key changed');
 assert.equal(window.PLAN.installPromptStorageKey, 'chasidus_install_prompt_shown', 'Chasidus install key changed');
+assert.equal(window.PLAN.showCardNumbers, false, 'Chasidus must use Sefaria chapter markers instead of generated numbers');
 assert.equal(window.CHASIDUS_CONTENT_COUNTS['Torah_Ohr,_Bereshit.1'], 14, 'Sefaria paragraph counts changed');
+assert.equal(window.CHASIDUS_CONTENT_COUNTS['Likkutei_Torah,_Shir_HaShirim.16'], 15, 'Title-only lines must not count as cards');
 assert.equal(window.APP_CONFIG.about.showYomiLink, false, 'Chasidus About panel must hide the Rambam Yomi link');
 assert.match(window.APP_CONFIG.about.bodySection, /תורה אור ולקוטי תורה/, 'Chasidus About copy is missing');
 

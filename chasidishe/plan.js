@@ -13,6 +13,7 @@ window.PLAN = {
   settingsPrefix: 'chasidus',
   startStorageKey: 'chasidus_start',
   installPromptStorageKey: 'chasidus_install_prompt_shown',
+  showCardNumbers: false,
   CYCLE_START: '2026-10-04',
 
   _getDayIndex(date) {
@@ -42,13 +43,13 @@ window.PLAN = {
     const entry = window.SCHEDULE?.[idx];
     if (!entry) return { chapters: [[]], chapterNumbers: [1] };
 
-    const chapters = await Promise.all(entry.books.map(({ book, chapter }) =>
+    const sections = await Promise.all(entry.books.map(({ book, chapter }) =>
       fetchChasidusChapter(book, chapter)
     ));
 
     return {
-      chapters,
-      chapterNumbers: chapters.map((_, index) => index + 1),
+      chapters: sections.flatMap(section => section.chapters),
+      chapterNumbers: sections.flatMap(section => section.chapterNumbers),
     };
   },
 };
@@ -83,6 +84,33 @@ refreshCachedDayCounts();
 
 const _chapterCache = {};
 
+function splitSefariaChapters(paragraphs) {
+  const chapters = [[]];
+  const chapterNumbers = [1];
+
+  paragraphs.forEach(paragraph => {
+    if (/^\s*<small>[^<]+<\/small>\s*$/.test(paragraph)) return;
+
+    const marker = paragraph.match(/^\s*<small>\s*([א-ת][א-ת״׳"']*)\s*<\/small>\s*/);
+    if (marker && chapters[chapters.length - 1].length > 0) {
+      chapters.push([]);
+      chapterNumbers.push(chapterNumbers.length + 1);
+      paragraph = paragraph.slice(marker[0].length);
+    } else if (marker) {
+      paragraph = paragraph.slice(marker[0].length);
+    }
+
+    if (paragraph.replace(/<[^>]*>/g, '').trim()) {
+      chapters[chapters.length - 1].push(`<p>${paragraph}</p>`);
+    }
+  });
+
+  return {
+    chapters: chapters.filter(chapter => chapter.length > 0),
+    chapterNumbers: chapterNumbers.slice(0, chapters.filter(chapter => chapter.length > 0).length),
+  };
+}
+
 async function fetchChasidusChapter(book, chapter) {
   const cacheKey = `${book}.${chapter}`;
   if (_chapterCache[cacheKey]) return _chapterCache[cacheKey];
@@ -97,13 +125,18 @@ async function fetchChasidusChapter(book, chapter) {
       .filter(text => text && text.trim())
       .map(text => text.replace(/<i data-overlay[^>]*><\/i>/g, ''));
 
-    const result = paragraphs
-      .map(paragraph => `<p>${paragraph}</p>`)
-      .filter(card => card.replace(/<[^>]*>/g, '').trim());
-    _chapterCache[cacheKey] = result.length ? result : ['(לא נמצא תוכן)'];
-    return _chapterCache[cacheKey];
+    const result = splitSefariaChapters(paragraphs);
+    if (result.chapters.length === 0) {
+      result.chapters = [['(לא נמצא תוכן)']];
+      result.chapterNumbers = [1];
+    }
+    _chapterCache[cacheKey] = result;
+    return result;
   } catch (err) {
     console.error(`Failed to load ${cacheKey}:`, err);
-    return [`שגיאה בטעינת ${book} פרק ${chapter}`];
+    return {
+      chapters: [[`שגיאה בטעינת ${book} פרק ${chapter}`]],
+      chapterNumbers: [1],
+    };
   }
 }
