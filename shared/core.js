@@ -1167,8 +1167,20 @@ async function handleDetailsToggle(event) {
 
   try {
     const { chapters, chapterNumbers } = await window.PLAN.loadContent(date, ref);
-    const done = getDone();
 
+    if (window.PLAN?.updateCountFromContent) {
+      const actualCount = chapters.reduce((total, chapter) => total + chapter.length, 0);
+      const days = getDays();
+      if (actualCount > 0 && days[date] && (days[date].count !== actualCount || !days[date].countIsExact)) {
+        days[date].count = actualCount;
+        days[date].countIsExact = true;
+        saveDays(days);
+        updateDayHeader(date);
+        renderStats();
+      }
+    }
+
+    const done = getDone();
     container.innerHTML = '';
 
     let globalIndex = 0; // For tracking completion across all chapters

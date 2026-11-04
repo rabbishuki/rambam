@@ -14,6 +14,7 @@ window.PLAN = {
   startStorageKey: 'chasidus_start',
   installPromptStorageKey: 'chasidus_install_prompt_shown',
   showCardNumbers: false,
+  updateCountFromContent: true,
   CYCLE_START: '2026-10-04',
 
   _getDayIndex(date) {
@@ -63,6 +64,7 @@ function refreshCachedDayCounts() {
     let changed = false;
 
     Object.values(days).forEach(day => {
+      if (day.countIsExact) return;
       const match = day.ref?.match(/^chasidus-day-(\d+)$/);
       const entry = match && window.SCHEDULE?.[Number(match[1])];
       if (!entry) return;
@@ -84,9 +86,73 @@ refreshCachedDayCounts();
 
 const _chapterCache = {};
 
+function textPointAt(root, requestedOffset) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let remaining = Math.max(0, requestedOffset);
+  let node;
+
+  while ((node = walker.nextNode())) {
+    if (remaining <= node.nodeValue.length) return { node, offset: remaining };
+    remaining -= node.nodeValue.length;
+  }
+
+  return { node: root, offset: root.childNodes.length };
+}
+
+function htmlRange(root, start, end) {
+  const range = document.createRange();
+  const startPoint = textPointAt(root, start);
+  const endPoint = textPointAt(root, end);
+  range.setStart(startPoint.node, startPoint.offset);
+  range.setEnd(endPoint.node, endPoint.offset);
+
+  const holder = document.createElement('div');
+  holder.appendChild(range.cloneContents());
+  return holder.innerHTML;
+}
+
+function getCardCharacterLimit() {
+  const saved = Number(localStorage.getItem('chasidus_card_character_limit'));
+  if (saved > 0) return saved;
+
+  const containerWidth = document.querySelector('.cards-container')?.clientWidth
+    || Math.min(window.innerWidth - 48, 1000);
+  const limit = Math.max(140, Math.round(containerWidth * 0.5));
+  localStorage.setItem('chasidus_card_character_limit', String(limit));
+  return limit;
+}
+
+function splitAtSentenceEnds(html, limit) {
+  const root = document.createElement('div');
+  root.innerHTML = html;
+  const text = root.textContent;
+  const sentenceEnds = [...text.matchAll(/\.(?:\s+|$)/g)].map(match => match.index + 1);
+  if (sentenceEnds.length === 0 || text.length <= limit) return [html];
+  if (sentenceEnds[sentenceEnds.length - 1] < text.length) sentenceEnds.push(text.length);
+
+  const ranges = [];
+  let chunkStart = 0;
+  let previousEnd = 0;
+
+  sentenceEnds.forEach(sentenceEnd => {
+    if (sentenceEnd - chunkStart > limit && previousEnd > chunkStart) {
+      ranges.push([chunkStart, previousEnd]);
+      chunkStart = previousEnd;
+    }
+    previousEnd = sentenceEnd;
+  });
+
+  if (chunkStart < text.length) ranges.push([chunkStart, text.length]);
+  return ranges.map(([start, end]) => htmlRange(root, start, end));
+}
+
 function splitSefariaChapters(paragraphs) {
   const chapters = [[]];
   const chapterNumbers = [1];
+  const characterLimit = getCardCharacterLimit();
+  const hasRealChapterMarkers = paragraphs.some(paragraph =>
+    /^\s*<small>\s*[א-ת][א-ת״׳"']*\s*<\/small>\s*/.test(paragraph)
+  );
 
   paragraphs.forEach(paragraph => {
     if (/^\s*<small>[^<]+<\/small>\s*$/.test(paragraph)) return;
@@ -100,9 +166,12 @@ function splitSefariaChapters(paragraphs) {
       paragraph = paragraph.slice(marker[0].length);
     }
 
-    if (paragraph.replace(/<[^>]*>/g, '').trim()) {
-      chapters[chapters.length - 1].push(`<p>${paragraph}</p>`);
-    }
+    const chunks = hasRealChapterMarkers ? [paragraph] : splitAtSentenceEnds(paragraph, characterLimit);
+    chunks.forEach(chunk => {
+      if (chunk.replace(/<[^>]*>/g, '').trim()) {
+        chapters[chapters.length - 1].push(`<p>${chunk}</p>`);
+      }
+    });
   });
 
   return {
