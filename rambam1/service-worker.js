@@ -14,6 +14,7 @@ self.addEventListener('install', (event) => {
         './plan.js',
         './manifest.json',
         './shared/styles.css',
+        './shared/fonts/SBLHebrew.woff',
         './shared/rambam-books.js',
         './shared/rambam-intros.js',
         './shared/screenshot.js',

@@ -1,3 +1,11 @@
+    @font-face {
+      font-family: 'SBL Hebrew';
+      src: url('fonts/SBLHebrew.woff') format('woff');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
     :root {
       --color-primary-dark: #1e3a8a;
       --color-primary: #1e40af;
@@ -922,8 +930,10 @@
       border: 2px solid var(--color-border-light);
       border-radius: 12px;
       padding: 1rem;
-      font-size: 1.125rem;
-      line-height: 1.8;
+      /* SBL Hebrew's letters are small for their font size, so it is set larger to match the rest of the UI */
+      font-family: 'SBL Hebrew', 'Noto Sans Hebrew', serif;
+      font-size: 1.305rem;
+      line-height: 1.676;
       color: var(--color-text-heading);
       position: relative;
       transition: transform 0.3s, opacity 0.3s, box-shadow 0.2s;
@@ -934,7 +944,8 @@
 
     /* Large font size */
     .large-font .halakha-card {
-      font-size: 1.7rem;
+      font-size: 1.819rem;
+      line-height: 1.682;
       padding: 1.25rem;
     }
 

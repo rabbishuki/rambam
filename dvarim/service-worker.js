@@ -16,6 +16,7 @@ self.addEventListener('install', (event) => {
         './hack.js',
         './manifest.json',
         './shared/styles.css',
+        './shared/fonts/SBLHebrew.woff',
         './shared/api.js',
         './shared/core.js',
         './shared/shell.js',

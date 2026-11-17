@@ -15,6 +15,7 @@ self.addEventListener('install', (event) => {
         './mitzvot.js',
         './manifest.json',
         './shared/styles.css',
+        './shared/fonts/SBLHebrew.woff',
         './shared/rambam-books.js',
         './shared/screenshot.js',
         './shared/api.js',
